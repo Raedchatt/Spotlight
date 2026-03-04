@@ -8,7 +8,6 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { home } from '@/routes';
 
 defineProps<{
     title?: string;
@@ -48,3 +47,7 @@ defineProps<{
         </div>
     </div>
 </template>
+
+function defineProps<T>() {
+  throw new Error('Function not implemented.');
+}
