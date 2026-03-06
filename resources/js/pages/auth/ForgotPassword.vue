@@ -30,7 +30,11 @@ defineProps<{
         </div>
 
         <div class="space-y-6">
+<<<<<<< HEAD
+            <Form v-bind="email.post()" v-slot="{ errors, processing }">
+=======
             <Form v-bind="email.form()" v-slot="{ errors, processing }">
+>>>>>>> a4d878a35023aeb496e8a22b58cad4a3fa2ae64e
                 <div class="grid gap-2">
                     <Label for="email">Email address</Label>
                     <Input
