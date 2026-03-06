@@ -25,7 +25,11 @@ const inputEmail = ref(props.email);
         <Head title="Reset password" />
 
         <Form
+<<<<<<< HEAD
             v-bind="update.post()"
+=======
+            v-bind="update.form()"
+>>>>>>> a4d878a35023aeb496e8a22b58cad4a3fa2ae64e
             :transform="(data) => ({ ...data, token, email })"
             :reset-on-success="['password', 'password_confirmation']"
             v-slot="{ errors, processing }"
