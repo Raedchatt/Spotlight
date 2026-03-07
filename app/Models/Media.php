@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use App\Enums\MediaType;
+use App\Enums\TypeMedia;
 
 class Media extends Model
 {
@@ -32,7 +32,7 @@ class Media extends Model
     protected function casts(): array
     {
         return [
-            'type' => MediaType::class,
+            'type' => TypeMedia::class,
             'date_upload' => 'datetime',
         ];
     }

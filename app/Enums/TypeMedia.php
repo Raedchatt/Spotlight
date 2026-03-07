@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum MediaType: string
+enum TypeMedia: string
 {
     case Image = 'image';
     case Video = 'video';
