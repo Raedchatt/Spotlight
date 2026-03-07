@@ -17,7 +17,7 @@ const email = ref("")
 const phone = ref("")
 const password = ref("")
 const confirmPassword = ref("")
-const errors = ref({})
+const errors = ref<Record<string, any>>({})
 const message = ref("")
 
 const register = async () =>{
@@ -39,7 +39,7 @@ const register = async () =>{
                 window.location.href = "/login"
             }, 2000)
         }
-    } catch (e) {
+    } catch (e: any) {
         if (e.response && e.response.data.errors) {
             errors.value = e.response.data.errors
         } else {
