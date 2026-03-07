@@ -21,7 +21,11 @@ class Evenement extends Model
         'prix_spectateur',
         'capacite_spectateur',
         'statut',
-        'categorie'
+        'categorie',
+        'is_tournoi',
+        'type_tournoi',
+        'prix_participant',
+        'capacite_participant'
     ];
 
     /**
@@ -38,6 +42,10 @@ class Evenement extends Model
             'capacite_spectateur' => 'integer',
             'statut' => StatutEvenement::class,
             'categorie' => CategorieEvenement::class,
+            'is_tournoi' => 'boolean',
+            'type_tournoi' => 'string',
+            'prix_participant' => 'decimal:2',
+            'capacite_participant' => 'integer',
         ];
     }
 
@@ -47,6 +55,14 @@ class Evenement extends Model
     public function organisateur()
     {
         return $this->belongsTo(User::class, 'organisateur_id');
+    }
+
+    /**
+     * Relation with Media (Polymorphic)
+     */
+    public function medias()
+    {
+        return $this->morphMany(Media::class, 'mediable');
     }
 
     /**

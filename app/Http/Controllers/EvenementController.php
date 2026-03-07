@@ -8,15 +8,26 @@ use Illuminate\Support\Facades\Auth;
 use App\Enums\StatutEvenement;
 use App\Enums\CategorieEvenement;
 use Illuminate\Validation\Rules\Enum;
+use App\Enums\TypeMedia;
+use App\Models\Media;
+use Illuminate\Support\Facades\Storage;
 
 class EvenementController extends Controller
 {
     // List Events
     public function index()
     {
-        $events = Evenement::latest()->get();
+        $events = Evenement::with('medias')->latest()->get();
 
         return response()->json($events);
+    }
+
+    // Show Event
+    public function show($id)
+    {
+        $event = Evenement::with('medias')->findOrFail($id);
+
+        return response()->json($event);
     }
 
     // Create Event
@@ -30,9 +41,9 @@ class EvenementController extends Controller
             'lieu' => 'required|string',
             'prix_spectateur' => 'required|numeric',
             'capacite_spectateur' => 'required|integer',
-            'categorie' => ['required', new Enum(CategorieEvenement::class)]
+            'categorie' => ['required', new Enum(CategorieEvenement::class)],
+            'medias.*' => 'nullable|file|mimes:jpeg,png,jpg,webp,mp4,mov|max:20480', // Allow up to 20MB
         ]);
-
         $event = Evenement::create([
             'organisateur_id' => Auth::id(),
             'titre' => $request->titre,
@@ -43,12 +54,34 @@ class EvenementController extends Controller
             'prix_spectateur' => $request->prix_spectateur,
             'capacite_spectateur' => $request->capacite_spectateur,
             'categorie' => $request->categorie,
+            // Tournament fields
+            'is_tournoi' => $request->has('is_tournoi') ? $request->boolean('is_tournoi') : false,
+            'type_tournoi' => $request->type_tournoi ?? null,
+            'prix_participant' => $request->prix_participant ?? null,
+            'capacite_participant' => $request->capacite_participant ?? null,
             'statut' => StatutEvenement::EnAttente
         ]);
 
+        if ($request->hasFile('medias')) {
+            foreach ($request->file('medias') as $file) {
+                // Determine type based on mime type
+                $mimeType = $file->getMimeType();
+                $type = str_starts_with($mimeType, 'video/') ? TypeMedia::Video : TypeMedia::Image;
+
+                // Store the file
+                $path = $file->store('events/media', 'public');
+
+                // Create media record
+                $event->medias()->create([
+                    'url' => '/storage/' . $path,
+                    'type' => $type,
+                ]);
+            }
+        }
+
         return response()->json([
             'message' => 'Event created successfully',
-            'event' => $event
+            'event' => $event->load('medias')
         ]);
     }
 
@@ -57,11 +90,59 @@ class EvenementController extends Controller
     {
         $event = Evenement::findOrFail($id);
 
-        $event->update($request->all());
+        // Validate input (including tournament fields)
+        $request->validate([
+            'titre' => 'required|string|max:255',
+            'description' => 'required',
+            'date_debut' => 'required|date',
+            'date_fin' => 'required|date',
+            'lieu' => 'required|string',
+            'prix_spectateur' => 'required|numeric',
+            'capacite_spectateur' => 'required|integer',
+            'categorie' => ['required', new Enum(CategorieEvenement::class)],
+            'is_tournoi' => 'sometimes|boolean',
+            'type_tournoi' => 'required_if:is_tournoi,1|in:equipe,individuel',
+            'prix_participant' => 'required_if:is_tournoi,1|numeric|min:0',
+            'capacite_participant' => 'required_if:is_tournoi,1|integer|min:1',
+            'medias.*' => 'nullable|file|mimes:jpeg,png,jpg,webp,mp4,mov|max:20480', // Allow up to 20MB
+        ]);
+
+        $event->update([
+            'titre' => $request->titre,
+            'description' => $request->description,
+            'date_debut' => $request->date_debut,
+            'date_fin' => $request->date_fin,
+            'lieu' => $request->lieu,
+            'prix_spectateur' => $request->prix_spectateur,
+            'capacite_spectateur' => $request->capacite_spectateur,
+            'categorie' => $request->categorie,
+            // Tournament fields
+            'is_tournoi' => $request->has('is_tournoi') ? $request->boolean('is_tournoi') : false,
+            'type_tournoi' => $request->type_tournoi ?? null,
+            'prix_participant' => $request->prix_participant ?? null,
+            'capacite_participant' => $request->capacite_participant ?? null,
+        ]);
+
+        if ($request->hasFile('medias')) {
+            foreach ($request->file('medias') as $file) {
+                // Determine type based on mime type
+                $mimeType = $file->getMimeType();
+                $type = str_starts_with($mimeType, 'video/') ? TypeMedia::Video : TypeMedia::Image;
+
+                // Store the file
+                $path = $file->store('events/media', 'public');
+
+                // Create media record
+                $event->medias()->create([
+                    'url' => '/storage/' . $path,
+                    'type' => $type,
+                ]);
+            }
+        }
 
         return response()->json([
             'message' => 'Event updated successfully',
-            'event' => $event
+            'event' => $event->load('medias')
         ]);
     }
 
@@ -80,7 +161,7 @@ class EvenementController extends Controller
     // Search events
     public function search(Request $request)
     {
-        $query = Evenement::query();
+        $query = Evenement::with('medias');
 
         if ($request->has('organisateur_id')) {
             $query->parOrganisateur($request->organisateur_id);

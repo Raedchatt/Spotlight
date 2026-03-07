@@ -13,8 +13,14 @@ declare module 'vite/client' {
     }
 }
 
+declare global {
+    interface Window {
+        axios: typeof import('axios').default;
+    }
+}
+
 declare module '@inertiajs/core' {
-    interface PageProps extends InertiaPageProps, AppPageProps {}
+    interface PageProps extends InertiaPageProps, AppPageProps { }
 }
 
 declare module 'vue' {
