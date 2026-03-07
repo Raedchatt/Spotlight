@@ -24,7 +24,7 @@ class AuthController extends Controller
             'role' => 'required|string|in:participant,organisateur,revendeur',
             'email' => 'required|email|unique:users',
             'telephone' => 'required|string|max:20',
-            'password' => 'required|confirmed|min:6'
+            'password' => 'required|confirmed|min:8'
         ]);
 
         if ($validator->fails()) {
@@ -113,6 +113,6 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        
+
     }
 }

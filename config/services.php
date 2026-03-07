@@ -15,6 +15,11 @@ return [    /*
     'postmark' => [
         'key' => getenv('POSTMARK_API_KEY'),
     ],
+    // config/services.php
+
+    'anthropic' => [
+    'key' => env('ANTHROPIC_API_KEY'),
+    ],
 
     'resend' => [
         'key' => getenv('RESEND_API_KEY'),
