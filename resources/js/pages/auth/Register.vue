@@ -1,13 +1,15 @@
-<script setup>
-import { ref } from "vue"
-import axios from "axios"
-
-import {
+<script setup lang="ts">
+import{
 UserIcon,
 EnvelopeIcon,
 PhoneIcon,
 LockClosedIcon
-} from "@heroicons/vue/24/outline"
+}from "@heroicons/vue/24/outline"
+import axios from "axios"
+import { ref } from "vue"
+
+
+
 
 const username = ref("")
 const role = ref("participant")
@@ -18,7 +20,7 @@ const confirmPassword = ref("")
 const errors = ref({})
 const message = ref("")
 
-const register = async () => {
+const register = async () =>{
     errors.value = {}
     message.value = ""
     try {
