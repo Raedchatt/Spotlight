@@ -22,7 +22,7 @@ const register = async () => {
     errors.value = {}
     message.value = ""
     try {
-        const response = await axios.post("/api/register", {
+        const response = await axios.post("/register", {
             username: username.value,
             role: role.value,
             email: email.value,
