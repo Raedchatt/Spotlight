@@ -94,6 +94,9 @@ class AuthController extends Controller
 
         RateLimiter::clear($throttleKey);
 
+        Auth::login($user);
+        $request->session()->regenerate();
+
         return response()->json([
             'status' => true,
             'message' => 'Login successful',
