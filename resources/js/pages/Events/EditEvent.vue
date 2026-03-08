@@ -1,21 +1,23 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { 
     ChevronLeft, 
-    Save, 
-    Calendar, 
+    Save,  
     MapPin, 
     CircleDollarSign,
     Users,
     Loader2
 } from 'lucide-vue-next';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ref, onMounted } from 'vue';
+
 import InputError from '@/components/InputError.vue';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import AppLayout from '@/layouts/AppLayout.vue';
+
+
 
 const props = defineProps<{
     id: string | number;

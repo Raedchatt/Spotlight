@@ -1,21 +1,13 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
 import axios from 'axios';
-import { 
-    ChevronLeft, 
-    Save, 
-    Calendar, 
-    MapPin, 
-    Info, 
-    CircleDollarSign,
-    Users
-} from 'lucide-vue-next';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { ChevronLeft, CircleDollarSign, Info, MapPin, Save, Users } from 'lucide-vue-next';
+import { ref } from 'vue';
 import InputError from '@/components/InputError.vue';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import AppLayout from '@/layouts/AppLayout.vue';
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },

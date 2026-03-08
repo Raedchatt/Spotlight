@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
-use App\Enums\StatutEvenement;
 use App\Enums\CategorieEvenement;
+use App\Enums\StatutEvenement;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Evenement extends Model
 {
@@ -63,6 +64,43 @@ class Evenement extends Model
     public function medias()
     {
         return $this->morphMany(Media::class, 'mediable');
+    }
+
+    /**
+     * All reservations made for this event.
+     */
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(Reservation::class, 'evenement_id');
+    }
+
+    // -------------------------------------------------------------------------
+    // Business Logic
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns true if the event still has open spectator spots.
+     * Counts only active (pending + confirmed) reservations.
+     */
+    public function hasAvailableSpots(): bool
+    {
+        $taken = $this->reservations()
+            ->whereIn('statut', ['pending', 'confirmed'])
+            ->count();
+
+        return $taken < $this->capacite_spectateur;
+    }
+
+    /**
+     * Returns true if the given user has an active (non-cancelled) reservation
+     * for this event.
+     */
+    public function isReservedBy(User $user): bool
+    {
+        return $this->reservations()
+            ->where('user_id', $user->id)
+            ->whereIn('statut', ['pending', 'confirmed'])
+            ->exists();
     }
 
     /**
