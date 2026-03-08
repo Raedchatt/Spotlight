@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, onMounted, watch } from 'vue';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { ref, onMounted, watch, computed } from 'vue';
 import axios from 'axios';
 import type { Evenement, CategorieEvenement, StatutEvenement } from '@/types/event';
 import {
@@ -27,6 +27,9 @@ const breadcrumbs = [
 
 const events = ref<Evenement[]>([]);
 const loading = ref(true);
+
+const page = usePage();
+const auth = computed(() => page.props.auth as { user: { id: number } });
 
 // Filters
 const filters = ref({
@@ -187,7 +190,7 @@ const getStatusLabel = (statut: StatutEvenement) => {
                                 <Trophy class="w-3 h-3 mr-1" /> Tournament
                             </Badge>
                         </div>
-                        <div class="absolute bottom-4 right-4 flex gap-2">
+                        <div class="absolute absolute bottom-4 right-4 flex gap-2" v-if="event.organisateur_id === auth.user.id">
                              <Link :href="`/dashboard/events/${event.id}/edit`">
                                 <Button size="icon" variant="secondary" class="h-8 w-8 rounded-full shadow-md hover:bg-white backdrop-blur-sm bg-white/80">
                                     <Edit class="w-4 h-4" />

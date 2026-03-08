@@ -90,6 +90,10 @@ class EvenementController extends Controller
     {
         $event = Evenement::findOrFail($id);
 
+        if ($event->organisateur_id !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+
         // Validate input (including tournament fields)
         $request->validate([
             'titre' => 'required|string|max:255',
@@ -150,6 +154,10 @@ class EvenementController extends Controller
     public function destroy($id)
     {
         $event = Evenement::findOrFail($id);
+
+        if ($event->organisateur_id !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
 
         $event->delete();
 

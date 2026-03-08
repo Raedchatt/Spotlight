@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-vue-next';
+import { usePage } from '@inertiajs/vue3';
+import { BookOpen, Folder, LayoutGrid, Search, Calendar } from 'lucide-vue-next';
+import { computed } from 'vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -17,18 +18,36 @@ import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import AppLogo from './AppLogo.vue';
 
-const mainNavItems: NavItem[] = [
+const page = usePage();
+const auth = computed(() => page.props.auth as any);
+
+const mainNavItems = computed<NavItem[]>(() => [
     {
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
     },
-    {
-        title: 'Events',
-        href: '/dashboard/events',
-        icon: Folder,
-    },
-];
+    ...(auth.value.user?.role === 'participant'
+        ? [
+            {
+                title: 'Explore Events',
+                href: '/dashboard/events',
+                icon: Search,
+            },
+            {
+                title: 'My Reservations',
+                href: '/dashboard/reservations',
+                icon: Calendar,
+            },
+        ]
+        : [
+            {
+                title: 'Events',
+                href: '/dashboard/events',
+                icon: Folder,
+            },
+        ]),
+]);
 
 const footerNavItems: NavItem[] = [
     {
