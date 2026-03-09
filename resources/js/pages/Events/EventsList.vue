@@ -192,7 +192,7 @@ const getStatusLabel = (statut: StatutEvenement) => {
                             </Badge>
                         </div>
                         <div class="absolute absolute bottom-4 right-4 flex gap-2" v-if="event.organisateur_id === auth.user.id">
-                             <Link :href="`/dashboard/events/${event.id}`">
+                             <Link :href="`/events/${event.id}`">
                                 <Button size="icon" variant="secondary" class="group/btn h-8 w-8 rounded-full shadow-md hover:bg-black/20 backdrop-blur-sm bg-white/80">
                                     <Eye class="w-4 h-4 text-black group-hover/btn:text-white transition-colors" />
                                 </Button>

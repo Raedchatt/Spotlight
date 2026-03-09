@@ -22,10 +22,17 @@ class ReservationController extends Controller
         $validated = $request->validate([
             'evenement_id' => 'required|exists:evenements,id',
             'nombre_tickets' => 'required|integer|min:1',
+            'ticket_type' => 'nullable|string|in:standard,spectator,participant',
             'note' => 'nullable|string|max:500',
         ]);
 
         $evenement = Evenement::findOrFail($validated['evenement_id']);
+
+        // Set default ticket type if not provided
+        $ticketType = $validated['ticket_type'] ?? 'standard';
+        if ($evenement->is_tournoi && $ticketType === 'standard') {
+            $ticketType = 'spectator'; // Default for tournaments if not specified
+        }
 
         // 1. Check if the event is open for reservations
         if ($evenement->statut->value !== 'ouvert') {
@@ -34,13 +41,29 @@ class ReservationController extends Controller
             ], 422);
         }
 
-        // 2. Check capacity
-        $currentReservations = $evenement->reservations()->active()->sum('nombre_tickets');
-        $availableSpaces = $evenement->capacite_spectateur - $currentReservations;
+        // 2. Check capacity based on ticket type
+        if ($evenement->is_tournoi && $ticketType === 'participant') {
+            $currentReservations = $evenement->reservations()
+                ->active()
+                ->where('ticket_type', 'participant')
+                ->sum('nombre_tickets');
+            $availableSpaces = $evenement->capacite_participant - $currentReservations;
+        } else {
+            $currentReservations = $evenement->reservations()
+                ->active()
+                ->where(function ($query) {
+                    $query->where('ticket_type', 'spectator')
+                        ->orWhere('ticket_type', 'standard')
+                        ->orWhereNull('ticket_type');
+                })
+                ->sum('nombre_tickets');
+            $availableSpaces = $evenement->capacite_spectateur - $currentReservations;
+        }
 
         if ($validated['nombre_tickets'] > $availableSpaces) {
+            $typeLabel = $ticketType === 'participant' ? 'participant' : 'spectator';
             return response()->json([
-                'message' => "Not enough spaces available. Only {$availableSpaces} spots left.",
+                'message' => "Not enough {$typeLabel} spaces available. Only {$availableSpaces} spots left.",
             ], 422);
         }
 
@@ -48,6 +71,7 @@ class ReservationController extends Controller
         $reservation = Reservation::create([
             'user_id' => Auth::id(),
             'evenement_id' => $evenement->id,
+            'ticket_type' => $ticketType,
             'nombre_tickets' => $validated['nombre_tickets'],
             'note' => $validated['note'] ?? null,
             'statut' => StatutReservation::Pending,
@@ -177,13 +201,19 @@ class ReservationController extends Controller
         }
 
         $evenement = $reservation->evenement;
+
         $unitPrice = (float) $evenement->prix_spectateur;
+        if ($evenement->is_tournoi && $reservation->ticket_type === 'participant') {
+            $unitPrice = (float) $evenement->prix_participant;
+        }
+
         $ticketCount = $reservation->nombre_tickets;
         $totalAmount = $unitPrice * $ticketCount;
 
         return response()->json([
             'reservation_id' => $reservation->id,
             'event' => $evenement->titre,
+            'ticket_type' => $reservation->ticket_type ?? 'standard',
             'unit_price' => $unitPrice,
             'ticket_count' => $ticketCount,
             'total_amount' => round($totalAmount, 2),

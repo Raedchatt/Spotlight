@@ -41,6 +41,9 @@ class User extends Authenticatable
         'statut',
         'dateCreation',
         'interests',
+        'google_id',
+        'google_token',
+        'google_refresh_token',
     ];
 
 

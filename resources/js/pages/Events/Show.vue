@@ -12,7 +12,8 @@ import {
     Share2,
     CalendarDays,
     Gamepad2,
-    Eye
+    Eye,
+    Edit
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -69,6 +70,10 @@ interface Props {
 const props = defineProps<Props>();
 const page = usePage();
 const auth = computed(() => page.props.auth as any);
+
+const isOwner = computed(() => {
+    return auth.value?.user?.id === props.event.organisateur.id;
+});
 
 const selectedTicketType = ref(props.event.is_tournoi ? 'participant' : 'standard');
 
@@ -183,6 +188,16 @@ const handleReserve = () => {
                                 {{ formatDate(props.event.date_debut) }}
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Owner Action Controls -->
+                    <div v-if="isOwner" class="absolute top-6 right-6 md:right-12 flex gap-3">
+                        <Link :href="`/dashboard/events/${props.event.id}/edit`">
+                            <Button class="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/30 font-bold">
+                                <Edit class="w-4 h-4 mr-2" />
+                                Edit Event
+                            </Button>
+                        </Link>
                     </div>
                 </div>
             </div>
@@ -346,10 +361,52 @@ const handleReserve = () => {
                     <div class="space-y-6">
                         <div class="sticky top-6 space-y-6">
                             
-                            <!-- Ticket Card -->
+                            <!-- Ticket / Management Card -->
                             <div class="bg-white rounded-2xl shadow-lg border border-zinc-100 overflow-hidden">
-                                <div class="p-1 h-2 bg-blue-600"></div>
-                                <div class="p-8">
+                                <div class="p-1 h-2" :class="isOwner ? 'bg-zinc-900' : 'bg-blue-600'"></div>
+                                
+                                <!-- Owner View: Management Card -->
+                                <div v-if="isOwner" class="p-8">
+                                    <h3 class="text-lg font-bold text-zinc-900 mb-6">Event Management</h3>
+                                    
+                                    <div class="space-y-6">
+                                        <div class="flex items-center justify-between p-4 bg-zinc-50 rounded-xl border border-zinc-100">
+                                            <div class="text-sm font-bold text-zinc-400 uppercase tracking-wider">Status</div>
+                                            <Badge variant="outline" class="capitalize font-bold text-blue-600 border-blue-100 bg-blue-50/50">
+                                                Active
+                                            </Badge>
+                                        </div>
+
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div class="p-4 bg-zinc-50 rounded-xl border border-zinc-100">
+                                                <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Total Revenue</div>
+                                                <div class="text-lg font-black text-zinc-900">
+                                                    {{ ((props.stats.spectator_reserved ?? 0) * props.event.prix_spectateur) + ((props.stats.participant_reserved ?? 0) * (props.event.prix_participant ?? 0)) }} TND
+                                                </div>
+                                            </div>
+                                            <div class="p-4 bg-zinc-50 rounded-xl border border-zinc-100">
+                                                <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Reservations</div>
+                                                <div class="text-lg font-black text-zinc-900">
+                                                    {{ (props.stats.total_reserved ?? 0) + (props.stats.participant_reserved ?? 0) + (props.stats.spectator_reserved ?? 0) }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <Link :href="`/dashboard/events/${props.event.id}/edit`" class="block w-full">
+                                            <Button class="w-full py-6 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold flex items-center justify-center gap-2">
+                                                <Edit class="w-4 h-4" />
+                                                Edit Specifications
+                                            </Button>
+                                        </Link>
+
+                                        <p class="text-[10px] text-center text-zinc-400 font-bold uppercase tracking-widest">
+                                            Last sync: Just now
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Participant View: Ticket Card -->
+                                <div v-else class="p-8">
                                     <h3 v-if="props.event.is_tournoi" class="text-lg font-bold text-zinc-900 mb-6">Choose your ticket</h3>
                                     
                                     <!-- Normal Event Pricing -->
@@ -438,15 +495,30 @@ const handleReserve = () => {
                                 <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-zinc-100 to-zinc-200 flex items-center justify-center font-bold text-xl text-zinc-500 mb-4 border border-white shadow-sm">
                                     {{ getInitials(props.event.organisateur.name) }}
                                 </div>
-                                <h4 class="font-bold text-zinc-900 text-lg">{{ props.event.organisateur.name }}</h4>
+                                <h4 class="font-bold text-zinc-900 text-lg">
+                                    <template v-if="isOwner">
+                                        You <span class="text-zinc-400 font-normal text-sm">(Owner)</span>
+                                    </template>
+                                    <Link 
+                                        v-else 
+                                        :href="`/organizer/${props.event.organisateur.id}`"
+                                        class="hover:text-blue-600 transition-colors duration-200"
+                                    >
+                                        {{ props.event.organisateur.name }}
+                                    </Link>
+                                </h4>
                                 <span class="text-xs font-bold text-blue-600 uppercase tracking-widest mt-1 mb-6">Organisateur</span>
                                 
                                 <Link 
+                                    v-if="!isOwner"
                                     :href="`/organizer/${props.event.organisateur.id}`"
                                     class="w-full py-2.5 rounded-lg border-2 border-zinc-900 text-zinc-900 font-bold hover:bg-zinc-900 hover:text-white transition-all text-sm"
                                 >
                                     View Profile
                                 </Link>
+                                <div v-else class="w-full text-zinc-400 text-xs font-medium">
+                                    You are managing this event
+                                </div>
                             </div>
 
                         </div>

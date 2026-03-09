@@ -158,12 +158,13 @@ Signup
 <div class="text-center text-gray-400">OR</div>
 
 <!-- GOOGLE -->
-<button
+<a
+href="/auth/google"
 class="w-full border py-2 rounded-full flex items-center justify-center gap-2 hover:bg-gray-50 transition text-[#222222]"
 >
 <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="18" />
 Signup with Google
-</button>
+</a>
 
 <p class="text-center text-sm mt-4 text-[#222222]">
 Already have account ?

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { ref, onMounted, watch, computed } from 'vue';
 import axios from 'axios';
 import type { Evenement, StatutEvenement } from '@/types/event';
@@ -10,7 +10,8 @@ import {
     MapPin, 
     Trophy,
     Clock,
-    X
+    X,
+    Eye
 } from 'lucide-vue-next';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -110,7 +111,7 @@ const resetFilters = () => {
                 </Badge>
             </div>
 
-            <!-- Filters Section - Exactly matching EventsList.vue style -->
+            <!-- Filters Section -->
             <div class="bg-card border rounded-xl p-4 shadow-sm flex flex-wrap gap-4 items-end">
                 <div class="flex-1 min-w-[200px] space-y-1.5">
                     <label class="text-sm font-medium">Search by title</label>
@@ -124,11 +125,11 @@ const resetFilters = () => {
                     <label class="text-sm font-medium">Category</label>
                     <select v-model="filters.categorie" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                         <option value="all">All Categories</option>
-                        <option value="sportifs">Sportifs</option>
-                        <option value="culturels">Culturels</option>
-                        <option value="scientifiques">Scientifiques</option>
-                        <option value="musicaux">Musicaux</option>
-                        <option value="commerciaux">Commerciaux</option>
+                        <option value="sportifs">Sports</option>
+                        <option value="culturels">Cultural</option>
+                        <option value="scientifiques">Scientific</option>
+                        <option value="musicaux">Musical</option>
+                        <option value="commerciaux">Commercial</option>
                     </select>
                 </div>
 
@@ -172,9 +173,16 @@ const resetFilters = () => {
                             <Badge :variant="getStatusVariant(event.statut)" class="capitalize shadow-sm w-fit bg-blue-600 hover:bg-blue-700 border-0 text-white">
                                 {{ getStatusLabel(event.statut) }}
                             </Badge>
-                            <Badge v-if="event.is_tournoi" variant="default" class="bg-amber-500 hover:bg-amber-600 shadow-sm w-fit border-0">
-                                <Trophy class="w-3 h-3 mr-1" /> Tournament
+                            <Badge v-if="event.is_tournoi" variant="default" class="bg-amber-500 hover:bg-amber-600 shadow-sm w-fit border-0 font-bold">
+                                <Trophy class="w-3 h-3 mr-1" /> TOURNAMENT
                             </Badge>
+                        </div>
+                        <div class="absolute bottom-4 right-4 animate-in fade-in zoom-in duration-300">
+                             <Link :href="`/events/${event.id}`">
+                                <Button size="icon" variant="secondary" class="group/btn h-8 w-8 rounded-full shadow-md hover:bg-black/20 backdrop-blur-sm bg-white/80 transition-all active:scale-90">
+                                    <Eye class="w-4 h-4 text-black group-hover/btn:text-white transition-colors" />
+                                </Button>
+                             </Link>
                         </div>
                     </div>
 
@@ -199,16 +207,22 @@ const resetFilters = () => {
 
                         <div class="pt-4 border-t flex justify-between items-center">
                             <div class="flex flex-col">
-                                <span class="font-medium text-blue-600">
-                                    {{ event.prix_spectateur > 0 ? `${event.prix_spectateur} TND` : 'Free' }}
+                                <span class="font-bold text-blue-600">
+                                    <template v-if="event.is_tournoi">
+                                        {{ event.prix_spectateur > 0 ? `${event.prix_spectateur} TND` : 'Free' }}
+                                        <span class="text-[9px] text-muted-foreground ml-1">(Spectator)</span>
+                                    </template>
+                                    <template v-else>
+                                        {{ event.prix_spectateur > 0 ? `${event.prix_spectateur} TND` : 'Free' }}
+                                    </template>
                                 </span>
                                 <span class="text-[10px] text-muted-foreground">
-                                    {{ event.capacite_spectateur }} seats available
+                                    {{ event.capacite_spectateur }} seats left
                                 </span>
                             </div>
                             
-                            <Button @click="openReservation(event)" size="sm" class="bg-blue-600 hover:bg-blue-700">
-                                Réserver
+                            <Button @click="openReservation(event)" size="sm" class="bg-blue-600 hover:bg-blue-700 font-semibold px-4 rounded-lg transition-all active:scale-95 shadow-sm">
+                                Book Now
                             </Button>
                         </div>
                     </div>

@@ -12,7 +12,7 @@ Route::get('/', function () {
 
 Route::get('/organizer/{id}', [\App\Http\Controllers\OrganizerProfileController::class, 'show'])->name('organizer.profile');
 Route::get('/participant/{id}', [\App\Http\Controllers\ParticipantProfileController::class, 'show'])->name('participant.profile');
-Route::get('/events/{id}', [\App\Http\Controllers\EvenementController::class, 'show'])->name('events.show');
+Route::get('/events/{id}', [EvenementController::class, 'show'])->name('events.show');
 
 Route::get('/login', function () {
     return Inertia::render('auth/Login');
@@ -26,6 +26,10 @@ Route::get('/register', function () {
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Google Auth Routes
+Route::get('/auth/google', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('/auth/google/callback', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
 Route::middleware(['auth'])->group(function () {
     // API endpoints masquerading in the web middleware for session persistence
