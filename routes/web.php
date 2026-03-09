@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\EvenementController;
+use App\Http\Controllers\ReservationController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -37,6 +38,10 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/events/{id}', [EvenementController::class, 'destroy']);
         Route::patch('/events/{id}/ouvrir', [EvenementController::class, 'ouvrirReservation']);
         Route::patch('/events/{id}/fermer', [EvenementController::class, 'fermerReservation']);
+
+        Route::post('/reservations', [ReservationController::class, 'store']);
+        Route::get('/my-reservations', [ReservationController::class, 'chercherReservationParParticipant']);
+        Route::patch('/reservations/{reservation}/annuler', [ReservationController::class, 'annuler']);
     });
 
     Route::get('/dashboard', function () {
@@ -48,6 +53,10 @@ Route::middleware(['auth'])->group(function () {
             return Inertia::render('Events/EventsList');
         })->name('events.index');
 
+        Route::get('/discovery', function () {
+            return Inertia::render('Events/Discovery');
+        })->name('discovery');
+
         Route::get('/events/create', function () {
             return Inertia::render('Events/CreateEvent');
         })->name('events.create');
@@ -55,6 +64,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/events/{id}/edit', function ($id) {
             return Inertia::render('Events/EditEvent', ['id' => $id]);
         })->name('events.edit');
+
+        Route::get('/reservations', function () {
+            return Inertia::render('Events/MyReservations');
+        })->name('reservations.index');
     });
 });
 

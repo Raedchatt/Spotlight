@@ -44,6 +44,12 @@ return new class extends Migration {
                 'commerciaux'
             ]);
 
+            // Tournament fields
+            $table->boolean('is_tournoi')->default(false);
+            $table->string('type_tournoi')->nullable(); // equipe or individuel
+            $table->decimal('prix_participant', 8, 2)->nullable();
+            $table->integer('capacite_participant')->nullable();
+
             $table->timestamps();
         });
     }

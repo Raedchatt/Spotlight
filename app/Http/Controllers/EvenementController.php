@@ -116,7 +116,7 @@ class EvenementController extends Controller
             'type_tournoi' => $request->type_tournoi ?? null,
             'prix_participant' => $request->prix_participant ?? null,
             'capacite_participant' => $request->capacite_participant ?? null,
-            'statut' => StatutEvenement::EnAttente
+            'statut' => StatutEvenement::Ouvert
         ]);
 
         if ($request->hasFile('medias')) {

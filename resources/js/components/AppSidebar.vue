@@ -30,8 +30,8 @@ const mainNavItems = computed<NavItem[]>(() => [
     ...(auth.value.user?.role === 'participant'
         ? [
             {
-                title: 'Explore Events',
-                href: '/dashboard/events',
+                title: 'Discovery',
+                href: '/dashboard/discovery',
                 icon: Search,
             },
             {

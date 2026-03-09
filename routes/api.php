@@ -6,6 +6,8 @@ use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\OrganisateurController;
 
+Route::get('/events/search', [EvenementController::class, 'search']);
+
 Route::middleware('auth:sanctum')->group(function () {
 
     // Messages
@@ -14,9 +16,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Events
     Route::apiResource('/events', EvenementController::class);
-    Route::get('/events/search', [EvenementController::class, 'search']);
-    Route::patch('/events/{evenement}/ouvrir', [EvenementController::class, 'ouvrirReservation']);
-    Route::patch('/events/{evenement}/fermer', [EvenementController::class, 'fermerReservation']);
+    Route::patch('/events/{id}/ouvrir', [EvenementController::class, 'ouvrirReservation']);
+    Route::patch('/events/{id}/fermer', [EvenementController::class, 'fermerReservation']);
 
     // Reservations
     Route::get('/reservations/evenement/{evenement}', [ReservationController::class, 'chercherReservationParEvenement']);

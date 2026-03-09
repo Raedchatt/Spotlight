@@ -62,8 +62,8 @@ const mainNavItems = computed<NavItem[]>(() => [
     // Participant specific navigation items
     ...(auth.value.user?.role === 'participant' ? [
         {
-            title: 'Explore Events',
-            href: '/dashboard/events',
+            title: 'Discovery',
+            href: '/dashboard/discovery',
             icon: Search,
         },
         {
@@ -71,7 +71,13 @@ const mainNavItems = computed<NavItem[]>(() => [
             href: '/dashboard/reservations',
             icon: Calendar,
         },
-    ] : []),
+    ] : [
+        {
+            title: 'Events',
+            href: '/dashboard/events',
+            icon: Folder,
+        },
+    ]),
 ]);
 
 const rightNavItems: NavItem[] = [
@@ -194,7 +200,7 @@ const rightNavItems: NavItem[] = [
                                 </Link>
                                 <div
                                     v-if="isCurrentUrl(item.href)"
-                                    class="absolute bottom-0 left-0 h-0.5 w-full translate-y-px bg-black dark:bg-white"
+                                    class="absolute bottom-0 left-0 h-0.5 w-full translate-y-px bg-blue-600 dark:bg-blue-500"
                                 ></div>
                             </NavigationMenuItem>
                         </NavigationMenuList>

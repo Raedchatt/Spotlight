@@ -31,7 +31,7 @@ const form = ref({
     medias: [] as File[]
 });
 
-const errors = ref<Record<string, string[]>>({});
+const formErrors = ref<Record<string, string[]>>({});
 const processing = ref(false);
 
 const handleFileChange = (event: Event) => {
@@ -43,7 +43,7 @@ const handleFileChange = (event: Event) => {
 
 const submit = async () => {
     processing.value = true;
-    errors.value = {};
+    formErrors.value = {};
     
     try {
         const formData = new FormData();
@@ -68,12 +68,9 @@ const submit = async () => {
         
         router.visit('/dashboard/events');
     } catch (error: any) {
-        if (error.response?.status === 422) {
-            errors.value = error.response.data.errors;
-        } else {
-            console.error('An unexpected error occurred:', error);
+            formErrors.value = error.response.data.errors || {};
         }
-    } finally {
+    finally {
         processing.value = false;
     }
 };
@@ -113,13 +110,13 @@ const submit = async () => {
                             <div class="space-y-2">
                                 <label class="text-sm font-medium">Event Title *</label>
                                 <Input v-model="form.titre" placeholder="e.g. Summer Beats Festival 2026" />
-                                <InputError :message="errors.titre?.[0]" />
+                                <InputError :message="formErrors?.titre?.[0]" />
                             </div>
 
                             <div class="space-y-2">
                                 <label class="text-sm font-medium">Description *</label>
                                 <textarea v-model="form.description" placeholder="Describe what makes your event special..." class="flex min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"></textarea>
-                                <InputError :message="errors.description?.[0]" />
+                                <InputError :message="formErrors?.description?.[0]" />
                             </div>
 
                             <div class="space-y-2">
@@ -132,7 +129,7 @@ const submit = async () => {
                                     <option value="musicaux">Musicaux</option>
                                     <option value="commerciaux">Commerciaux</option>
                                 </select>
-                                <InputError :message="errors.categorie?.[0]" />
+                                <InputError :message="formErrors?.categorie?.[0]" />
                             </div>
                         </CardContent>
                     </Card>
@@ -150,19 +147,19 @@ const submit = async () => {
                                     <MapPin class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                                     <Input v-model="form.lieu" placeholder="Online or Physical Address" class="pl-10" />
                                 </div>
-                                <InputError :message="errors.lieu?.[0]" />
+                                <InputError :message="formErrors?.lieu?.[0]" />
                             </div>
 
                             <div class="space-y-2">
                                 <label class="text-sm font-medium">Start Date & Time *</label>
                                 <Input v-model="form.date_debut" type="datetime-local" />
-                                <InputError :message="errors.date_debut?.[0]" />
+                                <InputError :message="formErrors?.date_debut?.[0]" />
                             </div>
 
                             <div class="space-y-2">
                                 <label class="text-sm font-medium">End Date & Time *</label>
                                 <Input v-model="form.date_fin" type="datetime-local" />
-                                <InputError :message="errors.date_fin?.[0]" />
+                                <InputError :message="formErrors?.date_fin?.[0]" />
                             </div>
                         </CardContent>
                     </Card>
@@ -195,8 +192,8 @@ const submit = async () => {
                                         <li v-for="file in form.medias" :key="file.name">{{ file.name }} ({{ (file.size / 1024 / 1024).toFixed(2) }} MB)</li>
                                     </ul>
                                 </div>
-
-                                <InputError :message="errors?.['medias.0']?.[0] || errors?.medias?.[0]" />
+                                
+                                <InputError :message="formErrors?.['medias.0']?.[0] || formErrors?.medias?.[0]" />
                             </div>
                         </CardContent>
                     </Card>
@@ -214,7 +211,7 @@ const submit = async () => {
                                     <Users class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                                     <Input v-model.number="form.capacite_spectateur" type="number" class="pl-10" />
                                 </div>
-                                <InputError :message="errors.capacite_spectateur?.[0]" />
+                                <InputError :message="formErrors?.capacite_spectateur?.[0]" />
                             </div>
 
                             <div class="space-y-2">
@@ -223,7 +220,7 @@ const submit = async () => {
                                     <CircleDollarSign class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                                     <Input v-model.number="form.prix_spectateur" type="number" step="0.01" class="pl-10" />
                                 </div>
-                                <InputError :message="errors.prix_spectateur?.[0]" />
+                                <InputError :message="formErrors?.prix_spectateur?.[0]" />
                             </div> <!-- Close Ticket Price div -->
 
                             <!-- Tournament Options -->
@@ -241,7 +238,7 @@ const submit = async () => {
                                             <option value="equipe">Équipe</option>
                                             <option value="individuel">Individuel</option>
                                         </select>
-                                        <InputError :message="errors.type_tournoi?.[0]" />
+                                        <InputError :message="formErrors?.type_tournoi?.[0]" />
                                     </div>
                                     
                                     <div class="space-y-2">
@@ -250,7 +247,7 @@ const submit = async () => {
                                             <CircleDollarSign class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                                             <Input v-model.number="form.prix_participant" type="number" step="0.01" class="pl-10" />
                                         </div>
-                                        <InputError :message="errors.prix_participant?.[0]" />
+                                        <InputError :message="formErrors?.prix_participant?.[0]" />
                                     </div>
                                     
                                     <div class="space-y-2">
@@ -259,7 +256,7 @@ const submit = async () => {
                                             <Users class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                                             <Input v-model.number="form.capacite_participant" type="number" class="pl-10" />
                                         </div>
-                                        <InputError :message="errors.capacite_participant?.[0]" />
+                                        <InputError :message="formErrors?.capacite_participant?.[0]" />
                                     </div>
                                 </div>
                             </div>
