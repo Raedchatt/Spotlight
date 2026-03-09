@@ -10,6 +10,8 @@ use App\Enums\CategorieEvenement;
 use Illuminate\Validation\Rules\Enum;
 use App\Enums\TypeMedia;
 use App\Models\Media;
+use App\Models\Reservation;
+use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 
 class EvenementController extends Controller
@@ -22,12 +24,67 @@ class EvenementController extends Controller
         return response()->json($events);
     }
 
-    // Show Event
-    public function show($id)
+    // Show Event Details (Public)
+    public function show(Request $request, $id)
     {
-        $event = Evenement::with('medias')->findOrFail($id);
+        $event = Evenement::with(['organisateur', 'medias'])->findOrFail($id);
 
-        return response()->json($event);
+        if ($request->wantsJson()) {
+            return response()->json($event);
+        }
+
+        // Stats calculation
+        $stats = [];
+        if (!$event->is_tournoi) {
+            $totalReserved = Reservation::where('evenement_id', $id)
+                ->where('statut', 'confirmed')
+                ->count();
+            $stats = [
+                'total_reserved' => $totalReserved,
+                'remaining'      => max(0, $event->capacite_spectateur - $totalReserved),
+            ];
+        } else {
+            $participantReserved = Reservation::where('evenement_id', $id)
+                ->where('ticket_type', 'participant')
+                ->where('statut', 'confirmed')
+                ->count();
+
+            $spectatorReserved = Reservation::where('evenement_id', $id)
+                ->where('ticket_type', 'spectator')
+                ->where('statut', 'confirmed')
+                ->count();
+
+            $stats = [
+                'participant_reserved'  => $participantReserved,
+                'spectator_reserved'    => $spectatorReserved,
+                'participant_remaining' => max(0, $event->capacite_participant - $participantReserved),
+                'spectator_remaining'   => max(0, $event->capacite_spectateur - $spectatorReserved),
+            ];
+        }
+
+        // Check if already reserved by auth user
+        $isReserved = false;
+        if (Auth::check()) {
+            $isReserved = Reservation::where('evenement_id', $id)
+                ->where('user_id', Auth::id())
+                ->where('statut', 'confirmed')
+                ->exists();
+        }
+
+        // Similar events (same category, different id, upcoming)
+        $similarEvents = Evenement::with('medias')
+            ->where('categorie', $event->categorie)
+            ->where('id', '!=', $id)
+            ->where('date_debut', '>=', now())
+            ->take(3)
+            ->get();
+
+        return Inertia::render('Events/Show', [
+            'event'          => $event,
+            'stats'          => $stats,
+            'is_reserved'    => $isReserved,
+            'similar_events' => $similarEvents->isEmpty() ? null : $similarEvents,
+        ]);
     }
 
     // Create Event

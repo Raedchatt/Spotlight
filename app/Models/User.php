@@ -36,9 +36,11 @@ class User extends Authenticatable
         'email',
         'password',
         'telephone',
+        'about',
         'role',
         'statut',
         'dateCreation',
+        'interests',
     ];
 
 
@@ -66,6 +68,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
             'role' => Role::class, // Cast role to Role enum
+            'interests' => 'array',
         ];
     }
 

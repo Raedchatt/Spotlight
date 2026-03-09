@@ -221,13 +221,21 @@ const getStatusLabel = (statut: StatutEvenement) => {
                             </div>
                         </div>
 
-                        <div class="pt-4 border-t flex justify-between items-center text-sm">
-                            <div class="font-medium text-blue-600">
-                                {{ event.prix_spectateur > 0 ? `${event.prix_spectateur} TND` : 'Free' }}
+                        <div class="pt-4 border-t space-y-4">
+                            <div class="flex justify-between items-center text-sm">
+                                <div class="font-medium text-blue-600">
+                                    {{ event.prix_spectateur > 0 ? `${event.prix_spectateur} TND` : 'Free' }}
+                                </div>
+                                <div class="text-muted-foreground">
+                                    {{ event.capacite_spectateur }} seats available
+                                </div>
                             </div>
-                            <div class="text-muted-foreground">
-                                {{ event.capacite_spectateur }} seats available
-                            </div>
+                            
+                            <Link :href="`/events/${event.id}`" class="block w-full">
+                                <Button variant="outline" class="w-full border-zinc-200 hover:bg-zinc-50 font-bold text-xs uppercase tracking-widest transition-all duration-300 group-hover:bg-zinc-900 group-hover:text-white group-hover:border-zinc-900">
+                                    View Public Page
+                                </Button>
+                            </Link>
                         </div>
                     </div>
                 </div>

@@ -9,6 +9,10 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 });
 
+Route::get('/organizer/{id}', [\App\Http\Controllers\OrganizerProfileController::class, 'show'])->name('organizer.profile');
+Route::get('/participant/{id}', [\App\Http\Controllers\ParticipantProfileController::class, 'show'])->name('participant.profile');
+Route::get('/events/{id}', [\App\Http\Controllers\EvenementController::class, 'show'])->name('events.show');
+
 Route::get('/login', function () {
     return Inertia::render('auth/Login');
 })->name('login');

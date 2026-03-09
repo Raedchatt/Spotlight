@@ -11,6 +11,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('settings/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    Route::get('settings/participant', [\App\Http\Controllers\ParticipantProfileController::class, 'edit'])->name('participant.settings.edit');
+    Route::patch('settings/participant', [\App\Http\Controllers\ParticipantProfileController::class, 'update'])->name('participant.settings.update');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
