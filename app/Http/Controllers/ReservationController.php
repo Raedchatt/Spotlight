@@ -12,6 +12,53 @@ use Illuminate\Validation\ValidationException;
 
 class ReservationController extends Controller
 {
+    /**
+     * Store a new reservation.
+     *
+     * POST /api/reservations
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'evenement_id' => 'required|exists:evenements,id',
+            'nombre_tickets' => 'required|integer|min:1',
+            'note' => 'nullable|string|max:500',
+        ]);
+
+        $evenement = Evenement::findOrFail($validated['evenement_id']);
+
+        // 1. Check if the event is open for reservations
+        if ($evenement->statut->value !== 'ouvert') {
+            return response()->json([
+                'message' => 'This event is not open for reservations.',
+            ], 422);
+        }
+
+        // 2. Check capacity
+        $currentReservations = $evenement->reservations()->active()->sum('nombre_tickets');
+        $availableSpaces = $evenement->capacite_spectateur - $currentReservations;
+
+        if ($validated['nombre_tickets'] > $availableSpaces) {
+            return response()->json([
+                'message' => "Not enough spaces available. Only {$availableSpaces} spots left.",
+            ], 422);
+        }
+
+        // 3. Create the reservation
+        $reservation = Reservation::create([
+            'user_id' => Auth::id(),
+            'evenement_id' => $evenement->id,
+            'nombre_tickets' => $validated['nombre_tickets'],
+            'note' => $validated['note'] ?? null,
+            'statut' => StatutReservation::Pending,
+        ]);
+
+        return response()->json([
+            'message' => 'Reservation created successfully and is pending confirmation.',
+            'reservation' => $reservation->load('evenement'),
+        ], 201);
+    }
+
     // -------------------------------------------------------------------------
     // Search
     // -------------------------------------------------------------------------
@@ -35,9 +82,9 @@ class ReservationController extends Controller
             ->get();
 
         return response()->json([
-            'event'        => $evenement->titre,
+            'event' => $evenement->titre,
             'reservations' => $reservations,
-            'total'        => $reservations->count(),
+            'total' => $reservations->count(),
         ]);
     }
 
@@ -64,7 +111,7 @@ class ReservationController extends Controller
 
         return response()->json([
             'reservations' => $reservations,
-            'total'        => $reservations->count(),
+            'total' => $reservations->count(),
         ]);
     }
 
@@ -95,7 +142,7 @@ class ReservationController extends Controller
         }
 
         // Business rule: cancellation is forbidden less than 3 days before the event
-        $evenement     = $reservation->evenement;
+        $evenement = $reservation->evenement;
         $daysRemaining = now()->diffInDays($evenement->date_debut, false); // false = negative if in the past
 
         if ($daysRemaining < 3) {
@@ -107,7 +154,7 @@ class ReservationController extends Controller
         $reservation->cancel();
 
         return response()->json([
-            'message'     => 'Reservation cancelled successfully.',
+            'message' => 'Reservation cancelled successfully.',
             'reservation' => $reservation->fresh(),
         ]);
     }
@@ -129,18 +176,18 @@ class ReservationController extends Controller
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
 
-        $evenement     = $reservation->evenement;
-        $unitPrice     = (float) $evenement->prix_spectateur;
-        $ticketCount   = $reservation->nombre_tickets;
-        $totalAmount   = $unitPrice * $ticketCount;
+        $evenement = $reservation->evenement;
+        $unitPrice = (float) $evenement->prix_spectateur;
+        $ticketCount = $reservation->nombre_tickets;
+        $totalAmount = $unitPrice * $ticketCount;
 
         return response()->json([
             'reservation_id' => $reservation->id,
-            'event'          => $evenement->titre,
-            'unit_price'     => $unitPrice,
-            'ticket_count'   => $ticketCount,
-            'total_amount'   => round($totalAmount, 2),
-            'currency'       => 'TND',
+            'event' => $evenement->titre,
+            'unit_price' => $unitPrice,
+            'ticket_count' => $ticketCount,
+            'total_amount' => round($totalAmount, 2),
+            'currency' => 'TND',
         ]);
     }
 }

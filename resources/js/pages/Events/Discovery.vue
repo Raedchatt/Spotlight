@@ -1,29 +1,25 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { ref, onMounted, watch, computed } from 'vue';
 import axios from 'axios';
-import type { Evenement, CategorieEvenement, StatutEvenement } from '@/types/event';
+import type { Evenement, StatutEvenement } from '@/types/event';
 import {
     Search, 
-    Plus, 
-    Edit, 
-    Trash2, 
     Calendar, 
     MapPin, 
-    Tag, 
-    Filter,
-    X,
     Trophy,
-    Eye
+    Clock,
+    X
 } from 'lucide-vue-next';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import Reserver from '@/components/Reserver.vue';
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Events', href: '/dashboard/events' },
+    { title: 'Discovery', href: '/dashboard/discovery' },
 ];
 
 const events = ref<Evenement[]>([]);
@@ -32,12 +28,11 @@ const loading = ref(true);
 const page = usePage();
 const auth = computed(() => page.props.auth as any);
 
-// Filters
+// Filters matching EventsList style
 const filters = ref({
     titre: '',
     categorie: 'all',
     date: '',
-    statut: 'all'
 });
 
 const fetchEvents = async () => {
@@ -49,52 +44,27 @@ const fetchEvents = async () => {
         if (filters.value.date) params.append('date', filters.value.date);
         
         const response = await axios.get(`/api/events/search?${params.toString()}`);
-        events.value = response.data;
+        // Filter strictly for 'ouvert' events for the Discovery page
+        events.value = response.data.filter((e: Evenement) => e.statut === 'ouvert');
     } catch (error) {
-        console.error('Error fetching events:', error);
+        console.error('Error fetching discovery events:', error);
     } finally {
         loading.value = false;
     }
-};
-
-const deleteEvent = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this event?')) return;
-    
-    try {
-        await axios.delete(`/api/events/${id}`);
-        events.value = events.value.filter(e => e.id !== id);
-    } catch (error) {
-        console.error('Error deleting event:', error);
-    }
-};
-
-const resetFilters = () => {
-    filters.value = {
-        titre: '',
-        categorie: 'all',
-        date: '',
-        statut: 'all'
-    };
-    fetchEvents();
 };
 
 onMounted(() => {
     fetchEvents();
 });
 
-// Watch filters for auto-search
+// Watch filters for auto-search (matching EventsList behavior)
 watch(() => filters.value, () => {
-    // Optional: Debounce search
     fetchEvents();
 }, { deep: true });
 
 const getStatusVariant = (statut: StatutEvenement) => {
     switch (statut) {
         case 'ouvert': return 'default'; 
-        case 'ferme': return 'secondary';
-        case 'encours': return 'outline';
-        case 'en_attente': return 'secondary';
-        case 'annule': return 'destructive';
         default: return 'outline';
     }
 };
@@ -103,27 +73,44 @@ const getStatusLabel = (statut: StatutEvenement) => {
     return statut.charAt(0).toUpperCase() + statut.slice(1).replace('_', ' ');
 };
 
+// Selection for reservation
+const selectedEvent = ref<Evenement | null>(null);
+
+const openReservation = (event: Evenement) => {
+    selectedEvent.value = event;
+};
+
+const closeReservation = () => {
+    selectedEvent.value = null;
+};
+
+const resetFilters = () => {
+    filters.value = {
+        titre: '',
+        categorie: 'all',
+        date: '',
+    };
+    fetchEvents();
+};
 </script>
 
 <template>
-    <Head title="Events Management" />
+    <Head title="Discovery - Explore Events" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6 space-y-6">
             <div class="flex justify-between items-center">
                 <div>
-                    <h1 class="text-3xl font-bold tracking-tight">My Hosted Events</h1>
-                    <p class="text-muted-foreground">Manage and track your published events and their status.</p>
+                    <h1 class="text-3xl font-bold tracking-tight">Discovery</h1>
+                    <p class="text-muted-foreground">Find and book your next amazing experience.</p>
                 </div>
-                <Link v-if="auth.user.role !== 'participant'" href="/dashboard/events/create">
-                    <Button class="bg-blue-600 hover:bg-blue-700">
-                        <Plus class="w-4 h-4 mr-2" />
-                        Create New Event
-                    </Button>
-                </Link>
+                <Badge variant="secondary" class="h-8 px-3 flex items-center gap-2">
+                    <Calendar class="w-4 h-4" />
+                    <span>{{ events.length }} Events Available</span>
+                </Badge>
             </div>
 
-            <!-- Filters Section -->
+            <!-- Filters Section - Exactly matching EventsList.vue style -->
             <div class="bg-card border rounded-xl p-4 shadow-sm flex flex-wrap gap-4 items-end">
                 <div class="flex-1 min-w-[200px] space-y-1.5">
                     <label class="text-sm font-medium">Search by title</label>
@@ -166,17 +153,15 @@ const getStatusLabel = (statut: StatutEvenement) => {
                 <div class="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
                     <Search class="w-6 h-6 text-muted-foreground" />
                 </div>
-                <h3 class="text-lg font-medium">No events found</h3>
-                <p class="text-muted-foreground">Try adjusting your filters or create a new event.</p>
-                <Link v-if="auth.user.role !== 'participant'" href="/dashboard/events/create" class="mt-4 block">
-                    <Button variant="outline">Create your first event</Button>
-                </Link>
+                <h3 class="text-lg font-medium">No open events found</h3>
+                <p class="text-muted-foreground">Try adjusting your filters.</p>
             </div>
 
             <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div v-for="event in events" :key="event.id" 
                     class="group bg-card border rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 relative"
                     :class="{ 'ring-2 ring-amber-500 shadow-amber-500/10': event.is_tournoi }">
+                    
                     <!-- Event Banner Image -->
                     <div 
                         class="h-40 relative bg-cover bg-center"
@@ -184,27 +169,12 @@ const getStatusLabel = (statut: StatutEvenement) => {
                         :style="event.medias?.length ? { backgroundImage: `url(${event.medias[0].url})` } : {}"
                     >
                         <div class="absolute top-4 left-4 flex flex-col gap-2">
-                            <Badge :variant="getStatusVariant(event.statut)" class="capitalize shadow-sm w-fit">
+                            <Badge :variant="getStatusVariant(event.statut)" class="capitalize shadow-sm w-fit bg-blue-600 hover:bg-blue-700 border-0 text-white">
                                 {{ getStatusLabel(event.statut) }}
                             </Badge>
                             <Badge v-if="event.is_tournoi" variant="default" class="bg-amber-500 hover:bg-amber-600 shadow-sm w-fit border-0">
                                 <Trophy class="w-3 h-3 mr-1" /> Tournament
                             </Badge>
-                        </div>
-                        <div class="absolute absolute bottom-4 right-4 flex gap-2" v-if="event.organisateur_id === auth.user.id">
-                             <Link :href="`/dashboard/events/${event.id}`">
-                                <Button size="icon" variant="secondary" class="group/btn h-8 w-8 rounded-full shadow-md hover:bg-black/20 backdrop-blur-sm bg-white/80">
-                                    <Eye class="w-4 h-4 text-black group-hover/btn:text-white transition-colors" />
-                                </Button>
-                             </Link>
-                             <Link :href="`/dashboard/events/${event.id}/edit`">
-                                <Button size="icon" variant="secondary" class="group/btn h-8 w-8 rounded-full shadow-md hover:bg-black/20 backdrop-blur-sm bg-white/80">
-                                    <Edit class="w-4 h-4 text-black group-hover/btn:text-white transition-colors" />
-                                </Button>
-                             </Link>
-                            <Button @click="deleteEvent(event.id)" size="icon" variant="destructive" class="h-8 w-8 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity ">
-                                <Trash2 class="w-4 h-4" />
-                            </Button>
                         </div>
                     </div>
 
@@ -227,16 +197,32 @@ const getStatusLabel = (statut: StatutEvenement) => {
                             </div>
                         </div>
 
-                        <div class="pt-4 border-t flex justify-between items-center text-sm">
-                            <div class="font-medium text-blue-600">
-                                {{ event.prix_spectateur > 0 ? `${event.prix_spectateur} TND` : 'Free' }}
+                        <div class="pt-4 border-t flex justify-between items-center">
+                            <div class="flex flex-col">
+                                <span class="font-medium text-blue-600">
+                                    {{ event.prix_spectateur > 0 ? `${event.prix_spectateur} TND` : 'Free' }}
+                                </span>
+                                <span class="text-[10px] text-muted-foreground">
+                                    {{ event.capacite_spectateur }} seats available
+                                </span>
                             </div>
-                            <div class="text-muted-foreground">
-                                {{ event.capacite_spectateur }} seats available
-                            </div>
+                            
+                            <Button @click="openReservation(event)" size="sm" class="bg-blue-600 hover:bg-blue-700">
+                                Réserver
+                            </Button>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Reservation Modal Backdrop -->
+        <div v-if="selectedEvent" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-all duration-300" @click.self="closeReservation">
+            <div class="relative w-full max-w-sm transform transition-all duration-300 scale-100">
+                <button @click="closeReservation" class="absolute -top-12 right-0 text-white hover:text-gray-200 p-2 bg-black/20 rounded-full transition-colors">
+                    <X class="w-6 h-6" />
+                </button>
+                <Reserver :event="selectedEvent" @reservation-success="closeReservation" />
             </div>
         </div>
     </AppLayout>
