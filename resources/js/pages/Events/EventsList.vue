@@ -1,25 +1,25 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { ref, onMounted, watch, computed } from 'vue';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+
 import axios from 'axios';
-import type { Evenement, CategorieEvenement, StatutEvenement } from '@/types/event';
+
 import {
     Search, 
     Plus, 
     Edit, 
     Trash2, 
     Calendar, 
-    MapPin, 
-    Tag, 
-    Filter,
+    MapPin,  
     X,
     Trophy,
     Eye
 } from 'lucide-vue-next';
+import { ref, onMounted, watch, computed } from 'vue';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import AppLayout from '@/layouts/AppLayout.vue';
+import type { Evenement,StatutEvenement } from '@/types/event';
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
