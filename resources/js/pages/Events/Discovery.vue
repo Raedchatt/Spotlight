@@ -179,7 +179,7 @@ const resetFilters = () => {
             <!-- Events List -->
             <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Skeleton Loader -->
-                <div v-for="n in 6" :key="n" class="h-64 rounded-xl bg-muted animate-pulse border" />
+                <div v-for="n in 6" :key="n" class="h-[400px] rounded-xl bg-muted/50 animate-pulse border border-border" />
             </div>
 
             <div v-else-if="events.length === 0" class="text-center py-12 bg-muted/20 rounded-xl border border-dashed">
@@ -237,7 +237,7 @@ const resetFilters = () => {
         </div>
 
         <!-- Reservation Modal Backdrop -->
-        <div v-if="selectedEvent" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-all duration-300" @click.self="closeReservation">
+        <div v-if="selectedEvent" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm transition-all duration-300" @click.self="closeReservation">
             <div class="relative w-full max-w-sm transform transition-all duration-300 scale-100">
                 <button @click="closeReservation" class="absolute -top-12 right-0 text-white hover:text-gray-200 p-2 bg-black/20 rounded-full transition-colors">
                     <X class="w-6 h-6" />

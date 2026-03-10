@@ -60,7 +60,8 @@ const register = async () => {
     <DialogContent class="sm:max-w-[420px] p-8 rounded-2xl border-none">
       <!-- LOGO -->
       <div class="text-center mb-8 mt-2">
-        <img src="/images/logo_Black.png" alt="Spotlight Logo" class="mx-auto w-42 mb-4" />
+        <img src="/images/logo_Black.png" alt="Spotlight Logo" class="mx-auto w-42 mb-4 dark:hidden" />
+        <img src="/images/logo_white.png" alt="Spotlight Logo" class="mx-auto w-42 mb-4 hidden dark:block" />
       </div>
 
       <div v-if="message" :class="{'bg-green-100 text-green-700': !Object.keys(errors).length, 'bg-red-100 text-red-700': Object.keys(errors).length}" class="p-3 rounded-lg mb-4 text-sm font-medium">
@@ -71,15 +72,15 @@ const register = async () => {
         <!-- USERNAME + ROLE -->
         <div class="flex gap-2">
             <div class="relative w-1/2">
-                <UserIcon class="w-5 h-5 absolute left-3 top-3 text-gray-400"/>
-                <input v-model="username" type="text" placeholder="Username" class="w-full pl-10 p-3 rounded-full border outline-none text-[#222222]" :class="{'border-red-500': errors.username}" />
+                <UserIcon class="w-5 h-5 absolute left-3 top-3 text-muted-foreground"/>
+                <input v-model="username" type="text" placeholder="Username" class="w-full pl-10 p-3 rounded-full border border-border bg-background outline-none text-foreground" :class="{'border-red-500': errors.username}" />
                 <p v-if="errors.username" class="text-red-500 text-xs mt-1 ml-4">{{ errors.username[0] }}</p>
             </div>
             <div class="relative w-1/2">
-                <select v-model="role" class="w-full p-3 rounded-full border outline-none text-[#222222]" :class="{'border-red-500': errors.role}">
-                    <option value="participant">Participant</option>
-                    <option value="organisateur">Organisateur</option>
-                    <option value="revendeur">Revendeur</option>
+                <select v-model="role" class="w-full p-3 rounded-full border border-border bg-background outline-none text-foreground" :class="{'border-red-500': errors.role}">
+                    <option value="participant" class="bg-background">Participant</option>
+                    <option value="organisateur" class="bg-background">Organisateur</option>
+                    <option value="revendeur" class="bg-background">Revendeur</option>
                 </select>
                 <p v-if="errors.role" class="text-red-500 text-xs mt-1 ml-4">{{ errors.role[0] }}</p>
             </div>
@@ -87,28 +88,28 @@ const register = async () => {
 
         <!-- EMAIL -->
         <div class="relative">
-            <EnvelopeIcon class="w-5 h-5 absolute left-3 top-3 text-gray-400"/>
-            <input v-model="email" type="email" placeholder="Email" class="w-full pl-10 p-3 rounded-full border outline-none text-[#222222]" :class="{'border-red-500': errors.email}" />
+            <EnvelopeIcon class="w-5 h-5 absolute left-3 top-3 text-muted-foreground"/>
+            <input v-model="email" type="email" placeholder="Email" class="w-full pl-10 p-3 rounded-full border border-border bg-background outline-none text-foreground" :class="{'border-red-500': errors.email}" />
             <p v-if="errors.email" class="text-red-500 text-xs mt-1 ml-4">{{ errors.email[0] }}</p>
         </div>
 
         <!-- PHONE -->
         <div class="relative">
-            <PhoneIcon class="w-5 h-5 absolute left-3 top-3 text-gray-400"/>
-            <input v-model="phone" type="text" placeholder="Phone number" class="w-full pl-10 p-3 rounded-full border outline-none text-[#222222]" :class="{'border-red-500': errors.telephone}" />
+            <PhoneIcon class="w-5 h-5 absolute left-3 top-3 text-muted-foreground"/>
+            <input v-model="phone" type="text" placeholder="Phone number" class="w-full pl-10 p-3 rounded-full border border-border bg-background outline-none text-foreground" :class="{'border-red-500': errors.telephone}" />
             <p v-if="errors.telephone" class="text-red-500 text-xs mt-1 ml-4">{{ errors.telephone[0] }}</p>
         </div>
 
         <!-- PASSWORDS -->
         <div class="flex gap-2">
             <div class="relative w-1/2">
-                <LockClosedIcon class="w-5 h-5 absolute left-3 top-3 text-gray-400"/>
-                <input v-model="password" type="password" placeholder="Password" class="w-full pl-10 p-3 rounded-full border outline-none text-[#222222]" :class="{'border-red-500': errors.password}" />
+                <LockClosedIcon class="w-5 h-5 absolute left-3 top-3 text-muted-foreground"/>
+                <input v-model="password" type="password" placeholder="Password" class="w-full pl-10 p-3 rounded-full border border-border bg-background outline-none text-foreground" :class="{'border-red-500': errors.password}" />
                 <p v-if="errors.password" class="text-red-500 text-xs mt-1 ml-4">{{ errors.password[0] }}</p>
             </div>
             <div class="relative w-1/2">
-                <LockClosedIcon class="w-5 h-5 absolute left-3 top-3 text-gray-400"/>
-                <input v-model="confirmPassword" type="password" placeholder="Confirm Password" class="w-full pl-10 p-3 rounded-full border outline-none text-[#222222]" @keyup.enter="register" />
+                <LockClosedIcon class="w-5 h-5 absolute left-3 top-3 text-muted-foreground"/>
+                <input v-model="confirmPassword" type="password" placeholder="Confirm Password" class="w-full pl-10 p-3 rounded-full border border-border bg-background outline-none text-foreground" @keyup.enter="register" />
             </div>
         </div>
 
@@ -120,12 +121,12 @@ const register = async () => {
         <div class="text-center text-gray-400">OR</div>
 
         <!-- GOOGLE -->
-        <a href="/auth/google" class="w-full border py-2 rounded-full flex items-center justify-center gap-2 hover:bg-gray-50 transition text-[#222222]">
+        <a href="/auth/google" class="w-full border border-border py-2 rounded-full flex items-center justify-center gap-2 hover:bg-accent transition text-foreground">
           <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="18" />
           Signup with Google
         </a>
 
-        <p class="text-center text-sm mt-4 text-[#222222]">
+        <p class="text-center text-sm mt-4 text-foreground">
           Already have account ?
           <button @click="emit('switchToLogin')" class="text-blue-500 hover:underline">Login</button>
         </p>

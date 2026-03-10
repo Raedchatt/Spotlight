@@ -54,7 +54,7 @@ onMounted(() => {
 <template>
     <Head title="Landing Page" />
 
-    <div class="min-h-screen bg-white font-sans text-[#111827]">
+    <div class="min-h-screen bg-background font-sans text-foreground">
         <AppHeader />
 
         <main>
@@ -93,14 +93,14 @@ onMounted(() => {
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div class="mb-12 flex items-end justify-between">
                         <div>
-                            <h2 class="text-3xl font-bold tracking-tight text-[#111827] sm:text-4xl">Fixtures Events</h2>
-                            <p class="mt-4 text-lg text-gray-500 text-muted-foreground">Discover and join the most exciting events near you.</p>
+                            <h2 class="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Fixtures Events</h2>
+                            <p class="mt-4 text-lg text-muted-foreground">Discover and join the most exciting events near you.</p>
                         </div>
                         <div class="flex gap-2">
                             <Button 
                                 variant="outline" 
                                 size="icon" 
-                                class="rounded-full border-gray-200"
+                                class="rounded-full border-border"
                                 @click="scroll('left')"
                             >
                                 <ChevronLeft class="size-5" />
@@ -108,7 +108,7 @@ onMounted(() => {
                             <Button 
                                 variant="outline" 
                                 size="icon" 
-                                class="rounded-full border-gray-200"
+                                class="rounded-full border-border"
                                 @click="scroll('right')"
                             >
                                 <ChevronRight class="size-5" />
@@ -129,10 +129,10 @@ onMounted(() => {
                         </div>
                         
                         <template v-if="events.length === 0">
-                            <div v-for="idx in 3" :key="idx" class="w-[350px] flex-shrink-0 rounded-2xl bg-gray-50/50 p-6 animate-pulse">
-                                <div class="aspect-video w-full rounded-xl bg-gray-200"></div>
-                                <div class="mt-4 h-6 w-3/4 rounded bg-gray-200"></div>
-                                <div class="mt-2 h-4 w-1/2 rounded bg-gray-200"></div>
+                            <div v-for="idx in 3" :key="idx" class="w-[350px] flex-shrink-0 rounded-2xl bg-muted/30 p-6 animate-pulse">
+                                <div class="aspect-video w-full rounded-xl bg-muted"></div>
+                                <div class="mt-4 h-6 w-3/4 rounded bg-muted"></div>
+                                <div class="mt-2 h-4 w-1/2 rounded bg-muted"></div>
                             </div>
                         </template>
                     </div>
@@ -143,43 +143,43 @@ onMounted(() => {
             <section class="py-20">
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div class="mb-16 text-center">
-                        <h2 class="inline-block text-3xl font-bold tracking-tight text-[#111827] sm:text-4xl">
+                        <h2 class="inline-block text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
                             Our Services
-                            <div class="mx-auto mt-2 h-1.5 w-12 rounded-full bg-[#111827]"></div>
+                            <div class="mx-auto mt-2 h-1.5 w-12 rounded-full bg-foreground"></div>
                         </h2>
                     </div>
 
                     <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
                         <!-- Card 1 -->
-                        <div class="flex flex-col items-center rounded-2xl border border-gray-100 bg-white p-8 text-center transition-all hover:shadow-lg">
-                            <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#1a56db] bg-blue-50/50 text-[#1a56db]">
+                        <div class="flex flex-col items-center rounded-2xl border border-border bg-card p-8 text-center transition-all hover:shadow-lg">
+                            <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#1a56db] bg-blue-50/50 dark:bg-blue-900/20 text-[#1a56db] dark:text-blue-400">
                                 <Calendar class="size-8" />
                             </div>
-                            <h3 class="text-xl font-bold text-[#111827]">Organize</h3>
-                            <p class="mt-4 text-gray-500">
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                            <h3 class="text-xl font-bold text-foreground">Organize</h3>
+                            <p class="mt-4 text-muted-foreground">
+                                Create and customize your events with ease. Manage every detail from one central place.
                             </p>
                         </div>
 
                         <!-- Card 2 -->
-                        <div class="flex flex-col items-center rounded-2xl border border-gray-100 bg-white p-8 text-center transition-all hover:shadow-lg">
-                            <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#1a56db] bg-blue-50/50 text-[#1a56db]">
+                        <div class="flex flex-col items-center rounded-2xl border border-border bg-card p-8 text-center transition-all hover:shadow-lg">
+                            <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#1a56db] bg-blue-50/50 dark:bg-blue-900/20 text-[#1a56db] dark:text-blue-400">
                                 <Ticket class="size-8" />
                             </div>
-                            <h3 class="text-xl font-bold text-[#111827]">Booking</h3>
-                            <p class="mt-4 text-gray-500">
-                                Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                            <h3 class="text-xl font-bold text-foreground">Booking</h3>
+                            <p class="mt-4 text-muted-foreground">
+                                Seamless ticket purchasing and seat selection for your favorite events.
                             </p>
                         </div>
 
                         <!-- Card 3 -->
-                        <div class="flex flex-col items-center rounded-2xl border border-gray-100 bg-white p-8 text-center transition-all hover:shadow-lg">
-                            <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#1a56db] bg-blue-50/50 text-[#1a56db]">
+                        <div class="flex flex-col items-center rounded-2xl border border-border bg-card p-8 text-center transition-all hover:shadow-lg">
+                            <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#1a56db] bg-blue-50/50 dark:bg-blue-900/20 text-[#1a56db] dark:text-blue-400">
                                 <ShieldCheck class="size-8" />
                             </div>
-                            <h3 class="text-xl font-bold text-[#111827]">Payment</h3>
-                            <p class="mt-4 text-gray-500">
-                                Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+                            <h3 class="text-xl font-bold text-foreground">Payment</h3>
+                            <p class="mt-4 text-muted-foreground">
+                                Secure transactions and multiple payment methods supported globally.
                             </p>
                         </div>
                     </div>
