@@ -89,7 +89,7 @@ onMounted(() => {
             </section>
 
             <!-- Section 1: Fixtures Events -->
-            <section class="py-16 sm:py-24">
+            <section class="py-16">
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div class="mb-12 flex items-end justify-between">
                         <div>
@@ -118,7 +118,7 @@ onMounted(() => {
 
                     <div 
                         ref="scrollContainer"
-                        class="no-scrollbar -mx-4 flex gap-6 overflow-x-auto px-4 pb-8"
+                        class="no-scrollbar -mx-4 pt-1 flex gap-6 overflow-x-auto px-4 pb-8"
                     >
                         <div 
                             v-for="event in events" 
@@ -140,7 +140,7 @@ onMounted(() => {
             </section>
 
             <!-- Section 2: Our Services -->
-            <section class="py-20">
+            <section>
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div class="mb-16 text-center">
                         <h2 class="inline-block text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
