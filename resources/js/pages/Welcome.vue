@@ -155,9 +155,15 @@ onMounted(() => {
                             <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#1a56db] bg-blue-50/50 dark:bg-blue-900/20 text-[#1a56db] dark:text-blue-400">
                                 <Calendar class="size-8" />
                             </div>
+<<<<<<< HEAD
                             <h3 class="text-xl font-bold text-foreground">Organize</h3>
                             <p class="mt-4 text-muted-foreground">
                                 Create and customize your events with ease. Manage every detail from one central place.
+=======
+                            <h3 class="text-xl font-bold text-[#111827]">Organize</h3>
+                            <p class="mt-4 text-gray-500">
+                                Spotlight's organize service empowers event creators to build and manage their events effortlessly. Organizers can create events, set ticket types, define capacity, and track reservations — all from a dedicated dashboard giving them full control over their event from creation to completion.
+>>>>>>> 87ece96a9133dc276f8441cb40725e588e0a3d10
                             </p>
                         </div>
 
@@ -166,9 +172,15 @@ onMounted(() => {
                             <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#1a56db] bg-blue-50/50 dark:bg-blue-900/20 text-[#1a56db] dark:text-blue-400">
                                 <Ticket class="size-8" />
                             </div>
+<<<<<<< HEAD
                             <h3 class="text-xl font-bold text-foreground">Booking</h3>
                             <p class="mt-4 text-muted-foreground">
                                 Seamless ticket purchasing and seat selection for your favorite events.
+=======
+                            <h3 class="text-xl font-bold text-[#111827]">Booking</h3>
+                            <p class="mt-4 text-gray-500">
+                                Spotlight's booking service lets users reserve their spot at any event in just a few clicks. Simply choose an event, select a ticket type, and confirm — your reservation is instantly saved to your account, with real-time availability updates to ensure no overbooking.
+>>>>>>> 87ece96a9133dc276f8441cb40725e588e0a3d10
                             </p>
                         </div>
 
@@ -177,9 +189,15 @@ onMounted(() => {
                             <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#1a56db] bg-blue-50/50 dark:bg-blue-900/20 text-[#1a56db] dark:text-blue-400">
                                 <ShieldCheck class="size-8" />
                             </div>
+<<<<<<< HEAD
                             <h3 class="text-xl font-bold text-foreground">Payment</h3>
                             <p class="mt-4 text-muted-foreground">
                                 Secure transactions and multiple payment methods supported globally.
+=======
+                            <h3 class="text-xl font-bold text-[#111827]">Payment</h3>
+                            <p class="mt-4 text-gray-500">
+                                Spotlight's payment service provides a secure and seamless checkout experience. Users can complete their booking by paying online directly through the platform, with instant confirmation once the transaction is processed.
+>>>>>>> 87ece96a9133dc276f8441cb40725e588e0a3d10
                             </p>
                         </div>
                     </div>
