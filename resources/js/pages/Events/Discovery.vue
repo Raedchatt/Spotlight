@@ -8,6 +8,8 @@ import {
     Search, 
     Calendar, 
     X,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-vue-next';
 import { ref, onMounted, watch} from 'vue';
 import EventCard from '@/components/EventCard.vue';
@@ -18,23 +20,30 @@ import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 import type { Evenement } from '@/types/event';
+import AppFooter from '@/components/AppFooter.vue';
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Discovery', href: '/dashboard/discovery' },
+    { title: 'Discovery', href: '/discovery' },
 ];
 
 const events = ref<Evenement[]>([]);
 const loading = ref(true);
 
-//const page = usePage();
-//const auth = computed(() => page.props.auth as any);
+// Pagination state
+const pagination = ref({
+    currentPage: 1,
+    lastPage: 1,
+    total: 0,
+    perPage: 9
+});
 
 // Filters matching EventsList style
 const filters = ref({
     titre: '',
     categorie: 'all',
     date: '',
+    page: 1,
 });
 
 const fetchEvents = async () => {
@@ -45,11 +54,27 @@ const fetchEvents = async () => {
         if (filters.value.categorie !== 'all') params.append('categorie', filters.value.categorie);
         if (filters.value.date) params.append('date', filters.value.date);
         
+        // Pagination params
+        params.append('page', filters.value.page.toString());
+        params.append('per_page', '9');
+        
         // Request 'ouvert', 'valide', 'encours', and 'en_attente' statuses from the backend
         params.append('statut', 'ouvert,valide,encours,en_attente');
         
         const response = await axios.get(`/api/events/search?${params.toString()}`);
-        events.value = response.data;
+        
+        // Handle paginated response
+        if (response.data.data) {
+            events.value = response.data.data;
+            pagination.value = {
+                currentPage: response.data.current_page,
+                lastPage: response.data.last_page,
+                total: response.data.total,
+                perPage: response.data.per_page
+            };
+        } else {
+            events.value = response.data;
+        }
     } catch (error) {
         console.error('Error fetching discovery events:', error);
     } finally {
@@ -57,14 +82,26 @@ const fetchEvents = async () => {
     }
 };
 
+const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= pagination.value.lastPage) {
+        filters.value.page = newPage;
+    }
+};
+
 onMounted(() => {
     fetchEvents();
 });
 
-// Watch filters for auto-search (matching EventsList behavior)
-watch(() => filters.value, () => {
+// Watch filters for auto-search
+watch(() => [filters.value.titre, filters.value.categorie, filters.value.date], () => {
+    filters.value.page = 1; // Reset to page 1 when criteria change
     fetchEvents();
-}, { deep: true });
+});
+
+// Watch page separately
+watch(() => filters.value.page, () => {
+    fetchEvents();
+});
 
 // Selection for reservation
 
@@ -84,6 +121,7 @@ const resetFilters = () => {
         titre: '',
         categorie: 'all',
         date: '',
+        page: 1,
     };
     fetchEvents();
 };
@@ -101,7 +139,7 @@ const resetFilters = () => {
                 </div>
                 <Badge variant="secondary" class="h-8 px-3 flex items-center gap-2">
                     <Calendar class="w-4 h-4" />
-                    <span>{{ events.length }} Events Available</span>
+                    <span>{{ pagination.total }} Events Available</span>
                 </Badge>
             </div>
 
@@ -152,13 +190,49 @@ const resetFilters = () => {
                 <p class="text-muted-foreground">Try adjusting your filters.</p>
             </div>
 
-            <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <EventCard 
-                    v-for="event in events" 
-                    :key="event.id" 
-                    :event="event" 
-                    @book="openReservation" 
-                />
+            <div v-else class="space-y-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <EventCard 
+                        v-for="event in events" 
+                        :key="event.id" 
+                        :event="event" 
+                        @book="openReservation" 
+                    />
+                </div>
+
+                <!-- Pagination Controls -->
+                <div v-if="pagination.lastPage > 1" class="flex items-center justify-center gap-2 pt-6">
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        :disabled="pagination.currentPage === 1"
+                        @click="handlePageChange(pagination.currentPage - 1)"
+                    >
+                        <ChevronLeft class="w-4 h-4 mr-2" /> Previous
+                    </Button>
+                    
+                    <div class="flex items-center gap-1">
+                        <Button 
+                            v-for="p in pagination.lastPage" 
+                            :key="p"
+                            :variant="p === pagination.currentPage ? 'default' : 'outline'"
+                            size="sm"
+                            class="w-9"
+                            @click="handlePageChange(p)"
+                        >
+                            {{ p }}
+                        </Button>
+                    </div>
+
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        :disabled="pagination.currentPage === pagination.lastPage"
+                        @click="handlePageChange(pagination.currentPage + 1)"
+                    >
+                        Next <ChevronRight class="w-4 h-4 ml-2" />
+                    </Button>
+                </div>
             </div>
         </div>
 
@@ -172,4 +246,5 @@ const resetFilters = () => {
             </div>
         </div>
     </AppLayout>
+    <AppFooter/>
 </template>

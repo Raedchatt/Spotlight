@@ -258,6 +258,11 @@ class EvenementController extends Controller
             return response()->json($query->latest()->limit($limit)->get());
         }
 
+        $perPage = $request->input('per_page');
+        if ($perPage) {
+            return response()->json($query->latest()->paginate($perPage));
+        }
+
         return response()->json($query->latest()->get());
     }
 

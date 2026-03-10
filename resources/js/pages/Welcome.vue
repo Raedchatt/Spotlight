@@ -6,14 +6,16 @@ import {
     ChevronLeft, 
     ChevronRight,
     Ticket,
-    ShieldCheck,
-    LayoutDashboard
+    ShieldCheck
 } from 'lucide-vue-next';
 import { ref, onMounted } from 'vue';
 import EventCard from '@/components/EventCard.vue';
 import { Button } from '@/components/ui/button';
-import { dashboard, login, register } from '@/routes';
 import type { Evenement } from '@/types/event';
+import { useAuthModal } from '@/composables/useAuthModal';
+import AppLogo from '@/components/AppLogo.vue';
+import AppFooter from '@/components/AppFooter.vue';
+import AppHeader from '@/components/AppHeader.vue';
 
 // Event data management
 
@@ -21,8 +23,10 @@ defineProps<{
     canRegister: boolean;
 }>();
 
-const events = ref<Evenement[]>([]);
 const scrollContainer = ref<HTMLElement | null>(null);
+
+const events = ref<Evenement[]>([]);
+const { openRegister } = useAuthModal();
 
 const fetchEvents = async () => {
     try {
@@ -51,39 +55,40 @@ onMounted(() => {
     <Head title="Landing Page" />
 
     <div class="min-h-screen bg-white font-sans text-[#111827]">
-        <!-- Navbar -->
-        <header class="sticky top-0 z-50 border-b border-gray-100 bg-white/80 backdrop-blur-md">
-            <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-                <div class="flex items-center gap-2">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1a56db] text-white">
-                        <Ticket class="size-6" />
-                    </div>
-                    <span class="text-xl font-bold tracking-tight text-[#111827]">Spotlight</span>
-                </div>
-
-                <nav class="flex items-center gap-4">
-                    <template v-if="$page.props.auth.user">
-                        <Link :href="dashboard()">
-                            <Button variant="default" class="bg-[#1a56db] hover:bg-[#1a56db]/90">
-                                <LayoutDashboard class="mr-2 size-4" />
-                                Dashboard
-                            </Button>
-                        </Link>
-                    </template>
-                    <template v-else>
-                        <Link :href="login()">
-                            <Button variant="ghost" class="text-[#111827] hover:bg-gray-50">Log in</Button>
-                        </Link>
-                        <Link v-if="canRegister" :href="register()">
-                            <Button class="bg-[#1a56db] hover:bg-[#1a56db]/90">Get Started</Button>
-                        </Link>
-                    </template>
-                </nav>
-            </div>
-        </header>
+        <AppHeader />
 
         <main>
-            <!-- Hero / Section 1: Fixtures Events -->
+            <!-- Hero Banner Section -->
+            <section class="relative h-[500px] w-full bg-black overflow-hidden">
+                <!-- Fallback gradient if image fails, and dimming overlay -->
+                <div class="absolute inset-0 bg-gradient-to-r from-black/80 to-black/40 z-10"></div>
+                
+                <!-- Background Image (Using a generic concert/crowd placeholder image) -->
+                <img 
+                    src="/images/hero-banner.webp" 
+                    alt="Crowd at event" 
+                    class="absolute inset-0 h-full w-full object-cover opacity-60"
+                />
+
+                <!-- Content container -->
+                <div class="relative z-20 mx-auto flex h-full max-w-7xl flex-col justify-center px-4 sm:px-6 lg:px-8">
+                    <div class="max-w-2xl">
+                        <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-5xl leading-tight mb-8">
+                            Manage Events. Sell Tickets.<br />
+                            Create Moments.
+                        </h1>
+                        <Button 
+                            v-if="!$page.props.auth.user"
+                            class="bg-[#1a56db] hover:bg-[#1a56db]/90 text-white rounded-full px-8 py-6 text-lg font-semibold flex items-center gap-2"
+                            @click="openRegister()"
+                        >
+                            Signup
+                        </Button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 1: Fixtures Events -->
             <section class="py-16 sm:py-24">
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div class="mb-12 flex items-end justify-between">
@@ -135,7 +140,7 @@ onMounted(() => {
             </section>
 
             <!-- Section 2: Our Services -->
-            <section class="bg-[#f5f5f5] py-20">
+            <section class="py-20">
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div class="mb-16 text-center">
                         <h2 class="inline-block text-3xl font-bold tracking-tight text-[#111827] sm:text-4xl">
@@ -182,12 +187,7 @@ onMounted(() => {
             </section>
         </main>
 
-        <!-- Footer -->
-        <footer class="border-t border-gray-100 py-12">
-            <div class="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-                <p class="text-sm text-gray-500">© 2026 Spotlight. All rights reserved.</p>
-            </div>
-        </footer>
+        <AppFooter />
     </div>
 </template>
 

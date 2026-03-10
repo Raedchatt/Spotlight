@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { 
     Calendar, 
     MapPin, 
@@ -8,6 +8,8 @@ import {
 } from 'lucide-vue-next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { computed } from 'vue';
+import { useAuthModal } from '@/composables/useAuthModal';
 import type { Evenement, StatutEvenement } from '@/types/event';
 
 interface Props {
@@ -19,7 +21,7 @@ withDefaults(defineProps<Props>(), {
     showAction: true
 });
 
-defineEmits<{
+const emit = defineEmits<{
     (e: 'book', event: Evenement): void;
 }>();
 
@@ -36,6 +38,18 @@ const getStatusVariant = (statut: StatutEvenement) => {
 
 const getStatusLabel = (statut: StatutEvenement) => {
     return statut.charAt(0).toUpperCase() + statut.slice(1).replace('_', ' ');
+};
+
+const page = usePage();
+const auth = computed(() => page.props.auth as any);
+const { openLogin } = useAuthModal();
+
+const handleAction = (event: Evenement) => {
+    if (!auth.value.user) {
+        openLogin();
+        return;
+    }
+    emit('book', event);
 };
 </script>
 
@@ -102,8 +116,8 @@ const getStatusLabel = (statut: StatutEvenement) => {
                     </span>
                 </div>
                 
-                <Button v-if="showAction" @click="$emit('book', event)" size="sm" class="bg-blue-600 hover:bg-blue-700 font-semibold px-4 rounded-lg transition-all active:scale-95 shadow-sm">
-                    Book Now
+                <Button v-if="showAction" @click="handleAction(event)" size="sm" class="bg-blue-600 hover:bg-blue-700 font-semibold px-4 rounded-lg transition-all active:scale-95 shadow-sm">
+                    {{ auth.user ? 'Book Now' : 'Login to Book' }}
                 </Button>
             </div>
         </div>

@@ -16,6 +16,8 @@ import {
 } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import AppHeader from '@/components/AppHeader.vue';
+import AppFooter from '@/components/AppFooter.vue';
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -167,4 +169,5 @@ const formatPrice = (price: number) => {
             </div>
         </div>
     </AppLayout>
+    <AppFooter/>
 </template>
