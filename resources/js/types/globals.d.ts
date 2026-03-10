@@ -17,6 +17,7 @@ declare global {
     interface Window {
         axios: typeof import('axios').default;
     }
+    const route: any;
 }
 
 declare module '@inertiajs/core' {

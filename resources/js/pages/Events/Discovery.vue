@@ -1,22 +1,24 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, Link, usePage } from '@inertiajs/vue3';
-import { ref, onMounted, watch, computed } from 'vue';
+
+import { Head, Link } from '@inertiajs/vue3';
+
 import axios from 'axios';
-import type { Evenement, StatutEvenement } from '@/types/event';
+
 import {
     Search, 
     Calendar, 
     MapPin, 
     Trophy,
-    Clock,
     X,
     Eye
 } from 'lucide-vue-next';
-import { Input } from '@/components/ui/input';
+import { ref, onMounted, watch} from 'vue';
+import Reserver from '@/components/Reserver.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import Reserver from '@/components/Reserver.vue';
+import { Input } from '@/components/ui/input';
+import AppLayout from '@/layouts/AppLayout.vue';
+import type { Evenement, StatutEvenement } from '@/types/event';
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -26,8 +28,8 @@ const breadcrumbs = [
 const events = ref<Evenement[]>([]);
 const loading = ref(true);
 
-const page = usePage();
-const auth = computed(() => page.props.auth as any);
+//const page = usePage();
+//const auth = computed(() => page.props.auth as any);
 
 // Filters matching EventsList style
 const filters = ref({

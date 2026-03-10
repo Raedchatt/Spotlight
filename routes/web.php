@@ -8,7 +8,7 @@ use App\Http\Controllers\ReservationController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
-});
+})->name('home');
 
 Route::get('/organizer/{id}', [\App\Http\Controllers\OrganizerProfileController::class, 'show'])->name('organizer.profile');
 Route::get('/participant/{id}', [\App\Http\Controllers\ParticipantProfileController::class, 'show'])->name('participant.profile');
