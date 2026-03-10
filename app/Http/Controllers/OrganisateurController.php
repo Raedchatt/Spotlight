@@ -192,7 +192,7 @@ class OrganisateurController extends Controller
             'prix_spectateur' => $request->prix_spectateur,
             'capacite_spectateur' => $request->capacite_spectateur,
             'categorie' => $request->categorie,
-            'statut' => StatutEvenement::EnAttente, // Organizer events start as pending admin approval
+            'statut' => StatutEvenement::Ouvert, // Organizer events start as open by default
         ]);
 
         return response()->json([

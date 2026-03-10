@@ -35,7 +35,7 @@ return new class extends Migration {
                 'en_attente',
                 'annule',
                 'valide'
-            ])->default('en_attente');
+            ])->default('ouvert');
 
             $table->enum('categorie', [
                 'sportifs',
