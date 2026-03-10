@@ -152,7 +152,7 @@ onMounted(() => {
                             </div>
                             <h3 class="text-xl font-bold text-[#111827]">Organize</h3>
                             <p class="mt-4 text-gray-500">
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                                Spotlight's organize service empowers event creators to build and manage their events effortlessly. Organizers can create events, set ticket types, define capacity, and track reservations — all from a dedicated dashboard giving them full control over their event from creation to completion.
                             </p>
                         </div>
 
@@ -163,7 +163,7 @@ onMounted(() => {
                             </div>
                             <h3 class="text-xl font-bold text-[#111827]">Booking</h3>
                             <p class="mt-4 text-gray-500">
-                                Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                                Spotlight's booking service lets users reserve their spot at any event in just a few clicks. Simply choose an event, select a ticket type, and confirm — your reservation is instantly saved to your account, with real-time availability updates to ensure no overbooking.
                             </p>
                         </div>
 
@@ -174,7 +174,7 @@ onMounted(() => {
                             </div>
                             <h3 class="text-xl font-bold text-[#111827]">Payment</h3>
                             <p class="mt-4 text-gray-500">
-                                Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+                                Spotlight's payment service provides a secure and seamless checkout experience. Users can complete their booking by paying online directly through the platform, with instant confirmation once the transaction is processed.
                             </p>
                         </div>
                     </div>
