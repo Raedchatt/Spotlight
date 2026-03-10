@@ -253,6 +253,11 @@ class EvenementController extends Controller
             $query->whereIn('statut', $statuts);
         }
 
+        $limit = $request->input('limit');
+        if ($limit) {
+            return response()->json($query->latest()->limit($limit)->get());
+        }
+
         return response()->json($query->latest()->get());
     }
 
