@@ -158,31 +158,27 @@ const handleReserve = () => {
 <template>
     <component :is="auth?.user ? AppLayout : 'div'">
         <Head :title="props.event.titre" />
-
-<<<<<<< HEAD
+        
         <div class="min-h-screen bg-background pb-12">
-=======
-        <!-- Guest Navbar -->
-        <header v-if="!auth?.user" class="sticky top-0 z-50 border-b border-gray-100 bg-white/80 backdrop-blur-md">
-            <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-                <div class="flex items-center gap-2">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1a56db] text-white">
-                        <Ticket class="size-6" />
+            <!-- Guest Navbar -->
+            <header v-if="!auth?.user" class="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
+                <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+                    <div class="flex items-center gap-2">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
+                            <Ticket class="size-6" />
+                        </div>
+                        <Link href="/">
+                            <span class="text-xl font-bold tracking-tight text-foreground">Spotlight</span>
+                        </Link>
                     </div>
-                    <Link href="/">
-                        <span class="text-xl font-bold tracking-tight text-[#111827]">Spotlight</span>
-                    </Link>
+
+                    <nav class="flex items-center gap-4">
+                        <Link href="/login" class="text-sm font-medium text-muted-foreground hover:text-foreground">Log in</Link>
+                        <Link href="/register" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Get Started</Link>
+                    </nav>
                 </div>
+            </header>
 
-                <nav class="flex items-center gap-4">
-                    <Link href="/login" class="text-sm font-medium text-gray-700 hover:text-gray-900">Log in</Link>
-                    <Link href="/register" class="rounded-lg bg-[#1a56db] px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Get Started</Link>
-                </nav>
-            </div>
-        </header>
-
-        <div class="min-h-screen bg-zinc-50 pb-12">
->>>>>>> 87ece96a9133dc276f8441cb40725e588e0a3d10
             <!-- 1. HERO SECTION -->
             <div class="relative h-72 md:h-96 w-full overflow-hidden bg-zinc-900">
                 <img 
@@ -621,7 +617,6 @@ const handleReserve = () => {
 
         </div>
     </component>
-    </AppLayout>
     <AppFooter/>
 </template>
 
