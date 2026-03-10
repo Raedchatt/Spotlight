@@ -46,9 +46,11 @@ const fetchEvents = async () => {
         if (filters.value.categorie !== 'all') params.append('categorie', filters.value.categorie);
         if (filters.value.date) params.append('date', filters.value.date);
         
+        // Request 'ouvert', 'valide', 'encours', and 'en_attente' statuses from the backend
+        params.append('statut', 'ouvert,valide,encours,en_attente');
+        
         const response = await axios.get(`/api/events/search?${params.toString()}`);
-        // Filter strictly for 'ouvert' events for the Discovery page
-        events.value = response.data.filter((e: Evenement) => e.statut === 'ouvert');
+        events.value = response.data;
     } catch (error) {
         console.error('Error fetching discovery events:', error);
     } finally {
@@ -68,6 +70,10 @@ watch(() => filters.value, () => {
 const getStatusVariant = (statut: StatutEvenement) => {
     switch (statut) {
         case 'ouvert': return 'default'; 
+        case 'valide': return 'default';
+        case 'encours': return 'outline';
+        case 'ferme': return 'secondary';
+        case 'annule': return 'destructive';
         default: return 'outline';
     }
 };
@@ -219,7 +225,7 @@ const resetFilters = () => {
                                     </template>
                                 </span>
                                 <span class="text-[10px] text-muted-foreground">
-                                    {{ event.capacite_spectateur }} seats left
+                                    {{ event.capacite_spectateur - (event.reservations_count || 0) }} seats left
                                 </span>
                             </div>
                             

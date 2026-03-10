@@ -33,7 +33,8 @@ return new class extends Migration {
                 'ferme',
                 'encours',
                 'en_attente',
-                'annule'
+                'annule',
+                'valide'
             ])->default('en_attente');
 
             $table->enum('categorie', [

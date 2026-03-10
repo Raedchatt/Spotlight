@@ -226,7 +226,7 @@ class EvenementController extends Controller
     // Search events
     public function search(Request $request)
     {
-        $query = Evenement::with('medias');
+        $query = Evenement::with('medias')->withCount('reservations');
 
         if ($request->has('organisateur_id')) {
             $query->parOrganisateur($request->organisateur_id);
@@ -248,7 +248,12 @@ class EvenementController extends Controller
             $query->parCategorie($request->categorie);
         }
 
-        return response()->json($query->get());
+        if ($request->has('statut')) {
+            $statuts = explode(',', $request->statut);
+            $query->whereIn('statut', $statuts);
+        }
+
+        return response()->json($query->latest()->get());
     }
 
     // Open reservation

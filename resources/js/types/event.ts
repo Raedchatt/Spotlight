@@ -1,4 +1,4 @@
-export type StatutEvenement = 'ouvert' | 'ferme' | 'encours' | 'en_attente' | 'annule';
+export type StatutEvenement = 'ouvert' | 'ferme' | 'encours' | 'en_attente' | 'annule' | 'valide';
 
 export type CategorieEvenement = 'sportifs' | 'culturels' | 'scientifiques' | 'musicaux' | 'commerciaux';
 
