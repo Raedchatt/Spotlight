@@ -14,6 +14,10 @@ Route::get('/organizer/{id}', [\App\Http\Controllers\OrganizerProfileController:
 Route::get('/participant/{id}', [\App\Http\Controllers\ParticipantProfileController::class, 'show'])->name('participant.profile');
 Route::get('/events/{id}', [EvenementController::class, 'show'])->name('events.show');
 
+Route::get('/discovery', function () {
+    return Inertia::render('Events/Discovery');
+})->name('discovery');
+
 Route::get('/login', function () {
     return Inertia::render('auth/Login');
 })->name('login');
@@ -59,10 +63,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/events', function () {
             return Inertia::render('Events/EventsList');
         })->name('events.index');
-
-        Route::get('/discovery', function () {
-            return Inertia::render('Events/Discovery');
-        })->name('discovery');
 
         Route::get('/events/create', function () {
             return Inertia::render('Events/CreateEvent');

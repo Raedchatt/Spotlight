@@ -1,17 +1,10 @@
 <script setup lang="ts">
-import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Menu, Search, Calendar } from 'lucide-vue-next';
+import { Link, usePage, router } from '@inertiajs/vue3';
+import { Folder, LayoutGrid, Menu, Search, Calendar, Bell, MessageCircle, User, LogOut } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
-import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
     NavigationMenu,
     NavigationMenuItem,
@@ -25,18 +18,12 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from '@/components/ui/tooltip';
-import UserMenuContent from '@/components/UserMenuContent.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
-import { getInitials } from '@/composables/useInitials';
-import { toUrl } from '@/lib/utils';
-import { dashboard } from '@/routes';
+import { dashboard, logout } from '@/routes';
 import type { BreadcrumbItem, NavItem } from '@/types';
+import { useAuthModal } from '@/composables/useAuthModal';
+import LoginModal from '@/components/auth/LoginModal.vue';
+import RegisterModal from '@/components/auth/RegisterModal.vue';
 
 type Props = {
     breadcrumbs?: BreadcrumbItem[];
@@ -50,131 +37,123 @@ const page = usePage();
 const auth = computed(() => page.props.auth as any);
 const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl();
 
-const activeItemStyles =
-    'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100';
+const activeItemStyles = 'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 font-semibold';
 
-const mainNavItems = computed<NavItem[]>(() => [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-    // Participant specific navigation items
-    ...(auth.value.user?.role === 'participant' ? [
+const mainNavItems = computed<NavItem[]>(() => {
+    if (!auth.value.user) {
+        return [
+            {
+                title: 'Discovery',
+                href: '/discovery',
+                icon: Search,
+            }
+        ];
+    }
+    
+    if (auth.value.user.role === 'participant') {
+        return [
+            {
+                title: 'Discovery',
+                href: '/discovery',
+                icon: Search,
+            },
+            {
+                title: 'My Reservations',
+                href: '/dashboard/reservations',
+                icon: Calendar,
+            },
+        ];
+    }
+    
+    return [
         {
-            title: 'Discovery',
-            href: '/dashboard/discovery',
-            icon: Search,
+            title: 'Dashboard',
+            href: dashboard(),
+            icon: LayoutGrid,
         },
-        {
-            title: 'My Reservations',
-            href: '/dashboard/reservations',
-            icon: Calendar,
-        },
-    ] : [
         {
             title: 'Events',
             href: '/dashboard/events',
             icon: Folder,
         },
-    ]),
-]);
+    ];
+});
 
-const rightNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
-    },
-];
+const { isLoginOpen, isRegisterOpen, openLogin, openRegister } = useAuthModal();
+
+defineExpose({
+    openLogin,
+    openRegister
+});
+
+const handleLogout = () => {
+    router.post(logout(), {}, {
+        onFinish: () => {
+            router.flushAll();
+        }
+    });
+};
 </script>
 
 <template>
     <div>
-        <div class="border-b border-sidebar-border/80">
+        <div class="border-b border-sidebar-border/80 bg-white dark:bg-neutral-900 shadow-sm">
             <div class="mx-auto flex h-16 items-center px-4 md:max-w-7xl">
                 <!-- Mobile Menu -->
                 <div class="lg:hidden">
                     <Sheet>
                         <SheetTrigger :as-child="true">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                class="mr-2 h-9 w-9"
-                            >
+                            <Button variant="ghost" size="icon" class="mr-2 h-9 w-9">
                                 <Menu class="h-5 w-5" />
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="left" class="w-[300px] p-6">
-                            <SheetTitle class="sr-only"
-                                >Navigation Menu</SheetTitle
-                            >
+                            <SheetTitle class="sr-only">Navigation Menu</SheetTitle>
                             <SheetHeader class="flex justify-start text-left">
-                                <AppLogoIcon
-                                    class="size-6 fill-current text-black dark:text-white"
-                                />
+                                <AppLogo />
                             </SheetHeader>
-                            <div
-                                class="flex h-full flex-1 flex-col justify-between space-y-4 py-6"
-                            >
+                            <div class="flex h-full flex-1 flex-col justify-between space-y-4 py-6">
                                 <nav class="-mx-3 space-y-1">
                                     <Link
                                         v-for="item in mainNavItems"
                                         :key="item.title"
                                         :href="item.href"
                                         class="flex items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent"
-                                        :class="
-                                            whenCurrentUrl(
-                                                item.href,
-                                                activeItemStyles,
-                                            )
-                                        "
+                                        :class="whenCurrentUrl(item.href, activeItemStyles)"
                                     >
-                                        <component
-                                            v-if="item.icon"
-                                            :is="item.icon"
-                                            class="h-5 w-5"
-                                        />
+                                        <component v-if="item.icon" :is="item.icon" class="h-5 w-5" />
                                         {{ item.title }}
                                     </Link>
                                 </nav>
-                                <div class="flex flex-col space-y-4">
-                                    <a
-                                        v-for="item in rightNavItems"
-                                        :key="item.title"
-                                        :href="toUrl(item.href)"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        class="flex items-center space-x-2 text-sm font-medium"
-                                    >
-                                        <component
-                                            v-if="item.icon"
-                                            :is="item.icon"
-                                            class="h-5 w-5"
-                                        />
-                                        <span>{{ item.title }}</span>
-                                    </a>
+                                <div class="flex flex-col space-y-4" v-if="auth.user">
+                                    <Link href="/settings/profile" class="flex items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent">
+                                        <User class="h-5 w-5" /> Profile
+                                    </Link>
+                                    <button @click="handleLogout" class="flex w-full items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent">
+                                        <LogOut class="h-5 w-5" /> Log out
+                                    </button>
+                                </div>
+                                <div class="flex flex-col space-y-4" v-else>
+                                    <button @click="openLogin" class="flex w-full items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent text-left">
+                                        Log in
+                                    </button>
+                                    <button @click="openRegister" class="flex w-full items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent text-left">
+                                        Sign up
+                                    </button>
                                 </div>
                             </div>
                         </SheetContent>
                     </Sheet>
                 </div>
 
-                <Link :href="dashboard()" class="flex items-center gap-x-2">
+                <Link :href="auth.user ? (auth.user.role === 'participant' ? '/discovery' : dashboard()) : '/'" class="flex items-center gap-x-2 mr-[2%] ">
                     <AppLogo />
                 </Link>
 
                 <!-- Desktop Menu -->
                 <div class="hidden h-full lg:flex lg:flex-1">
-                    <NavigationMenu class="ml-10 flex h-full items-stretch">
-                        <NavigationMenuList
-                            class="flex h-full items-stretch space-x-2"
-                        >
+                    <NavigationMenu class="flex h-full items-stretch">
+                        <NavigationMenuList class="flex h-full items-stretch space-x-4 mt-[2%]">
                             <NavigationMenuItem
                                 v-for="(item, index) in mainNavItems"
                                 :key="index"
@@ -182,20 +161,11 @@ const rightNavItems: NavItem[] = [
                             >
                                 <Link
                                     :class="[
-                                        navigationMenuTriggerStyle(),
-                                        whenCurrentUrl(
-                                            item.href,
-                                            activeItemStyles,
-                                        ),
-                                        'h-9 cursor-pointer px-3',
+                                        'h-9 cursor-pointer px-3 text-base font-semibold hover:text-black dark:hover:text-white',
+                                        isCurrentUrl(item.href) ? 'text-black dark:text-white' : 'text-neutral-500 dark:text-neutral-400'
                                     ]"
                                     :href="item.href"
                                 >
-                                    <component
-                                        v-if="item.icon"
-                                        :is="item.icon"
-                                        class="mr-2 h-4 w-4"
-                                    />
                                     {{ item.title }}
                                 </Link>
                                 <div
@@ -207,96 +177,44 @@ const rightNavItems: NavItem[] = [
                     </NavigationMenu>
                 </div>
 
+                <!-- Right Side Actions -->
                 <div class="ml-auto flex items-center space-x-2">
-                    <div class="relative flex items-center space-x-1">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            class="group h-9 w-9 cursor-pointer"
-                        >
-                            <Search
-                                class="size-5 opacity-80 group-hover:opacity-100"
-                            />
-                        </Button>
-
-                        <div class="hidden space-x-1 lg:flex">
-                            <template
-                                v-for="item in rightNavItems"
-                                :key="item.title"
-                            >
-                                <TooltipProvider :delay-duration="0">
-                                    <Tooltip>
-                                        <TooltipTrigger>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                as-child
-                                                class="group h-9 w-9 cursor-pointer"
-                                            >
-                                                <a
-                                                    :href="toUrl(item.href)"
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                >
-                                                    <span class="sr-only">{{
-                                                        item.title
-                                                    }}</span>
-                                                    <component
-                                                        :is="item.icon"
-                                                        class="size-5 opacity-80 group-hover:opacity-100"
-                                                    />
-                                                </a>
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>{{ item.title }}</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </template>
-                        </div>
-                    </div>
-
-                    <DropdownMenu>
-                        <DropdownMenuTrigger :as-child="true">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                class="relative size-10 w-auto rounded-full p-1 focus-within:ring-2 focus-within:ring-primary"
-                            >
-                                <Avatar
-                                    class="size-8 overflow-hidden rounded-full"
-                                >
-                                    <AvatarImage
-                                        v-if="auth.user.avatar"
-                                        :src="auth.user.avatar"
-                                        :alt="auth.user.name"
-                                    />
-                                    <AvatarFallback
-                                        class="rounded-lg bg-neutral-200 font-semibold text-black dark:bg-neutral-700 dark:text-white"
-                                    >
-                                        {{ getInitials(auth.user?.name) }}
-                                    </AvatarFallback>
-                                </Avatar>
+                    <div class="hidden lg:flex items-center gap-2">
+                        <template v-if="auth.user">
+                            <Button variant="outline" size="icon" class="h-10 w-10">
+                                <Bell class="h-5 w-5 text-neutral-700 dark:text-neutral-300" />
                             </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" class="w-56">
-                            <UserMenuContent :user="auth.user" />
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                            <Button variant="outline" size="icon" class="h-10 w-10">
+                                <MessageCircle class="h-5 w-5 text-neutral-700 dark:text-neutral-300" />
+                            </Button>
+                            <Link href="/settings/profile">
+                                <Button variant="outline" size="icon" class="h-10 w-10">
+                                    <User class="h-5 w-5 text-neutral-700 dark:text-neutral-300" />
+                                </Button>
+                            </Link>
+                            <Button variant="outline" size="icon" class="h-10 w-10" @click="handleLogout">
+                                <LogOut class="h-5 w-5 text-neutral-700 dark:text-neutral-300" />
+                            </Button>
+                        </template>
+                        <template v-else>
+                            <button @click="openLogin" class="text-sm font-semibold text-neutral-700 hover:underline dark:text-neutral-300">Log in</button>
+                            <button @click="openRegister" class="ml-4 text-sm font-semibold text-neutral-700 hover:underline dark:text-neutral-300">Sign up</button>
+                        </template>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div
             v-if="props.breadcrumbs.length > 1"
-            class="flex w-full border-b border-sidebar-border/70"
+            class="hidden w-full border-b border-sidebar-border/70 bg-white dark:bg-neutral-900"
         >
-            <div
-                class="mx-auto flex h-12 w-full items-center justify-start px-4 text-neutral-500 md:max-w-7xl"
-            >
+            <div class="mx-auto flex h-12 w-full items-center justify-start px-4 text-neutral-500 md:max-w-7xl">
                 <Breadcrumbs :breadcrumbs="breadcrumbs" />
             </div>
         </div>
+
+        <LoginModal v-model:open="isLoginOpen" @switchToRegister="isLoginOpen = false; isRegisterOpen = true" />
+        <RegisterModal v-model:open="isRegisterOpen" @switchToLogin="isRegisterOpen = false; isLoginOpen = true" />
     </div>
 </template>

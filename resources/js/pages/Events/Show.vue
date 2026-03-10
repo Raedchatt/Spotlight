@@ -16,8 +16,10 @@ import {
     Edit
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-import AppLayout from '@/layouts/AppLayout.vue';
 
+import AppFooter from '@/components/AppFooter.vue';
+import { useAuthModal } from '@/composables/useAuthModal';
+import AppLayout from '@/layouts/AppLayout.vue';
 interface EventMedia {
     id: number;
     url: string;
@@ -123,6 +125,8 @@ const isFullyBooked = computed(() => {
 });
 
 const reserveButtonText = computed(() => {
+    if (!auth.value.user) return 'Login to Reserve';
+    
     if (props.is_reserved) return 'Already Reserved';
     
     if (!props.event.is_tournoi) {
@@ -139,9 +143,11 @@ const reserveButtonText = computed(() => {
     }
 });
 
+const { openLogin } = useAuthModal();
+
 const handleReserve = () => {
     if (!auth.value.user) {
-        window.location.href = '/login';
+        openLogin();
         return;
     }
     // Reservation logic would go here
@@ -611,6 +617,8 @@ const handleReserve = () => {
 
         </div>
     </component>
+    </AppLayout>
+    <AppFooter/>
 </template>
 
 <style scoped>
