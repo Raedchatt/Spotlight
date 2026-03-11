@@ -36,7 +36,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/auth/google', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
-Route::prefix('api')->group(function () {
+Route::prefix('web-api')->group(function () {
     Route::get('/events', [EvenementController::class, 'index']);
     Route::get('/events/search', [EvenementController::class, 'search']);
     Route::get('/events/{id}', [EvenementController::class, 'show']);
@@ -44,7 +44,7 @@ Route::prefix('api')->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     // API endpoints masquerading in the web middleware for session persistence
-    Route::prefix('api')->group(function () {
+    Route::prefix('web-api')->group(function () {
         Route::post('/events', [EvenementController::class, 'store']);
         Route::put('/events/{id}', [EvenementController::class, 'update']);
         Route::delete('/events/{id}', [EvenementController::class, 'destroy']);

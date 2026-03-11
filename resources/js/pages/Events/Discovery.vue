@@ -62,7 +62,7 @@ const fetchEvents = async () => {
         // Request 'ouvert', 'valide', 'encours', and 'en_attente' statuses from the backend
         params.append('statut', 'ouvert,valide,encours,en_attente');
         
-        const response = await axios.get(`/api/events/search?${params.toString()}`);
+        const response = await axios.get(`/web-api/events/search?${params.toString()}`);
         
         // Handle paginated response
         if (response.data.data) {

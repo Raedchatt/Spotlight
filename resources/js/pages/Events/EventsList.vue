@@ -4,6 +4,12 @@ import { Head, Link, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 
 import {
+    Search,
+    Plus,
+    Pencil,
+    Trash2,
+    Calendar,
+    MapPin,
     X,
     Trophy,
     Eye,
@@ -60,7 +66,7 @@ const fetchEvents = async () => {
         params.append('page', filters.value.page.toString());
         params.append('per_page', '9');
         
-        const response = await axios.get(`/api/events/search?${params.toString()}`);
+        const response = await axios.get(`/web-api/events/search?${params.toString()}`);
         
         if (response.data.data) {
             events.value = response.data.data;
@@ -91,7 +97,7 @@ const deleteEvent = async (id: number) => {
     if (!confirm('Are you sure you want to delete this event?')) return;
     
     try {
-        await axios.delete(`/api/events/${id}`);
+        await axios.delete(`/web-api/events/${id}`);
         events.value = events.value.filter(e => e.id !== id);
     } catch (error) {
         console.error('Error deleting event:', error);
@@ -216,10 +222,13 @@ const getStatusLabel = (statut: StatutEvenement) => {
                         :class="{ 'ring-2 ring-amber-500 shadow-amber-500/10': event.is_tournoi }">
                         <!-- Event Banner Image -->
                         <div 
-                            class="h-40 relative bg-cover bg-center"
-                            :class="!event.medias?.length ? 'bg-gradient-to-br from-blue-500/10 to-purple-500/10' : ''"
-                            :style="event.medias?.length ? { backgroundImage: `url(${event.medias[0].url})` } : {}"
-                        >
+                        class="h-40 relative bg-cover bg-center transition-all duration-500 group-hover:scale-105"
+                        :style="{ 
+                            backgroundImage: `url(${event.poster_url || (event.medias && event.medias.length > 0 
+                                ? event.medias.find(m => m.type === 'image')?.url || event.medias[0].url 
+                                : 'https://picsum.photos/seed/fallback/800/600')})` 
+                        }"
+                    >
                             <div class="absolute top-4 left-4 flex flex-col gap-2">
                                 <Badge :variant="getStatusVariant(event.statut)" class="capitalize shadow-sm w-fit">
                                     {{ getStatusLabel(event.statut) }}
@@ -228,15 +237,15 @@ const getStatusLabel = (statut: StatutEvenement) => {
                                     <Trophy class="w-3 h-3 mr-1" /> Tournament
                                 </Badge>
                             </div>
-                            <div class="absolute absolute bottom-4 right-4 flex gap-2" v-if="event.organisateur_id === auth.user.id">
+                                <div class="absolute bottom-4 right-4 flex gap-2" v-if="event.organisateur_id === auth.user.id">
                                 <Link :href="`/events/${event.id}`">
-                                    <Button size="icon" variant="secondary" class="group/btn h-8 w-8 rounded-full shadow-md hover:bg-black/20 backdrop-blur-sm bg-white/80">
+                                    <Button size="icon" variant="secondary" class="group/btn h-8 w-8 rounded-full shadow-md hover:bg-black/20 backdrop-blur-sm bg-white/80 transition-all hover:scale-110">
                                         <Eye class="w-4 h-4 text-black group-hover/btn:text-white transition-colors" />
                                     </Button>
                                 </Link>
                                 <Link :href="`/dashboard/events/${event.id}/edit`">
-                                    <Button size="icon" variant="secondary" class="group/btn h-8 w-8 rounded-full shadow-md hover:bg-black/20 backdrop-blur-sm bg-white/80">
-                                        <Edit class="w-4 h-4 text-black group-hover/btn:text-white transition-colors" />
+                                    <Button size="icon" variant="secondary" class="group/btn h-8 w-8 rounded-full shadow-md hover:bg-black/20 backdrop-blur-sm bg-white/80 transition-all hover:scale-110">
+                                        <Pencil class="w-4 h-4 text-black group-hover/btn:text-white transition-colors" />
                                     </Button>
                                 </Link>
                                 <Button @click="deleteEvent(event.id)" size="icon" variant="destructive" class="h-8 w-8 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity ">

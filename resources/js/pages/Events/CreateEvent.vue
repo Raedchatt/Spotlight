@@ -81,15 +81,33 @@ const submit = async () => {
             }
         });
 
-        await axios.post('/api/events', formData, {
+        await axios.post('/web-api/events', formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
         
-        router.visit('/dashboard/events');
+        // Successful creation, redirect to list using Inertia router
+        router.visit('/dashboard/events', {
+            method: 'get',
+            replace: true,
+            preserveScroll: false,
+            onFinish: () => {
+                // Dual-safety: fallback redirect if Inertia transition fails
+                setTimeout(() => {
+                    if (window.location.pathname !== '/dashboard/events') {
+                        window.location.href = '/dashboard/events';
+                    }
+                }, 1000);
+            }
+        });
     } catch (error: any) {
-            formErrors.value = error.response.data.errors || {};
+        console.error('Error creating event:', error);
+        if (error.response && error.response.data && error.response.data.errors) {
+            formErrors.value = error.response.data.errors;
+        } else {
+            // Fallback for non-validation errors
+            alert(error.response?.data?.message || 'An unexpected error occurred. Please try again.');
         }
-    finally {
+    } finally {
         processing.value = false;
     }
 };

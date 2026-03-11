@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Enum;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+// use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class OrganisateurController extends Controller
 {
@@ -81,9 +81,9 @@ class OrganisateurController extends Controller
 
         $logoPath = null;
         if ($request->hasFile('logo')) {
-            $logoPath = Cloudinary::upload($request->file('logo')->getRealPath(), [
+            $logoPath = cloudinary()->uploadApi()->upload($request->file('logo')->getRealPath(), [
                 'folder' => 'organisateurs/logos'
-            ])->getSecurePath();
+            ])['secure_url'];
         }
 
         $organisateur = Organisateur::create([
@@ -125,9 +125,9 @@ class OrganisateurController extends Controller
         // Handle logo replacement
         if ($request->hasFile('logo')) {
             // Remove old logo from Cloudinary if it exists (using Cloudinary facade would require extra parsing, so we skip deletion for now to keep it simple and safe)
-            $data['logo'] = Cloudinary::upload($request->file('logo')->getRealPath(), [
+            $data['logo'] = cloudinary()->uploadApi()->upload($request->file('logo')->getRealPath(), [
                 'folder' => 'organisateurs/logos'
-            ])->getSecurePath();
+            ])['secure_url'];
         }
 
         $organisateur->update($data);

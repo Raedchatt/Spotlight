@@ -39,6 +39,7 @@ export interface Evenement {
     type_tournoi?: string;
     prix_participant?: number;
     capacite_participant?: number;
+    poster_url?: string;
     organisateur?: User;
     medias?: Media[];
     tournoi?: Tournoi;

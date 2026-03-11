@@ -4,7 +4,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+// use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class MediaUploadController extends Controller
 {
@@ -16,7 +16,7 @@ class MediaUploadController extends Controller
         ]);
 
         // Upload to Cloudinary
-        $uploadedFile = cloudinary::upload(
+        $uploadedFile = cloudinary()->uploadApi()->upload(
             $request->file('image')->getRealPath(),
             [
                 'folder' => 'spotlight/posters', // organized folder
@@ -31,8 +31,8 @@ class MediaUploadController extends Controller
         );
 
         return response()->json([
-            'url'       => $uploadedFile->getSecurePath(),  // https URL
-            'public_id' => $uploadedFile->getPublicId(),    // to delete later
+            'url'       => $uploadedFile['secure_url'],  // https URL
+            'public_id' => $uploadedFile['public_id'],    // to delete later
         ]);
     }
 
@@ -43,7 +43,7 @@ class MediaUploadController extends Controller
             'video' => 'required|mimetypes:video/mp4,video/avi,video/quicktime|max:102400', // 100MB
         ]);
 
-        $uploadedFile = cloudinary::uploadVideo(
+        $uploadedFile = cloudinary()->uploadApi()->upload(
             $request->file('video')->getRealPath(),
             [
                 'folder'             => 'spotlight/videos',
@@ -56,8 +56,8 @@ class MediaUploadController extends Controller
         );
 
         return response()->json([
-            'url'       => $uploadedFile->getSecurePath(),
-            'public_id' => $uploadedFile->getPublicId(),
+            'url'       => $uploadedFile['secure_url'],
+            'public_id' => $uploadedFile['public_id'],
         ]);
     }
 
@@ -68,7 +68,7 @@ class MediaUploadController extends Controller
             'public_id' => 'required|string',
         ]);
 
-        cloudinary::destroy($request->public_id);
+        cloudinary()->uploadApi()->destroy($request->public_id);
 
         return response()->json(['message' => 'Deleted successfully']);
     }

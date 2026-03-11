@@ -13,7 +13,7 @@ use App\Models\Media;
 use App\Models\Reservation;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+// use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class EvenementController extends Controller
 {
@@ -137,16 +137,23 @@ class EvenementController extends Controller
                 $type = str_starts_with($mimeType, 'video/') ? TypeMedia::Video : TypeMedia::Image;
 
                 // Store the file
-                $uploadResult = Cloudinary::upload($file->getRealPath(), [
+                $uploadResult = cloudinary()->uploadApi()->upload($file->getRealPath(), [
                     'folder' => 'events/media',
                     'resource_type' => $type === TypeMedia::Video ? 'video' : 'image'
                 ]);
                 
+                $url = $uploadResult['secure_url'];
+
                 // Create media record
                 $event->medias()->create([
-                    'url' => $uploadResult->getSecurePath(),
+                    'url' => $url,
                     'type' => $type,
                 ]);
+
+                // Also set as main poster if it's an image and not set yet
+                if ($type === TypeMedia::Image && !$event->poster_url) {
+                    $event->update(['poster_url' => $url]);
+                }
             }
         }
 
@@ -166,7 +173,8 @@ class EvenementController extends Controller
         }
 
         // Validate input (including tournament fields)
-        $request->validate([
+        try {
+            $request->validate([
             'titre' => 'required|string|max:255',
             'description' => 'required',
             'date_debut' => 'required|date',
@@ -175,12 +183,20 @@ class EvenementController extends Controller
             'prix_spectateur' => 'required|numeric',
             'capacite_spectateur' => 'required|integer',
             'categorie' => ['required', new Enum(CategorieEvenement::class)],
+            'statut' => ['required', new Enum(StatutEvenement::class)],
             'is_tournoi' => 'sometimes|boolean',
-            'type_tournoi' => 'required_if:is_tournoi,1|in:equipe,individuel',
-            'prix_participant' => 'required_if:is_tournoi,1|numeric|min:0',
-            'capacite_participant' => 'required_if:is_tournoi,1|integer|min:1',
+            'type_tournoi' => 'exclude_if:is_tournoi,0|required_if:is_tournoi,1|in:equipe,individuel',
+            'prix_participant' => 'exclude_if:is_tournoi,0|required_if:is_tournoi,1|numeric|min:0',
+            'capacite_participant' => 'exclude_if:is_tournoi,0|required_if:is_tournoi,1|integer|min:1',
             'medias.*' => 'nullable|file|mimes:jpeg,png,jpg,webp,mp4,mov|max:20480', // Allow up to 20MB
+            'media_to_delete' => 'nullable|array',
+            'media_to_delete.*' => 'integer|exists:media,id',
+            'poster_url' => 'nullable|string',
         ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Illuminate\Support\Facades\Log::error('Event Update Validation Failed:', $e->errors());
+            throw $e;
+        }
 
         $event->update([
             'titre' => $request->titre,
@@ -191,12 +207,31 @@ class EvenementController extends Controller
             'prix_spectateur' => $request->prix_spectateur,
             'capacite_spectateur' => $request->capacite_spectateur,
             'categorie' => $request->categorie,
+            'statut' => $request->statut,
             // Tournament fields
             'is_tournoi' => $request->has('is_tournoi') ? $request->boolean('is_tournoi') : false,
             'type_tournoi' => $request->type_tournoi ?? null,
             'prix_participant' => $request->prix_participant ?? null,
             'capacite_participant' => $request->capacite_participant ?? null,
+            'poster_url' => $request->poster_url ?? $event->poster_url,
         ]);
+
+        // Handle media deletion
+        if ($request->has('media_to_delete')) {
+            $mediaIds = $request->input('media_to_delete');
+            $medias = $event->medias()->whereIn('id', $mediaIds)->get();
+            
+            foreach ($medias as $media) {
+                // If it's the poster, clear it
+                if ($event->poster_url === $media->url) {
+                    $event->update(['poster_url' => null]);
+                }
+                
+                // Try to delete from Cloudinary if possible (needs public_id storage, which we don't have yet, so just delete DB record)
+                // For now, we just delete the database record
+                $media->delete();
+            }
+        }
 
         if ($request->hasFile('medias')) {
             foreach ($request->file('medias') as $file) {
@@ -205,16 +240,23 @@ class EvenementController extends Controller
                 $type = str_starts_with($mimeType, 'video/') ? TypeMedia::Video : TypeMedia::Image;
 
                 // Store the file
-                $uploadResult = Cloudinary::upload($file->getRealPath(), [
+                $uploadResult = cloudinary()->uploadApi()->upload($file->getRealPath(), [
                     'folder' => 'events/media',
                     'resource_type' => $type === TypeMedia::Video ? 'video' : 'image'
                 ]);
 
+                $url = $uploadResult['secure_url'];
+
                 // Create media record
                 $event->medias()->create([
-                    'url' => $uploadResult->getSecurePath(),
+                    'url' => $url,
                     'type' => $type,
                 ]);
+
+                // Also set as main poster if it's an image and not set yet
+                if ($type === TypeMedia::Image && !$event->poster_url) {
+                    $event->update(['poster_url' => $url]);
+                }
             }
         }
 

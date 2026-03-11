@@ -36,7 +36,7 @@ const { openRegister } = useAuthModal();
 
 const fetchEvents = async () => {
     try {
-        const response = await axios.get('/api/events/search?statut=ouvert,valide,encours,en_attente&limit=6');
+        const response = await axios.get('/web-api/events/search?statut=ouvert,valide,encours,en_attente&limit=6');
         events.value = response.data;
     } catch (error) {
         console.error('Error fetching events:', error);
