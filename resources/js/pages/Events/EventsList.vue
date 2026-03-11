@@ -248,5 +248,4 @@ const getStatusLabel = (statut: StatutEvenement) => {
             </div>
         </div>
     </AppLayout>
-<AppFooter/>
 </template>

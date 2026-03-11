@@ -19,7 +19,6 @@ import {
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
-import AppFooter from '@/components/AppFooter.vue';
 import AppHeader from '@/components/AppHeader.vue';
 import { useAuthModal } from '@/composables/useAuthModal';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -680,7 +679,6 @@ const handleReserve = () => {
 
         </div>
     </component>
-    <AppFooter/>
 </template>
 
 <style scoped>
