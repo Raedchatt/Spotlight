@@ -114,14 +114,14 @@ class EvenementController extends Controller
 
         $event = Evenement::create([
             'organisateur_id' => Auth::id(),
-            'titre' => $request->titre,
-            'description' => $request->description,
-            'date_debut' => $request->date_debut,
-            'date_fin' => $request->date_fin,
-            'lieu' => $request->lieu,
-            'prix_spectateur' => $request->prix_spectateur,
-            'capacite_spectateur' => $request->capacite_spectateur,
-            'categorie' => $request->categorie,
+            'titre' => $request->input('titre'),
+            'description' => $request->input('description'),
+            'date_debut' => $request->input('date_debut'),
+            'date_fin' => $request->input('date_fin'),
+            'lieu' => $request->input('lieu'),
+            'prix_spectateur' => $request->input('prix_spectateur'),
+            'capacite_spectateur' => $request->input('capacite_spectateur'),
+            'categorie' => $request->input('categorie'),
             // Tournament fields
             'is_tournoi' => $request->has('is_tournoi') ? $request->boolean('is_tournoi') : false,
             'type_tournoi' => $request->type_tournoi ?? null,
@@ -199,15 +199,15 @@ class EvenementController extends Controller
         }
 
         $event->update([
-            'titre' => $request->titre,
-            'description' => $request->description,
-            'date_debut' => $request->date_debut,
-            'date_fin' => $request->date_fin,
-            'lieu' => $request->lieu,
-            'prix_spectateur' => $request->prix_spectateur,
-            'capacite_spectateur' => $request->capacite_spectateur,
-            'categorie' => $request->categorie,
-            'statut' => $request->statut,
+            'titre' => $request->input('titre'),
+            'description' => $request->input('description'),
+            'date_debut' => $request->input('date_debut'),
+            'date_fin' => $request->input('date_fin'),
+            'lieu' => $request->input('lieu'),
+            'prix_spectateur' => $request->input('prix_spectateur'),
+            'capacite_spectateur' => $request->input('capacite_spectateur'),
+            'categorie' => $request->input('categorie'),
+            'statut' => $request->input('statut'),
             // Tournament fields
             'is_tournoi' => $request->has('is_tournoi') ? $request->boolean('is_tournoi') : false,
             'type_tournoi' => $request->type_tournoi ?? null,
@@ -288,27 +288,27 @@ class EvenementController extends Controller
         $query = Evenement::with('medias')->withCount('reservations');
 
         if ($request->has('organisateur_id')) {
-            $query->parOrganisateur($request->organisateur_id);
+            $query->parOrganisateur($request->input('organisateur_id'));
         }
 
         if ($request->has('titre')) {
-            $query->parTitre($request->titre);
+            $query->parTitre($request->input('titre'));
         }
 
         if ($request->has('date')) {
-            $query->parDate($request->date);
+            $query->parDate($request->input('date'));
         }
 
         if ($request->has('prix_max')) {
-            $query->parPrix($request->prix_max);
+            $query->parPrix($request->input('prix_max'));
         }
 
         if ($request->has('categorie')) {
-            $query->parCategorie($request->categorie);
+            $query->parCategorie($request->input('categorie'));
         }
 
         if ($request->has('statut')) {
-            $statuts = explode(',', $request->statut);
+            $statuts = explode(',', $request->input('statut'));
             $query->whereIn('statut', $statuts);
         }
 
