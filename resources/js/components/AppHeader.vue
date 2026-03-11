@@ -3,13 +3,14 @@ import { Link, usePage, router } from '@inertiajs/vue3';
 import { Folder, LayoutGrid, Menu, Search, Calendar, Bell, MessageCircle, User, LogOut } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
+import LoginModal from '@/components/auth/LoginModal.vue';
+import RegisterModal from '@/components/auth/RegisterModal.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import { Button } from '@/components/ui/button';
 import {
     NavigationMenu,
     NavigationMenuItem,
     NavigationMenuList,
-    navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
 import {
     Sheet,
@@ -18,12 +19,13 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { useAuthModal } from '@/composables/useAuthModal';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { dashboard, logout } from '@/routes';
 import type { BreadcrumbItem, NavItem } from '@/types';
-import { useAuthModal } from '@/composables/useAuthModal';
-import LoginModal from '@/components/auth/LoginModal.vue';
-import RegisterModal from '@/components/auth/RegisterModal.vue';
+
+
+
 
 type Props = {
     breadcrumbs?: BreadcrumbItem[];

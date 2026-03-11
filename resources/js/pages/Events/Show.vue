@@ -617,7 +617,6 @@ const handleReserve = () => {
 
         </div>
     </component>
-    </AppLayout>
     <AppFooter/>
 </template>
 

@@ -13,6 +13,7 @@ use App\Models\Media;
 use App\Models\Reservation;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class EvenementController extends Controller
 {
@@ -126,11 +127,14 @@ class EvenementController extends Controller
                 $type = str_starts_with($mimeType, 'video/') ? TypeMedia::Video : TypeMedia::Image;
 
                 // Store the file
-                $path = $file->store('events/media', 'public');
-
+                $uploadResult = Cloudinary::upload($file->getRealPath(), [
+                    'folder' => 'events/media',
+                    'resource_type' => $type === TypeMedia::Video ? 'video' : 'image'
+                ]);
+                
                 // Create media record
                 $event->medias()->create([
-                    'url' => '/storage/' . $path,
+                    'url' => $uploadResult->getSecurePath(),
                     'type' => $type,
                 ]);
             }
@@ -191,11 +195,14 @@ class EvenementController extends Controller
                 $type = str_starts_with($mimeType, 'video/') ? TypeMedia::Video : TypeMedia::Image;
 
                 // Store the file
-                $path = $file->store('events/media', 'public');
+                $uploadResult = Cloudinary::upload($file->getRealPath(), [
+                    'folder' => 'events/media',
+                    'resource_type' => $type === TypeMedia::Video ? 'video' : 'image'
+                ]);
 
                 // Create media record
                 $event->medias()->create([
-                    'url' => '/storage/' . $path,
+                    'url' => $uploadResult->getSecurePath(),
                     'type' => $type,
                 ]);
             }

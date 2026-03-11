@@ -26,7 +26,12 @@ class Evenement extends Model
         'is_tournoi',
         'type_tournoi',
         'prix_participant',
-        'capacite_participant'
+        'capacite_participant',
+        'titre_image',
+        'poster_url',
+        'poster_public_id',
+        'video_url',
+        'video_public_id',
     ];
 
     /**

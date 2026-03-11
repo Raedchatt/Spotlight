@@ -12,6 +12,7 @@ import {
     ChevronRight
 } from 'lucide-vue-next';
 import { ref, onMounted, watch} from 'vue';
+import AppFooter from '@/components/AppFooter.vue';
 import EventCard from '@/components/EventCard.vue';
 import Reserver from '@/components/Reserver.vue';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +21,7 @@ import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 import type { Evenement } from '@/types/event';
-import AppFooter from '@/components/AppFooter.vue';
+
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },

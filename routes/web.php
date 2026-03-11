@@ -5,6 +5,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\EvenementController;
 use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\MediaUploadController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -58,6 +59,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
+    // routes/web.php (for Inertia) or api.php
+
+Route::middleware('auth')->group(function () {
+    Route::post('/upload/image', [MediaUploadController::class, 'uploadImage']);
+    Route::post('/upload/video', [MediaUploadController::class, 'uploadVideo']);
+    Route::delete('/upload/media', [MediaUploadController::class, 'deleteMedia']);
+});
 
     Route::prefix('dashboard')->group(function () {
         Route::get('/events', function () {

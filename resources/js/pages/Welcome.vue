@@ -6,16 +6,22 @@ import {
     ChevronLeft, 
     ChevronRight,
     Ticket,
-    ShieldCheck
+    ShieldCheck,
+    MoreHorizontal
 } from 'lucide-vue-next';
 import { ref, onMounted } from 'vue';
-import EventCard from '@/components/EventCard.vue';
-import { Button } from '@/components/ui/button';
-import type { Evenement } from '@/types/event';
-import { useAuthModal } from '@/composables/useAuthModal';
-import AppLogo from '@/components/AppLogo.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import AppHeader from '@/components/AppHeader.vue';
+import EventCard from '@/components/EventCard.vue';
+import { Button } from '@/components/ui/button';
+import { useAuthModal } from '@/composables/useAuthModal';
+
+
+import type { Evenement } from '@/types/event';
+
+
+
+
 
 // Event data management
 
@@ -118,7 +124,7 @@ onMounted(() => {
 
                     <div 
                         ref="scrollContainer"
-                        class="no-scrollbar -mx-4 flex gap-6 overflow-x-auto px-4 pb-8"
+                        class="no-scrollbar -mx-4 flex items-stretch gap-6 overflow-x-auto px-4 py-8"
                     >
                         <div 
                             v-for="event in events" 
@@ -126,6 +132,19 @@ onMounted(() => {
                             class="w-[350px] flex-shrink-0"
                         >
                             <EventCard :event="event" :show-action="false" />
+                        </div>
+                        
+                        <!-- Explore More Card -->
+                        <div v-if="events.length > 0" class="w-[350px] flex-shrink-0">
+                            <Link 
+                                href="/discovery" 
+                                class="group flex h-full min-h-[400px] flex-col items-center justify-center rounded-xl border border-slate-300 bg-slate-50 transition-all hover:border-slate-400 hover:bg-slate-100 hover:shadow-md"
+                            >
+                                <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-400 text-white transition-colors group-hover:bg-slate-500">
+                                    <MoreHorizontal class="h-8 w-8" stroke-width="3" />
+                                </div>
+                                <span class="text-lg font-bold text-slate-400 transition-colors group-hover:text-slate-500">Explore more</span>
+                            </Link>
                         </div>
                         
                         <template v-if="events.length === 0">
