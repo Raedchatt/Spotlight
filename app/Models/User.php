@@ -26,6 +26,27 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
 
+    protected static function booted()
+    {
+        static::created(function ($user) {
+            if ($user->role === Role::Organisateur) {
+                $user->organisateur()->create([
+                    'nom_organisation' => $user->username,
+                    'statut' => 'approved', // Defaulting to approved for simplicity, or 'pending' if review is required
+                ]);
+            }
+        });
+
+        static::updated(function ($user) {
+            if ($user->isDirty('role') && $user->role === Role::Organisateur && !$user->organisateur) {
+                $user->organisateur()->create([
+                    'nom_organisation' => $user->username,
+                    'statut' => 'approved',
+                ]);
+            }
+        });
+    }
+
     /**
      * The attributes that are mass assignable.
      *

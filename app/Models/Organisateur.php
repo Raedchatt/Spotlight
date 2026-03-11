@@ -23,6 +23,8 @@ class Organisateur extends Model
         'adresse',
         'site_web',
         'logo',
+        'rib',
+        'rib_popup_seen',
     ];
 
     // -------------------------------------------------------------------------

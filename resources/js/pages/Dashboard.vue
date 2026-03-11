@@ -4,6 +4,9 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import PlaceholderPattern from '../components/PlaceholderPattern.vue';
+import RibPopup from '@/components/organizer/RibPopup.vue';
+import { ref, onMounted, computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -11,6 +14,21 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: dashboard().url,
     },
 ];
+
+const page = usePage();
+const auth = computed(() => page.props.auth as any);
+const showRibPopup = ref(false);
+
+onMounted(() => {
+    const user = auth.value.user;
+    if (user && user.role === 'organisateur') {
+        const organisateur = user.organisateur;
+        // Show only if the user hasn't seen the popup yet
+        if (!organisateur || (!organisateur.rib && !organisateur.rib_popup_seen)) {
+            showRibPopup.value = true;
+        }
+    }
+});
 </script>
 
 <template>
@@ -43,5 +61,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                 <PlaceholderPattern />
             </div>
         </div>
+
+        <RibPopup v-model:open="showRibPopup" />
     </AppLayout>
 </template>

@@ -99,8 +99,18 @@ class EvenementController extends Controller
             'prix_spectateur' => 'required|numeric',
             'capacite_spectateur' => 'required|integer',
             'categorie' => ['required', new Enum(CategorieEvenement::class)],
-            'medias.*' => 'nullable|file|mimes:jpeg,png,jpg,webp,mp4,mov|max:20480', // Allow up to 20MB
         ]);
+
+        $user = Auth::user();
+        if ($user->role === \App\Enums\Role::Organisateur) {
+            if (!$user->organisateur || !$user->organisateur->rib) {
+                return response()->json([
+                    'message' => 'Bank information (RIB) is required to create events. Please complete your bank details first.',
+                    'require_rib' => true
+                ], 422);
+            }
+        }
+
         $event = Evenement::create([
             'organisateur_id' => Auth::id(),
             'titre' => $request->titre,

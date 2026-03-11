@@ -53,6 +53,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/reservations', [ReservationController::class, 'store']);
         Route::get('/my-reservations', [ReservationController::class, 'chercherReservationParParticipant']);
         Route::patch('/reservations/{reservation}/annuler', [ReservationController::class, 'annuler']);
+        
+        // Organizers Profile Management (via Session)
+        Route::put('/organisateurs/{organisateur}', [\App\Http\Controllers\OrganisateurController::class, 'update']);
     });
 
     Route::get('/dashboard', function () {

@@ -84,6 +84,12 @@ class ProfileController extends Controller
         $request->user()->fill($request->validated());
         $request->user()->save();
 
+        if ($request->user()->isOrganisateur() && $request->has('rib')) {
+            $request->user()->organisateur()->update([
+                'rib' => $request->rib
+            ]);
+        }
+
         return to_route('profile.edit');
     }
 
