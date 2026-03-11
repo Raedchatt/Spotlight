@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
+
 import { Head, Link } from '@inertiajs/vue3';
-import { ref, onMounted, computed } from 'vue';
+
 import axios from 'axios';
-import {
-    Search, 
+import { 
     Calendar, 
     MapPin, 
     Clock,
-    X,
     Ticket,
     AlertCircle,
     CheckCircle2,
     XCircle
 } from 'lucide-vue-next';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import AppHeader from '@/components/AppHeader.vue';
+import { ref, onMounted} from 'vue';
 import AppFooter from '@/components/AppFooter.vue';
+//import AppHeader from '@/components/AppHeader.vue';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/AppLayout.vue';
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
