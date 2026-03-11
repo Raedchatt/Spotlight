@@ -4,22 +4,21 @@ import { Head, Link, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 
 import {
-    Search, 
-    Plus, 
-    Edit, 
-    Trash2, 
-    Calendar, 
-    MapPin,  
     X,
     Trophy,
-    Eye
+    Eye,
+    ChevronLeft,
+    ChevronRight,
 } from 'lucide-vue-next';
 import { ref, onMounted, watch, computed } from 'vue';
+import AppFooter from '@/components/AppFooter.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { Evenement,StatutEvenement } from '@/types/event';
+
+
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -37,7 +36,16 @@ const filters = ref({
     titre: '',
     categorie: 'all',
     date: '',
-    statut: 'all'
+    statut: 'all',
+    page: 1
+});
+
+// Pagination state
+const pagination = ref({
+    currentPage: 1,
+    lastPage: 1,
+    total: 0,
+    perPage: 9
 });
 
 const fetchEvents = async () => {
@@ -48,12 +56,34 @@ const fetchEvents = async () => {
         if (filters.value.categorie !== 'all') params.append('categorie', filters.value.categorie);
         if (filters.value.date) params.append('date', filters.value.date);
         
+        // Pagination params
+        params.append('page', filters.value.page.toString());
+        params.append('per_page', '9');
+        
         const response = await axios.get(`/api/events/search?${params.toString()}`);
-        events.value = response.data;
+        
+        if (response.data.data) {
+            events.value = response.data.data;
+            pagination.value = {
+                currentPage: response.data.current_page,
+                lastPage: response.data.last_page,
+                total: response.data.total,
+                perPage: response.data.per_page
+            };
+        } else {
+            events.value = response.data;
+            pagination.value.total = events.value.length;
+        }
     } catch (error) {
         console.error('Error fetching events:', error);
     } finally {
         loading.value = false;
+    }
+};
+
+const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= pagination.value.lastPage) {
+        filters.value.page = newPage;
     }
 };
 
@@ -73,7 +103,8 @@ const resetFilters = () => {
         titre: '',
         categorie: 'all',
         date: '',
-        statut: 'all'
+        statut: 'all',
+        page: 1
     };
     fetchEvents();
 };
@@ -83,10 +114,15 @@ onMounted(() => {
 });
 
 // Watch filters for auto-search
-watch(() => filters.value, () => {
-    // Optional: Debounce search
+watch(() => [filters.value.titre, filters.value.categorie, filters.value.date], () => {
+    filters.value.page = 1; // Reset to page 1 on search change
     fetchEvents();
-}, { deep: true });
+});
+
+// Watch page separately
+watch(() => filters.value.page, () => {
+    fetchEvents();
+});
 
 const getStatusVariant = (statut: StatutEvenement) => {
     switch (statut) {
@@ -173,77 +209,113 @@ const getStatusLabel = (statut: StatutEvenement) => {
                 </Link>
             </div>
 
-            <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div v-for="event in events" :key="event.id" 
-                    class="group bg-card border rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 relative"
-                    :class="{ 'ring-2 ring-amber-500 shadow-amber-500/10': event.is_tournoi }">
-                    <!-- Event Banner Image -->
-                    <div 
-                        class="h-40 relative bg-cover bg-center"
-                        :class="!event.medias?.length ? 'bg-gradient-to-br from-blue-500/10 to-purple-500/10' : ''"
-                        :style="event.medias?.length ? { backgroundImage: `url(${event.medias[0].url})` } : {}"
+            <div v-else class="space-y-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div v-for="event in events" :key="event.id" 
+                        class="group bg-card border rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 relative"
+                        :class="{ 'ring-2 ring-amber-500 shadow-amber-500/10': event.is_tournoi }">
+                        <!-- Event Banner Image -->
+                        <div 
+                            class="h-40 relative bg-cover bg-center"
+                            :class="!event.medias?.length ? 'bg-gradient-to-br from-blue-500/10 to-purple-500/10' : ''"
+                            :style="event.medias?.length ? { backgroundImage: `url(${event.medias[0].url})` } : {}"
+                        >
+                            <div class="absolute top-4 left-4 flex flex-col gap-2">
+                                <Badge :variant="getStatusVariant(event.statut)" class="capitalize shadow-sm w-fit">
+                                    {{ getStatusLabel(event.statut) }}
+                                </Badge>
+                                <Badge v-if="event.is_tournoi" variant="default" class="bg-amber-500 hover:bg-amber-600 shadow-sm w-fit border-0">
+                                    <Trophy class="w-3 h-3 mr-1" /> Tournament
+                                </Badge>
+                            </div>
+                            <div class="absolute absolute bottom-4 right-4 flex gap-2" v-if="event.organisateur_id === auth.user.id">
+                                <Link :href="`/events/${event.id}`">
+                                    <Button size="icon" variant="secondary" class="group/btn h-8 w-8 rounded-full shadow-md hover:bg-black/20 backdrop-blur-sm bg-white/80">
+                                        <Eye class="w-4 h-4 text-black group-hover/btn:text-white transition-colors" />
+                                    </Button>
+                                </Link>
+                                <Link :href="`/dashboard/events/${event.id}/edit`">
+                                    <Button size="icon" variant="secondary" class="group/btn h-8 w-8 rounded-full shadow-md hover:bg-black/20 backdrop-blur-sm bg-white/80">
+                                        <Edit class="w-4 h-4 text-black group-hover/btn:text-white transition-colors" />
+                                    </Button>
+                                </Link>
+                                <Button @click="deleteEvent(event.id)" size="icon" variant="destructive" class="h-8 w-8 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity ">
+                                    <Trash2 class="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div class="p-5 space-y-4">
+                            <div class="space-y-1">
+                                <h2 class="text-xl font-bold line-clamp-1 capitalize">{{ event.titre }}</h2>
+                                <Badge variant="outline" class="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                                    {{ event.categorie }}
+                                </Badge>
+                            </div>
+
+                            <div class="space-y-3 text-sm text-muted-foreground">
+                                <div class="flex items-center gap-2">
+                                    <Calendar class="w-4 h-4" />
+                                    <span>{{ new Date(event.date_debut).toLocaleDateString() }} - {{ new Date(event.date_debut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <MapPin class="w-4 h-4" />
+                                    <span class="line-clamp-1">{{ event.lieu }}</span>
+                                </div>
+                            </div>
+
+                            <div class="pt-4 border-t space-y-4">
+                                <div class="flex justify-between items-center text-sm">
+                                    <div class="font-medium text-blue-600">
+                                        {{ event.prix_spectateur > 0 ? `${event.prix_spectateur} TND` : 'Free' }}
+                                    </div>
+                                    <div class="text-muted-foreground">
+                                        {{ event.capacite_spectateur }} seats available
+                                    </div>
+                                </div>
+                                
+                                <Link :href="`/events/${event.id}`" class="block w-full">
+                                    <Button variant="outline" class="w-full border-zinc-200 hover:bg-zinc-50 font-bold text-xs uppercase tracking-widest transition-all duration-300 group-hover:bg-zinc-900 group-hover:text-white group-hover:border-zinc-900">
+                                        View Public Page
+                                    </Button>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagination Controls -->
+                <div v-if="pagination.lastPage > 1" class="flex items-center justify-center gap-2 pt-6">
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        :disabled="pagination.currentPage === 1"
+                        @click="handlePageChange(pagination.currentPage - 1)"
                     >
-                        <div class="absolute top-4 left-4 flex flex-col gap-2">
-                            <Badge :variant="getStatusVariant(event.statut)" class="capitalize shadow-sm w-fit">
-                                {{ getStatusLabel(event.statut) }}
-                            </Badge>
-                            <Badge v-if="event.is_tournoi" variant="default" class="bg-amber-500 hover:bg-amber-600 shadow-sm w-fit border-0">
-                                <Trophy class="w-3 h-3 mr-1" /> Tournament
-                            </Badge>
-                        </div>
-                        <div class="absolute absolute bottom-4 right-4 flex gap-2" v-if="event.organisateur_id === auth.user.id">
-                             <Link :href="`/events/${event.id}`">
-                                <Button size="icon" variant="secondary" class="group/btn h-8 w-8 rounded-full shadow-md hover:bg-black/20 backdrop-blur-sm bg-white/80">
-                                    <Eye class="w-4 h-4 text-black group-hover/btn:text-white transition-colors" />
-                                </Button>
-                             </Link>
-                             <Link :href="`/dashboard/events/${event.id}/edit`">
-                                <Button size="icon" variant="secondary" class="group/btn h-8 w-8 rounded-full shadow-md hover:bg-black/20 backdrop-blur-sm bg-white/80">
-                                    <Edit class="w-4 h-4 text-black group-hover/btn:text-white transition-colors" />
-                                </Button>
-                             </Link>
-                            <Button @click="deleteEvent(event.id)" size="icon" variant="destructive" class="h-8 w-8 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity ">
-                                <Trash2 class="w-4 h-4" />
-                            </Button>
-                        </div>
+                        <ChevronLeft class="w-4 h-4 mr-2" /> Previous
+                    </Button>
+                    
+                    <div class="flex items-center gap-1">
+                        <Button 
+                            v-for="p in pagination.lastPage" 
+                            :key="p"
+                            :variant="p === pagination.currentPage ? 'default' : 'outline'"
+                            size="sm"
+                            class="w-9"
+                            @click="handlePageChange(p)"
+                        >
+                            {{ p }}
+                        </Button>
                     </div>
 
-                    <div class="p-5 space-y-4">
-                        <div class="space-y-1">
-                            <h2 class="text-xl font-bold line-clamp-1 capitalize">{{ event.titre }}</h2>
-                            <Badge variant="outline" class="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                                {{ event.categorie }}
-                            </Badge>
-                        </div>
-
-                        <div class="space-y-3 text-sm text-muted-foreground">
-                            <div class="flex items-center gap-2">
-                                <Calendar class="w-4 h-4" />
-                                <span>{{ new Date(event.date_debut).toLocaleDateString() }} - {{ new Date(event.date_debut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <MapPin class="w-4 h-4" />
-                                <span class="line-clamp-1">{{ event.lieu }}</span>
-                            </div>
-                        </div>
-
-                        <div class="pt-4 border-t space-y-4">
-                            <div class="flex justify-between items-center text-sm">
-                                <div class="font-medium text-blue-600">
-                                    {{ event.prix_spectateur > 0 ? `${event.prix_spectateur} TND` : 'Free' }}
-                                </div>
-                                <div class="text-muted-foreground">
-                                    {{ event.capacite_spectateur }} seats available
-                                </div>
-                            </div>
-                            
-                            <Link :href="`/events/${event.id}`" class="block w-full">
-                                <Button variant="outline" class="w-full border-zinc-200 hover:bg-zinc-50 font-bold text-xs uppercase tracking-widest transition-all duration-300 group-hover:bg-zinc-900 group-hover:text-white group-hover:border-zinc-900">
-                                    View Public Page
-                                </Button>
-                            </Link>
-                        </div>
-                    </div>
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        :disabled="pagination.currentPage === pagination.lastPage"
+                        @click="handlePageChange(pagination.currentPage + 1)"
+                    >
+                        Next <ChevronRight class="w-4 h-4 ml-2" />
+                    </Button>
                 </div>
             </div>
         </div>

@@ -20,7 +20,6 @@ import {
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 
 import AppFooter from '@/components/AppFooter.vue';
-import AppHeader from '@/components/AppHeader.vue';
 import { useAuthModal } from '@/composables/useAuthModal';
 import AppLayout from '@/layouts/AppLayout.vue';
 
@@ -194,8 +193,6 @@ const handleReserve = () => {
         <Head :title="props.event.titre" />
         
         <div class="min-h-screen bg-background pb-12">
-            <!-- Guest Navbar -->
-            <AppHeader />
 
             <!-- 1. HERO SECTION -->
             <div class="relative h-72 md:h-[500px] w-full overflow-hidden bg-zinc-900">
@@ -212,6 +209,7 @@ const handleReserve = () => {
                         v-if="currentMedia?.type === 'image'"
                         :src="currentMedia.url"
                         :key="'img-' + currentMedia.id"
+                        @error="(e) => (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/fallback/1200/800'"
                         class="w-full h-full object-cover opacity-70 transition-opacity duration-500"
                     />
 

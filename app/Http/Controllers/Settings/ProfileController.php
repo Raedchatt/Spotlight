@@ -85,7 +85,7 @@ class ProfileController extends Controller
         $request->user()->save();
 
         if ($request->user()->isOrganisateur() && $request->has('rib')) {
-            $request->user()->organisateur()->update([
+            $request->user()->organisateur->update([
                 'rib' => $request->rib
             ]);
         }

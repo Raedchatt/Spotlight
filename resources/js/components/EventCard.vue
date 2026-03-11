@@ -17,7 +17,7 @@ interface Props {
     showAction?: boolean;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
     showAction: true
 });
 
@@ -51,6 +51,11 @@ const handleAction = (event: Evenement) => {
     }
     emit('book', event);
 };
+
+const bannerImage = computed(() => {
+    const imageMedia = props.event.medias?.find((m: any) => m.type === 'image');
+    return imageMedia?.url || 'https://picsum.photos/seed/fallback/800/600';
+});
 </script>
 
 <template>
@@ -62,7 +67,7 @@ const handleAction = (event: Evenement) => {
         <div 
             class="h-40 relative bg-cover bg-center shrink-0"
             :class="!event.medias?.length ? 'bg-gradient-to-br from-blue-500/10 to-purple-500/10' : ''"
-            :style="event.medias?.length ? { backgroundImage: `url(${event.medias[0].url})` } : {}"
+            :style="{ backgroundImage: `url(${bannerImage})` }"
         >
             <div class="absolute top-4 left-4 flex flex-col gap-2">
                 <Badge :variant="getStatusVariant(event.statut)" class="capitalize shadow-sm w-fit bg-blue-600 hover:bg-blue-700 border-0 text-white">

@@ -159,7 +159,7 @@ onMounted(() => {
             </section>
 
             <!-- Section 2: Our Services -->
-            <section>
+            <section class="pb-16">
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div class="mb-16 text-center">
                         <h2 class="inline-block text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
