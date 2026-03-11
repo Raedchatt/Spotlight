@@ -20,9 +20,10 @@ import {
 import { computed, ref } from 'vue';
 
 import AppFooter from '@/components/AppFooter.vue';
+import AppHeader from '@/components/AppHeader.vue';
 import { useAuthModal } from '@/composables/useAuthModal';
 import AppLayout from '@/layouts/AppLayout.vue';
-import AppHeader from '@/components/AppHeader.vue';
+
 interface EventMedia {
     id: number;
     url: string;
@@ -101,10 +102,20 @@ const formatTime = (dateString: string) => {
     });
 };
 
-const coverImage = computed(() => {
-    const img = props.event.medias.find(m => m.type === 'image');
-    return img ? img.url : null;
-});
+// --- Media Carousel ---
+const currentMediaIndex = ref(0);
+const allMedias = computed(() => props.event.medias ?? []);
+const currentMedia = computed(() => allMedias.value[currentMediaIndex.value] ?? null);
+
+const prevMedia = () => {
+    if (allMedias.value.length <= 1) return;
+    currentMediaIndex.value = (currentMediaIndex.value - 1 + allMedias.value.length) % allMedias.value.length;
+};
+
+const nextMedia = () => {
+    if (allMedias.value.length <= 1) return;
+    currentMediaIndex.value = (currentMediaIndex.value + 1) % allMedias.value.length;
+};
 
 const progressPercentage = (reserved: number, total: number) => {
     if (total === 0) return 0;
@@ -167,13 +178,10 @@ const handleReserve = () => {
             <AppHeader />
 
             <!-- 1. HERO SECTION -->
-            <div class="relative h-72 md:h-96 w-full overflow-hidden bg-zinc-900">
-                <img 
-                    v-if="coverImage" 
-                    :src="coverImage" 
-                    class="w-full h-full object-cover opacity-60"
-                />
-                <div v-else class="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center">
+            <div class="relative h-72 md:h-[500px] w-full overflow-hidden bg-zinc-900">
+
+                <!-- No media fallback -->
+                <div v-if="allMedias.length === 0" class="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center">
                     <Calendar class="w-20 h-20 text-zinc-600" />
                 </div>
 
@@ -183,7 +191,7 @@ const handleReserve = () => {
                     <img
                         v-if="currentMedia?.type === 'image'"
                         :src="currentMedia.url"
-                        :key="currentMedia.id"
+                        :key="'img-' + currentMedia.id"
                         class="w-full h-full object-cover opacity-70 transition-opacity duration-500"
                     />
 
@@ -191,7 +199,7 @@ const handleReserve = () => {
                     <video
                         v-else-if="currentMedia?.type === 'video'"
                         :src="currentMedia.url"
-                        :key="currentMedia.id"
+                        :key="'vid-' + currentMedia.id"
                         class="w-full h-full object-cover opacity-80"
                         autoplay
                         muted
@@ -222,7 +230,7 @@ const handleReserve = () => {
                     <!-- Dot Indicators -->
                     <div v-if="allMedias.length > 1" class="absolute bottom-20 md:bottom-24 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
                         <button
-                            v-for="(media, idx) in allMedias"
+                            v-for="(_, idx) in allMedias"
                             :key="idx"
                             @click="currentMediaIndex = idx"
                             :class="[
