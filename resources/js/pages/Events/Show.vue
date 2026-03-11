@@ -158,27 +158,27 @@ const handleReserve = () => {
 <template>
     <component :is="auth?.user ? AppLayout : 'div'">
         <Head :title="props.event.titre" />
-
-        <!-- Guest Navbar -->
-        <header v-if="!auth?.user" class="sticky top-0 z-50 border-b border-gray-100 bg-white/80 backdrop-blur-md">
-            <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-                <div class="flex items-center gap-2">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1a56db] text-white">
-                        <Ticket class="size-6" />
+        
+        <div class="min-h-screen bg-background pb-12">
+            <!-- Guest Navbar -->
+            <header v-if="!auth?.user" class="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
+                <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+                    <div class="flex items-center gap-2">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
+                            <Ticket class="size-6" />
+                        </div>
+                        <Link href="/">
+                            <span class="text-xl font-bold tracking-tight text-foreground">Spotlight</span>
+                        </Link>
                     </div>
-                    <Link href="/">
-                        <span class="text-xl font-bold tracking-tight text-[#111827]">Spotlight</span>
-                    </Link>
+
+                    <nav class="flex items-center gap-4">
+                        <Link href="/login" class="text-sm font-medium text-muted-foreground hover:text-foreground">Log in</Link>
+                        <Link href="/register" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Get Started</Link>
+                    </nav>
                 </div>
+            </header>
 
-                <nav class="flex items-center gap-4">
-                    <Link href="/login" class="text-sm font-medium text-gray-700 hover:text-gray-900">Log in</Link>
-                    <Link href="/register" class="rounded-lg bg-[#1a56db] px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Get Started</Link>
-                </nav>
-            </div>
-        </header>
-
-        <div class="min-h-screen bg-zinc-50 pb-12">
             <!-- 1. HERO SECTION -->
             <div class="relative h-72 md:h-96 w-full overflow-hidden bg-zinc-900">
                 <img 
@@ -235,19 +235,19 @@ const handleReserve = () => {
                     <div class="lg:col-span-2 space-y-8">
                         
                         <!-- Section 1: About -->
-                        <div class="bg-white rounded-2xl shadow-sm p-8 border border-zinc-100">
-                            <h2 class="text-xl font-bold text-zinc-900 mb-6 flex items-center gap-2">
+                        <div class="bg-card rounded-2xl shadow-sm p-8 border border-border">
+                            <h2 class="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
                                 <span class="w-1.5 h-6 bg-blue-600 rounded-full"></span>
                                 About this Event
                             </h2>
-                            <div class="prose prose-zinc max-w-none text-zinc-600 leading-relaxed whitespace-pre-line">
+                            <div class="prose prose-zinc dark:prose-invert max-w-none text-muted-foreground leading-relaxed whitespace-pre-line">
                                 {{ props.event.description }}
                             </div>
                         </div>
 
                         <!-- Section 2: Date & Time -->
-                        <div class="bg-white rounded-2xl shadow-sm p-8 border border-zinc-100">
-                            <h2 class="text-xl font-bold text-zinc-900 mb-6 flex items-center gap-2">
+                        <div class="bg-card rounded-2xl shadow-sm p-8 border border-border">
+                            <h2 class="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
                                 <span class="w-1.5 h-6 bg-blue-600 rounded-full"></span>
                                 Date & Time
                             </h2>
@@ -257,9 +257,9 @@ const handleReserve = () => {
                                         <Calendar class="w-5 h-5 text-blue-600" />
                                     </div>
                                     <div>
-                                        <div class="text-sm font-bold text-zinc-400 uppercase tracking-wider mb-1">Start</div>
-                                        <div class="text-zinc-900 font-semibold">{{ formatDate(props.event.date_debut) }}</div>
-                                        <div class="text-zinc-500 text-sm">{{ formatTime(props.event.date_debut) }}</div>
+                                        <div class="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-1">Start</div>
+                                        <div class="text-foreground font-semibold">{{ formatDate(props.event.date_debut) }}</div>
+                                        <div class="text-muted-foreground text-sm">{{ formatTime(props.event.date_debut) }}</div>
                                     </div>
                                 </div>
                                 <div class="flex items-start gap-4">
@@ -267,17 +267,17 @@ const handleReserve = () => {
                                         <Clock class="w-5 h-5 text-zinc-400" />
                                     </div>
                                     <div>
-                                        <div class="text-sm font-bold text-zinc-400 uppercase tracking-wider mb-1">End</div>
-                                        <div class="text-zinc-900 font-semibold">{{ formatDate(props.event.date_fin) }}</div>
-                                        <div class="text-zinc-500 text-sm">{{ formatTime(props.event.date_fin) }}</div>
+                                        <div class="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-1">End</div>
+                                        <div class="text-foreground font-semibold">{{ formatDate(props.event.date_fin) }}</div>
+                                        <div class="text-muted-foreground text-sm">{{ formatTime(props.event.date_fin) }}</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Section 3: Location -->
-                        <div class="bg-white rounded-2xl shadow-sm p-8 border border-zinc-100">
-                            <h2 class="text-xl font-bold text-zinc-900 mb-6 flex items-center gap-2">
+                        <div class="bg-card rounded-2xl shadow-sm p-8 border border-border">
+                            <h2 class="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
                                 <span class="w-1.5 h-6 bg-blue-600 rounded-full"></span>
                                 Location
                             </h2>
@@ -301,8 +301,8 @@ const handleReserve = () => {
                         </div>
 
                         <!-- Section 4: Capacity -->
-                        <div class="bg-white rounded-2xl shadow-sm p-8 border border-zinc-100">
-                            <h2 class="text-xl font-bold text-zinc-900 mb-6 flex items-center gap-2">
+                        <div class="bg-card rounded-2xl shadow-sm p-8 border border-border">
+                            <h2 class="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
                                 <span class="w-1.5 h-6 bg-blue-600 rounded-full"></span>
                                 Capacity
                             </h2>
@@ -310,15 +310,15 @@ const handleReserve = () => {
                             <!-- Normal Event Capacity -->
                             <div v-if="!props.event.is_tournoi" class="space-y-4">
                                 <div class="flex justify-between items-end">
-                                    <div class="flex items-center gap-2 text-zinc-900 font-bold">
+                                    <div class="flex items-center gap-2 text-foreground font-bold">
                                         <Users class="w-5 h-5 text-blue-600" />
                                         Attendees
                                     </div>
-                                    <div class="text-sm text-zinc-500">
-                                        <span class="font-bold text-zinc-900">{{ props.stats.total_reserved }}</span> / {{ props.event.capacite_spectateur }} spots
+                                    <div class="text-sm text-muted-foreground">
+                                        <span class="font-bold text-foreground">{{ props.stats.total_reserved }}</span> / {{ props.event.capacite_spectateur }} spots
                                     </div>
                                 </div>
-                                <div class="w-full bg-zinc-100 rounded-full h-3 overflow-hidden">
+                                <div class="w-full bg-muted rounded-full h-3 overflow-hidden">
                                     <div 
                                         class="bg-blue-600 h-full transition-all duration-1000" 
                                         :style="{ width: progressPercentage(props.stats.total_reserved ?? 0, props.event.capacite_spectateur) + '%' }"
@@ -335,15 +335,15 @@ const handleReserve = () => {
                                 <!-- Participants -->
                                 <div class="space-y-4">
                                     <div class="flex justify-between items-end">
-                                        <div class="flex items-center gap-2 text-zinc-900 font-bold">
+                                        <div class="flex items-center gap-2 text-foreground font-bold">
                                             <Gamepad2 class="w-5 h-5 text-blue-600" />
                                             Participants
                                         </div>
-                                        <div class="text-sm text-zinc-500">
-                                            <span class="font-bold text-zinc-900">{{ props.stats.participant_reserved }}</span> / {{ props.event.capacite_participant }} slots
+                                        <div class="text-sm text-muted-foreground">
+                                            <span class="font-bold text-foreground">{{ props.stats.participant_reserved }}</span> / {{ props.event.capacite_participant }} slots
                                         </div>
                                     </div>
-                                    <div class="w-full bg-zinc-100 rounded-full h-3 overflow-hidden">
+                                    <div class="w-full bg-muted rounded-full h-3 overflow-hidden">
                                         <div 
                                             class="bg-blue-600 h-full transition-all duration-1000" 
                                             :style="{ width: progressPercentage(props.stats.participant_reserved ?? 0, props.event.capacite_participant ?? 1) + '%' }"
@@ -358,15 +358,15 @@ const handleReserve = () => {
                                 <!-- Spectators -->
                                 <div class="space-y-4">
                                     <div class="flex justify-between items-end">
-                                        <div class="flex items-center gap-2 text-zinc-900 font-bold">
+                                        <div class="flex items-center gap-2 text-foreground font-bold">
                                             <Eye class="w-5 h-5 text-orange-500" />
                                             Spectators
                                         </div>
-                                        <div class="text-sm text-zinc-500">
-                                            <span class="font-bold text-zinc-900">{{ props.stats.spectator_reserved }}</span> / {{ props.event.capacite_spectateur }} spots
+                                        <div class="text-sm text-muted-foreground">
+                                            <span class="font-bold text-foreground">{{ props.stats.spectator_reserved }}</span> / {{ props.event.capacite_spectateur }} spots
                                         </div>
                                     </div>
-                                    <div class="w-full bg-zinc-100 rounded-full h-3 overflow-hidden">
+                                    <div class="w-full bg-muted rounded-full h-3 overflow-hidden">
                                         <div 
                                             class="bg-orange-500 h-full transition-all duration-1000" 
                                             :style="{ width: progressPercentage(props.stats.spectator_reserved ?? 0, props.event.capacite_spectateur) + '%' }"
@@ -387,38 +387,38 @@ const handleReserve = () => {
                         <div class="sticky top-6 space-y-6">
                             
                             <!-- Ticket / Management Card -->
-                            <div class="bg-white rounded-2xl shadow-lg border border-zinc-100 overflow-hidden">
-                                <div class="p-1 h-2" :class="isOwner ? 'bg-zinc-900' : 'bg-blue-600'"></div>
+                            <div class="bg-card rounded-2xl shadow-lg border border-border overflow-hidden">
+                                <div class="p-1 h-2" :class="isOwner ? 'bg-foreground' : 'bg-blue-600'"></div>
                                 
                                 <!-- Owner View: Management Card -->
                                 <div v-if="isOwner" class="p-8">
-                                    <h3 class="text-lg font-bold text-zinc-900 mb-6">Event Management</h3>
+                                    <h3 class="text-lg font-bold text-foreground mb-6">Event Management</h3>
                                     
                                     <div class="space-y-6">
-                                        <div class="flex items-center justify-between p-4 bg-zinc-50 rounded-xl border border-zinc-100">
-                                            <div class="text-sm font-bold text-zinc-400 uppercase tracking-wider">Status</div>
+                                        <div class="flex items-center justify-between p-4 bg-muted/30 rounded-xl border border-border">
+                                            <div class="text-sm font-bold text-muted-foreground uppercase tracking-wider">Status</div>
                                             <Badge variant="outline" class="capitalize font-bold text-blue-600 border-blue-100 bg-blue-50/50">
                                                 Active
                                             </Badge>
                                         </div>
 
                                         <div class="grid grid-cols-2 gap-4">
-                                            <div class="p-4 bg-zinc-50 rounded-xl border border-zinc-100">
-                                                <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Total Revenue</div>
-                                                <div class="text-lg font-black text-zinc-900">
+                                            <div class="p-4 bg-muted/30 rounded-xl border border-border">
+                                                <div class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Total Revenue</div>
+                                                <div class="text-lg font-black text-foreground">
                                                     {{ ((props.stats.spectator_reserved ?? 0) * props.event.prix_spectateur) + ((props.stats.participant_reserved ?? 0) * (props.event.prix_participant ?? 0)) }} TND
                                                 </div>
                                             </div>
-                                            <div class="p-4 bg-zinc-50 rounded-xl border border-zinc-100">
-                                                <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Reservations</div>
-                                                <div class="text-lg font-black text-zinc-900">
+                                            <div class="p-4 bg-muted/30 rounded-xl border border-border">
+                                                <div class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Reservations</div>
+                                                <div class="text-lg font-black text-foreground">
                                                     {{ (props.stats.total_reserved ?? 0) + (props.stats.participant_reserved ?? 0) + (props.stats.spectator_reserved ?? 0) }}
                                                 </div>
                                             </div>
                                         </div>
 
                                         <Link :href="`/dashboard/events/${props.event.id}/edit`" class="block w-full">
-                                            <Button class="w-full py-6 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold flex items-center justify-center gap-2">
+                                            <Button class="w-full py-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold flex items-center justify-center gap-2">
                                                 <Edit class="w-4 h-4" />
                                                 Edit Specifications
                                             </Button>
@@ -432,12 +432,12 @@ const handleReserve = () => {
 
                                 <!-- Participant View: Ticket Card -->
                                 <div v-else class="p-8">
-                                    <h3 v-if="props.event.is_tournoi" class="text-lg font-bold text-zinc-900 mb-6">Choose your ticket</h3>
+                                    <h3 v-if="props.event.is_tournoi" class="text-lg font-bold text-foreground mb-6">Choose your ticket</h3>
                                     
                                     <!-- Normal Event Pricing -->
                                     <div v-if="!props.event.is_tournoi" class="mb-8">
-                                        <div class="text-3xl font-black text-zinc-900">{{ props.event.prix_spectateur }} TND <span class="text-sm font-semibold text-zinc-400">/ ticket</span></div>
-                                        <div class="mt-2 flex items-center gap-2 text-sm text-zinc-500 font-medium">
+                                        <div class="text-3xl font-black text-foreground">{{ props.event.prix_spectateur }} TND <span class="text-sm font-semibold text-muted-foreground">/ ticket</span></div>
+                                        <div class="mt-2 flex items-center gap-2 text-sm text-muted-foreground font-medium">
                                             <Users class="w-4 h-4" />
                                             {{ props.stats.remaining }} spots remaining
                                         </div>
@@ -449,7 +449,7 @@ const handleReserve = () => {
                                         <label 
                                             :class="[
                                                 'relative flex flex-col p-4 rounded-xl border-2 transition-all cursor-pointer group',
-                                                selectedTicketType === 'participant' ? 'border-blue-600 bg-blue-50/30' : 'border-zinc-100 hover:border-zinc-200'
+                                                selectedTicketType === 'participant' ? 'border-blue-600 bg-blue-50/30' : 'border-border hover:border-accent'
                                             ]"
                                         >
                                             <input type="radio" v-model="selectedTicketType" value="participant" class="sr-only" />
@@ -472,7 +472,7 @@ const handleReserve = () => {
                                         <label 
                                             :class="[
                                                 'relative flex flex-col p-4 rounded-xl border-2 transition-all cursor-pointer group',
-                                                selectedTicketType === 'spectator' ? 'border-blue-600 bg-blue-50/30' : 'border-zinc-100 hover:border-zinc-200'
+                                                selectedTicketType === 'spectator' ? 'border-blue-600 bg-blue-50/30' : 'border-border hover:border-accent'
                                             ]"
                                         >
                                             <input type="radio" v-model="selectedTicketType" value="spectator" class="sr-only" />
@@ -499,8 +499,8 @@ const handleReserve = () => {
                                         :class="[
                                             'w-full py-4 rounded-xl font-bold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg mb-4',
                                             (props.is_reserved || isFullyBooked) 
-                                                ? 'bg-zinc-200 text-zinc-500 cursor-not-allowed shadow-none' 
-                                                : 'bg-black hover:bg-zinc-800 text-white shadow-zinc-800/10'
+                                                ? 'bg-muted text-muted-foreground cursor-not-allowed shadow-none' 
+                                                : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/10'
                                         ]"
                                     >
                                         <Ticket class="w-5 h-5" v-if="!isFullyBooked && !props.is_reserved" />
@@ -516,11 +516,11 @@ const handleReserve = () => {
                             </div>
 
                             <!-- Organizer Card -->
-                            <div class="bg-white rounded-2xl shadow-sm border border-zinc-100 p-6 flex flex-col items-center text-center">
-                                <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-zinc-100 to-zinc-200 flex items-center justify-center font-bold text-xl text-zinc-500 mb-4 border border-white shadow-sm">
+                            <div class="bg-card rounded-2xl shadow-sm border border-border p-6 flex flex-col items-center text-center">
+                                <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center font-bold text-xl text-muted-foreground mb-4 border border-border shadow-sm">
                                     {{ getInitials(props.event.organisateur.name) }}
                                 </div>
-                                <h4 class="font-bold text-zinc-900 text-lg">
+                                <h4 class="font-bold text-foreground text-lg">
                                     <template v-if="isOwner">
                                         You <span class="text-zinc-400 font-normal text-sm">(Owner)</span>
                                     </template>
@@ -537,7 +537,7 @@ const handleReserve = () => {
                                 <Link 
                                     v-if="!isOwner"
                                     :href="`/organizer/${props.event.organisateur.id}`"
-                                    class="w-full py-2.5 rounded-lg border-2 border-zinc-900 text-zinc-900 font-bold hover:bg-zinc-900 hover:text-white transition-all text-sm"
+                                    class="w-full py-2.5 rounded-lg border-2 border-primary text-primary font-bold hover:bg-primary hover:text-primary-foreground transition-all text-sm"
                                 >
                                     View Profile
                                 </Link>
@@ -555,8 +555,8 @@ const handleReserve = () => {
             <!-- 3. BOTTOM SECTION: Similar Events -->
             <div v-if="props.similar_events && props.similar_events.length > 0" class="max-w-7xl mx-auto px-4 md:px-12 mt-20">
                 <div class="flex items-center justify-between mb-8">
-                    <h2 class="text-2xl font-bold text-zinc-900">Similar Events</h2>
-                    <Link href="/dashboard/events" class="text-sm font-bold text-zinc-400 hover:text-zinc-900 flex items-center gap-1 transition-colors group">
+                    <h2 class="text-2xl font-bold text-foreground">Similar Events</h2>
+                    <Link href="/dashboard/events" class="text-sm font-bold text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors group">
                         See all <ChevronRight class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </Link>
                 </div>
@@ -566,7 +566,7 @@ const handleReserve = () => {
                         v-for="sim in props.similar_events" 
                         :key="sim.id"
                         :href="`/events/${sim.id}`"
-                        class="bg-white rounded-2xl shadow-sm overflow-hidden group border border-transparent hover:border-zinc-200 transition-all duration-300"
+                        class="bg-card rounded-2xl shadow-sm overflow-hidden group border border-transparent hover:border-border transition-all duration-300"
                     >
                         <div class="relative h-44 bg-zinc-100 overflow-hidden">
                             <img 
@@ -585,9 +585,9 @@ const handleReserve = () => {
                         </div>
                         <div class="p-6 flex-1 flex flex-col justify-between">
                             <div class="space-y-4">
-                                <h3 class="font-bold text-lg text-zinc-900 line-clamp-1 transition-colors">{{ sim.titre }}</h3>
+                                <h3 class="font-bold text-lg text-foreground line-clamp-1 transition-colors">{{ sim.titre }}</h3>
                                 
-                                <div class="space-y-2 text-sm text-zinc-500">
+                                <div class="space-y-2 text-sm text-muted-foreground">
                                     <div class="flex items-center gap-2">
                                         <MapPin class="w-4 h-4 shrink-0" />
                                         <span class="line-clamp-1">{{ sim.lieu }}</span>
@@ -600,13 +600,13 @@ const handleReserve = () => {
                             </div>
 
                             <div class="mt-6 flex flex-col gap-4">
-                                <div class="pt-4 border-t border-zinc-50 flex items-center justify-between">
-                                    <div class="text-lg font-bold text-zinc-900">{{ sim.prix_spectateur }} TND</div>
+                                <div class="pt-4 border-t border-border flex items-center justify-between">
+                                    <div class="text-lg font-bold text-foreground">{{ sim.prix_spectateur }} TND</div>
                                     <div class="text-blue-600 font-bold transition-transform group-hover:translate-x-1">
                                         <ChevronRight class="w-5 h-5" />
                                     </div>
                                 </div>
-                                <div class="w-full py-2.5 rounded-xl bg-zinc-900 text-white text-xs font-bold uppercase tracking-widest text-center group-hover:bg-blue-600 transition-all duration-300 shadow-lg shadow-zinc-900/10 group-hover:shadow-blue-600/20">
+                                <div class="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest text-center group-hover:bg-blue-600 transition-all duration-300 shadow-lg shadow-primary/10 group-hover:shadow-blue-600/20">
                                     View Details
                                 </div>
                             </div>

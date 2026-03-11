@@ -14,7 +14,8 @@ const verify = () => {
 <div class="bg-white w-[420px] rounded-2xl p-8 shadow-xl">
 
 <div class="text-center mb-8 mt-6">
-<img src="/images/logo_Black.png" class="mx-auto w-28 mb-4" />
+<img src="/images/logo_Black.png" class="mx-auto w-28 mb-4 dark:hidden" />
+<img src="/images/logo_white.png" class="mx-auto w-28 mb-4 hidden dark:block" />
 <h2 class="text-lg text-[#222222] font-semibold">
 Enter verification code
 </h2>

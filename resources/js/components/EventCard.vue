@@ -74,8 +74,8 @@ const handleAction = (event: Evenement) => {
             </div>
             <div class="absolute bottom-4 right-4 animate-in fade-in zoom-in duration-300">
                  <Link :href="`/events/${event.id}`">
-                    <Button size="icon" variant="secondary" class="group/btn h-8 w-8 rounded-full shadow-md hover:bg-black/20 backdrop-blur-sm bg-white/80 transition-all active:scale-90">
-                        <Eye class="w-4 h-4 text-black group-hover/btn:text-white transition-colors" />
+                    <Button size="icon" variant="secondary" class="group/btn h-8 w-8 rounded-full shadow-md hover:bg-accent/20 backdrop-blur-sm bg-background/80 transition-all active:scale-90">
+                        <Eye class="w-4 h-4 text-foreground transition-colors" />
                     </Button>
                  </Link>
             </div>
