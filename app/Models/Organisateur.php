@@ -13,6 +13,15 @@ class Organisateur extends Model
     protected $table = 'organisateurs';
 
     /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'rib' => 'encrypted',
+    ];
+
+    /**
      * Mass-assignable attributes.
      */
     protected $fillable = [

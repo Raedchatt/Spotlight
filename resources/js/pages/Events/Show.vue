@@ -17,9 +17,9 @@ import {
     Edit,
     PlayCircle
 } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
-
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import AppHeader from '@/components/AppHeader.vue';
+import AppFooter from '@/components/AppFooter.vue';
 import { useAuthModal } from '@/composables/useAuthModal';
 import AppLayout from '@/layouts/AppLayout.vue';
 
@@ -109,12 +109,32 @@ const currentMedia = computed(() => allMedias.value[currentMediaIndex.value] ?? 
 const prevMedia = () => {
     if (allMedias.value.length <= 1) return;
     currentMediaIndex.value = (currentMediaIndex.value - 1 + allMedias.value.length) % allMedias.value.length;
+    resetTimer();
 };
 
 const nextMedia = () => {
     if (allMedias.value.length <= 1) return;
     currentMediaIndex.value = (currentMediaIndex.value + 1) % allMedias.value.length;
+    resetTimer();
 };
+
+// Auto-advance every 5 seconds
+let timer: ReturnType<typeof setInterval> | null = null;
+
+const startTimer = () => {
+    if (allMedias.value.length <= 1) return;
+    timer = setInterval(() => {
+        currentMediaIndex.value = (currentMediaIndex.value + 1) % allMedias.value.length;
+    }, 5000);
+};
+
+const resetTimer = () => {
+    if (timer) clearInterval(timer);
+    startTimer();
+};
+
+onMounted(startTimer);
+onUnmounted(() => { if (timer) clearInterval(timer); });
 
 const progressPercentage = (reserved: number, total: number) => {
     if (total === 0) return 0;
@@ -173,8 +193,6 @@ const handleReserve = () => {
         <Head :title="props.event.titre" />
         
         <div class="min-h-screen bg-background pb-12">
-            <!-- Guest Navbar -->
-            <AppHeader />
 
             <!-- 1. HERO SECTION -->
             <div class="relative h-72 md:h-[500px] w-full overflow-hidden bg-zinc-900">
@@ -191,6 +209,7 @@ const handleReserve = () => {
                         v-if="currentMedia?.type === 'image'"
                         :src="currentMedia.url"
                         :key="'img-' + currentMedia.id"
+                        @error="(e) => (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/fallback/1200/800'"
                         class="w-full h-full object-cover opacity-70 transition-opacity duration-500"
                     />
 

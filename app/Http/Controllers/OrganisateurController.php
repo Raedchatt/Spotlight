@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Enum;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+// use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class OrganisateurController extends Controller
 {
@@ -36,7 +36,7 @@ class OrganisateurController extends Controller
 
         return response()->json([
             'organisateurs' => $organisateurs,
-            'total'         => $organisateurs->count(),
+            'total' => $organisateurs->count(),
         ]);
     }
 
@@ -54,7 +54,7 @@ class OrganisateurController extends Controller
 
         $organisateur->load([
             'user:id,username,email',
-            'evenements' => fn ($q) => $q->latest()->take(10),
+            'evenements' => fn($q) => $q->latest()->take(10),
         ]);
 
         return response()->json($organisateur);
@@ -81,25 +81,25 @@ class OrganisateurController extends Controller
 
         $logoPath = null;
         if ($request->hasFile('logo')) {
-            $logoPath = Cloudinary::upload($request->file('logo')->getRealPath(), [
+            $logoPath = cloudinary()->uploadApi()->upload($request->file('logo')->getRealPath(), [
                 'folder' => 'organisateurs/logos'
-            ])->getSecurePath();
+            ])['secure_url'];
         }
 
         $organisateur = Organisateur::create([
-            'user_id'          => Auth::id(),
+            'user_id' => Auth::id(),
             'nom_organisation' => $request->nom_organisation,
-            'description'      => $request->description,
-            'telephone'        => $request->telephone,
-            'adresse'          => $request->adresse,
-            'site_web'         => $request->site_web,
-            'logo'             => $logoPath,
-            'statut'           => 'pending',
+            'description' => $request->description,
+            'telephone' => $request->telephone,
+            'adresse' => $request->adresse,
+            'site_web' => $request->site_web,
+            'logo' => $logoPath,
+            'statut' => 'pending',
         ]);
 
         return response()->json([
-            'message'       => 'Your organizer application has been submitted and is pending review.',
-            'organisateur'  => $organisateur,
+            'message' => 'Your organizer application has been submitted and is pending review.',
+            'organisateur' => $organisateur,
         ], 201);
     }
 
@@ -119,15 +119,21 @@ class OrganisateurController extends Controller
         }
 
         $data = $request->only([
-            'nom_organisation', 'description', 'telephone', 'adresse', 'site_web', 'rib', 'rib_popup_seen'
+            'nom_organisation',
+            'description',
+            'telephone',
+            'adresse',
+            'site_web',
+            'rib',
+            'rib_popup_seen'
         ]);
 
         // Handle logo replacement
         if ($request->hasFile('logo')) {
             // Remove old logo from Cloudinary if it exists (using Cloudinary facade would require extra parsing, so we skip deletion for now to keep it simple and safe)
-            $data['logo'] = Cloudinary::upload($request->file('logo')->getRealPath(), [
+            $data['logo'] = cloudinary()->uploadApi()->upload($request->file('logo')->getRealPath(), [
                 'folder' => 'organisateurs/logos'
-            ])->getSecurePath();
+            ])['secure_url'];
         }
 
         $organisateur->update($data);
@@ -137,7 +143,7 @@ class OrganisateurController extends Controller
         }
 
         return response()->json([
-            'message'      => 'Organizer profile updated successfully.',
+            'message' => 'Organizer profile updated successfully.',
             'organisateur' => $organisateur->fresh(),
         ]);
     }
@@ -160,7 +166,7 @@ class OrganisateurController extends Controller
 
         return response()->json([
             'organisateurs' => $organisateurs,
-            'total'         => $organisateurs->count(),
+            'total' => $organisateurs->count(),
         ]);
     }
     // -------------------------------------------------------------------------
@@ -175,7 +181,7 @@ class OrganisateurController extends Controller
     public function creerEvenement(Request $request): JsonResponse
     {
         $user = Auth::user();
-        
+
         if ($user->role !== 'organisateur' || !$user->isApprovedOrganisateur()) {
             return response()->json(['message' => 'Unauthorized. Only approved organizers can create events.'], 403);
         }
@@ -278,22 +284,22 @@ class OrganisateurController extends Controller
     public function consulterStatistiques(): JsonResponse
     {
         $organisateurId = Auth::id();
-        
+
         $totalEvents = Evenement::where('organisateur_id', $organisateurId)->count();
         $activeEvents = Evenement::where('organisateur_id', $organisateurId)
             ->where('statut', StatutEvenement::Ouvert)
             ->count();
-            
-        $reservations = Reservation::whereHas('evenement', function($q) use ($organisateurId) {
+
+        $reservations = Reservation::whereHas('evenement', function ($q) use ($organisateurId) {
             $q->where('organisateur_id', $organisateurId);
         })->get();
 
         $totalReservations = $reservations->count();
         $confirmedReservations = $reservations->where('statut', \App\Enums\StatutReservation::Confirmed)->count();
-        
+
         $totalRevenue = $reservations->where('statut', \App\Enums\StatutReservation::Confirmed)
-            ->sum(function($r) {
-                return $r->nombre_tickets * (float)$r->evenement->prix_spectateur;
+            ->sum(function ($r) {
+                return $r->nombre_tickets * (float) $r->evenement->prix_spectateur;
             });
 
         return response()->json([

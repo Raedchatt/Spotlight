@@ -36,7 +36,7 @@ const { openRegister } = useAuthModal();
 
 const fetchEvents = async () => {
     try {
-        const response = await axios.get('/api/events/search?statut=ouvert,valide,encours,en_attente&limit=6');
+        const response = await axios.get('/web-api/events/search?statut=ouvert,valide,encours,en_attente&limit=6');
         events.value = response.data;
     } catch (error) {
         console.error('Error fetching events:', error);
@@ -159,7 +159,7 @@ onMounted(() => {
             </section>
 
             <!-- Section 2: Our Services -->
-            <section>
+            <section class="pb-16">
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div class="mb-16 text-center">
                         <h2 class="inline-block text-3xl font-bold tracking-tight text-foreground sm:text-4xl">

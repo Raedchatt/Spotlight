@@ -7,13 +7,19 @@ import {
     MapPin, 
     CircleDollarSign,
     Users,
-    Loader2
+    Loader2,
+    Trash2,
+    Star,
+    X,
+    Image as ImageIcon,
+    Film
 } from 'lucide-vue-next';
 import { ref, onMounted } from 'vue';
 
 import InputError from '@/components/InputError.vue';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 
@@ -43,8 +49,12 @@ const form = ref({
     type_tournoi: '',
     prix_participant: 0,
     capacite_participant: 0,
-    medias: [] as File[]
+    medias: [] as File[],
+    poster_url: ''
 });
+
+const existingMedias = ref<any[]>([]);
+const mediaToDelete = ref<number[]>([]);
 
 const errors = ref<Record<string, string[]>>({});
 const processing = ref(false);
@@ -52,7 +62,7 @@ const fetching = ref(true);
 
 const fetchEvent = async () => {
     try {
-        const response = await axios.get(`/api/events/${props.id}`); // Note: Need a show endpoint in controller or use search with id
+        const response = await axios.get(`/web-api/events/${props.id}`); // Note: Need a show endpoint in controller or use search with id
         const event = response.data;
         
         // Format dates for datetime-local input
@@ -75,8 +85,11 @@ const fetchEvent = async () => {
             type_tournoi: event.type_tournoi ?? '',
             prix_participant: event.prix_participant ?? 0,
             capacite_participant: event.capacite_participant ?? 0,
-            medias: [] as File[] // Keep empty initially, as we are appending new medias
+            medias: [] as File[],
+            poster_url: event.poster_url ?? ''
         };
+
+        existingMedias.value = event.medias || [];
     } catch (error) {
         console.error('Error fetching event:', error);
     } finally {
@@ -87,8 +100,21 @@ const fetchEvent = async () => {
 const handleFileChange = (event: Event) => {
     const input = event.target as HTMLInputElement;
     if (input.files) {
-        form.value.medias = Array.from(input.files);
+        form.value.medias = [...form.value.medias, ...Array.from(input.files)];
     }
+};
+
+const removeNewMedia = (index: number) => {
+    form.value.medias.splice(index, 1);
+};
+
+const removeExistingMedia = (id: number) => {
+    mediaToDelete.value.push(id);
+    existingMedias.value = existingMedias.value.filter(m => m.id !== id);
+};
+
+const setMainPoster = (url: string) => {
+    form.value.poster_url = url;
 };
 
 const submit = async () => {
@@ -114,16 +140,38 @@ const submit = async () => {
             }
         });
 
-        await axios.post(`/api/events/${props.id}`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
+        mediaToDelete.value.forEach(id => {
+            formData.append('media_to_delete[]', String(id));
+        });
+
+        await axios.post(`/web-api/events/${props.id}`, formData, {
+            headers: { 
+                'Content-Type': 'multipart/form-data',
+                'X-Requested-With': 'XMLHttpRequest'
+             }
         });
         
-        router.visit('/dashboard/events');
+        // Successful update, redirect to list using Inertia router
+        router.visit('/dashboard/events', {
+            method: 'get',
+            replace: true,
+            preserveScroll: false,
+            onFinish: () => {
+                // Dual-safety: fallback redirect if Inertia transition fails
+                setTimeout(() => {
+                    if (window.location.pathname !== '/dashboard/events') {
+                        window.location.href = '/dashboard/events';
+                    }
+                }, 1000);
+            }
+        });
     } catch (error: any) {
+        console.error('Error updating event:', error);
         if (error.response?.status === 422) {
             errors.value = error.response.data.errors;
         } else {
-            console.error('An unexpected error occurred:', error);
+            // Fallback for non-validation errors
+            alert(error.response?.data?.message || 'An unexpected error occurred. Please try again.');
         }
     } finally {
         processing.value = false;
@@ -214,11 +262,53 @@ onMounted(() => {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Media Uploads</CardTitle>
-                            <CardDescription>Upload additional images or videos. (Existing media not shown here yet)</CardDescription>
+                            <CardTitle>Media Management</CardTitle>
+                            <CardDescription>View existing media, set a main poster, or upload new files.</CardDescription>
                         </CardHeader>
-                        <CardContent>
-                            <div class="space-y-4">
+                        <CardContent class="space-y-6">
+                            <!-- Existing Media -->
+                            <div v-if="existingMedias.length > 0" class="space-y-3">
+                                <h4 class="text-sm font-medium">Existing Media</h4>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                    <div v-for="media in existingMedias" :key="media.id" class="relative group aspect-video rounded-lg overflow-hidden border bg-muted">
+                                        <img v-if="media.type === 'image'" :src="media.url" class="w-full h-full object-cover" />
+                                        <div v-else class="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800">
+                                            <Film class="w-8 h-8 text-muted-foreground" />
+                                        </div>
+                                        
+                                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                            <Button 
+                                                v-if="media.type === 'image'"
+                                                size="icon" 
+                                                variant="secondary" 
+                                                class="h-8 w-8 rounded-full"
+                                                :class="{ 'bg-amber-500 text-white hover:bg-amber-600': form.poster_url === media.url }"
+                                                @click="setMainPoster(media.url)"
+                                                title="Set as Main Poster"
+                                            >
+                                                <Star class="w-4 h-4" :class="{ 'fill-current': form.poster_url === media.url }" />
+                                            </Button>
+                                            <Button 
+                                                size="icon" 
+                                                variant="destructive" 
+                                                class="h-8 w-8 rounded-full"
+                                                @click="removeExistingMedia(media.id)"
+                                                title="Delete Media"
+                                            >
+                                                <Trash2 class="w-4 h-4" />
+                                            </Button>
+                                        </div>
+
+                                        <div v-if="form.poster_url === media.url" class="absolute top-1 left-1">
+                                            <Badge class="bg-amber-500 hover:bg-amber-500 text-[8px] h-4 px-1">Main Poster</Badge>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- New Media Upload -->
+                            <div class="space-y-4 pt-4 border-t">
+                                <h4 class="text-sm font-medium">Add New Media</h4>
                                 <div class="flex items-center justify-center w-full">
                                     <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-slate-700">
                                         <div class="flex flex-col items-center justify-center pt-5 pb-6">
@@ -232,11 +322,21 @@ onMounted(() => {
                                     </label>
                                 </div>
                                 
-                                <div v-if="form.medias.length > 0" class="flex flex-col space-y-2 mt-4">
-                                    <h4 class="text-sm font-medium">Selected files to add:</h4>
-                                    <ul class="text-sm text-muted-foreground list-disc list-inside">
-                                        <li v-for="file in form.medias" :key="file.name">{{ file.name }} ({{ (file.size / 1024 / 1024).toFixed(2) }} MB)</li>
-                                    </ul>
+                                <div v-if="form.medias.length > 0" class="space-y-2">
+                                    <h5 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">New files to add:</h5>
+                                    <div class="space-y-1">
+                                        <div v-for="(file, index) in form.medias" :key="index" class="flex items-center justify-between p-2 rounded-md bg-muted/50 text-sm border border-dashed">
+                                            <div class="flex items-center gap-2 overflow-hidden">
+                                                <ImageIcon v-if="file.type.startsWith('image/')" class="w-4 h-4 shrink-0 text-blue-500" />
+                                                <Film v-else class="w-4 h-4 shrink-0 text-purple-500" />
+                                                <span class="truncate">{{ file.name }}</span>
+                                                <span class="text-[10px] text-muted-foreground whitespace-nowrap">({{ (file.size / 1024 / 1024).toFixed(2) }} MB)</span>
+                                            </div>
+                                            <button @click="removeNewMedia(index)" class="p-1 hover:text-destructive transition-colors rounded-full hover:bg-destructive/10">
+                                                <X class="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <InputError :message="errors?.['medias.0']?.[0] || errors?.medias?.[0]" />
