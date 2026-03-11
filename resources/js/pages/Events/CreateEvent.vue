@@ -8,12 +8,31 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
+import { AlertCircle } from 'lucide-vue-next';
+import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Events', href: '/dashboard/events' },
     { title: 'Create Event', href: '/dashboard/events/create' },
 ];
+
+type Props = {
+    breadcrumbs?: BreadcrumbItem[];
+};
+
+const props = withDefaults(defineProps<Props>(), {
+    breadcrumbs: () => [],
+});
+
+const page = usePage();
+const auth = computed(() => page.props.auth as any);
+const isMissingRib = computed(() => {
+    return auth.value.user?.role === 'organisateur' && 
+           (!auth.value.user?.organisateur || !auth.value.user?.organisateur.rib);
+});
 
 const form = ref({
     titre: '',
@@ -90,10 +109,26 @@ const submit = async () => {
                     <h1 class="text-3xl font-bold tracking-tight">Host an Event</h1>
                     <p class="text-muted-foreground">Fill in the details below to publish your event to the platform.</p>
                 </div>
-                <Button @click="submit" :disabled="processing" class="bg-blue-600 hover:bg-blue-700">
+                <Button @click="submit" :disabled="processing || isMissingRib" class="bg-blue-600 hover:bg-blue-700">
                     <Save class="w-4 h-4 mr-2" />
                     {{ processing ? 'Publishing...' : 'Publish Event' }}
                 </Button>
+            </div>
+
+            <!-- RIB Missing Warning -->
+            <div v-if="isMissingRib" class="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-xl p-4 flex gap-4 items-center">
+                <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center flex-shrink-0">
+                    <AlertCircle class="w-6 h-6 text-red-600 dark:text-red-400" />
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-sm font-semibold text-red-900 dark:text-red-300">Bank Information Missing</h3>
+                    <p class="text-sm text-red-800 dark:text-red-400">You must add your bank account information (RIB) before you can publish events.</p>
+                </div>
+                <Link href="/settings/profile">
+                    <Button variant="outline" size="sm" class="border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-900/30 text-red-700 dark:text-red-400">
+                        Add RIB Now
+                    </Button>
+                </Link>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -267,7 +302,7 @@ const submit = async () => {
                          <Link href="/dashboard/events">
                             <Button variant="ghost">Cancel and go back</Button>
                         </Link>
-                        <Button @click="submit" :disabled="processing" class="bg-blue-600 hover:bg-blue-700 min-w-[150px]">
+                        <Button @click="submit" :disabled="processing || isMissingRib" class="bg-blue-600 hover:bg-blue-700 min-w-[150px]">
                             {{ processing ? 'Publishing...' : 'Publish Event' }}
                         </Button>
                     </div>

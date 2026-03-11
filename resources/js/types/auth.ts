@@ -10,6 +10,12 @@ export type User = {
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
+    organisateur?: {
+        id: number;
+        rib?: string;
+        rib_popup_seen: boolean;
+        [key: string]: any;
+    };
     [key: string]: unknown;
 };
 

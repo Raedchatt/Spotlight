@@ -31,6 +31,8 @@ class UpdateOrganisateurRequest extends FormRequest
             'adresse'          => ['nullable', 'string', 'max:500'],
             'site_web'         => ['nullable', 'url', 'max:255'],
             'logo'             => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+            'rib'              => ['nullable', 'string', 'max:30'],
+            'rib_popup_seen'   => ['sometimes', 'boolean'],
         ];
     }
 

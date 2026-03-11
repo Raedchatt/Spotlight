@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Form, Head, Link, usePage } from '@inertiajs/vue3';
-import { Calendar, DollarSign, User as UserIcon, Trophy, ChevronRight } from 'lucide-vue-next';
+import { Calendar, DollarSign, User as UserIcon, Trophy, ChevronRight, CreditCard } from 'lucide-vue-next';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import AppearanceTabs from '@/components/AppearanceTabs.vue';
 import InputError from '@/components/InputError.vue';
@@ -32,6 +32,7 @@ type Props = {
         reservations_count: number;
         medias: Array<{ url: string }>;
     }>;
+    rib?: string;
 };
 
 defineProps<Props>();
@@ -44,7 +45,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
 ];
 
 const page = usePage<AppPageProps>();
-const user = page.props.auth.user;
+const user = page.props.auth.user as any;
 </script>
 
 <template>
@@ -228,7 +229,36 @@ const user = page.props.auth.user;
                                 </CardContent>
                             </Card>
 
-                            <div class="flex items-center gap-4">
+                            <!-- Bank Information Section (Organizers Only) -->
+                            <Card v-if="user.role === 'organisateur'" class="mt-6">
+                                <CardHeader>
+                                    <div class="flex items-center gap-2">
+                                        <div class="p-2 bg-blue-500/10 rounded-lg">
+                                            <CreditCard class="h-4 w-4 text-blue-500" />
+                                        </div>
+                                        <CardTitle>Bank Information</CardTitle>
+                                    </div>
+                                </CardHeader>
+                                <CardContent class="space-y-4">
+                                    <div class="grid gap-2">
+                                        <Label for="rib">RIB (Bank Account Number)</Label>
+                                        <Input
+                                            id="rib"
+                                            name="rib"
+                                            class="font-mono"
+                                            :default-value="user.organisateur?.rib"
+                                            placeholder="Enter your 20-digit RIB"
+                                            maxlength="30"
+                                        />
+                                        <p class="text-[10px] text-muted-foreground italic">
+                                            Required to receive payments from event registrations.
+                                        </p>
+                                        <InputError class="mt-2" :message="errors.rib" />
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <div class="flex items-center gap-4 mt-6">
                                 <Button
                                     type="submit"
                                     :disabled="processing"

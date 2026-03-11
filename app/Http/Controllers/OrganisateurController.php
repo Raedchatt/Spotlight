@@ -108,15 +108,18 @@ class OrganisateurController extends Controller
      *
      * PUT /api/organisateurs/{organisateur}
      */
-    public function update(UpdateOrganisateurRequest $request, Organisateur $organisateur): JsonResponse
+    public function update(UpdateOrganisateurRequest $request, Organisateur $organisateur)
     {
         // Extra guard (FormRequest authorize() already checks, but belt-and-suspenders)
         if ($organisateur->user_id !== Auth::id()) {
-            return response()->json(['message' => 'Unauthorized action.'], 403);
+            if ($request->wantsJson() || $request->header('X-Inertia')) {
+                return response()->json(['message' => 'Unauthorized action.'], 403);
+            }
+            abort(403);
         }
 
         $data = $request->only([
-            'nom_organisation', 'description', 'telephone', 'adresse', 'site_web',
+            'nom_organisation', 'description', 'telephone', 'adresse', 'site_web', 'rib', 'rib_popup_seen'
         ]);
 
         // Handle logo replacement
@@ -128,6 +131,10 @@ class OrganisateurController extends Controller
         }
 
         $organisateur->update($data);
+
+        if ($request->header('X-Inertia')) {
+            return back()->with('message', 'Organizer profile updated successfully.');
+        }
 
         return response()->json([
             'message'      => 'Organizer profile updated successfully.',
@@ -171,6 +178,13 @@ class OrganisateurController extends Controller
         
         if ($user->role !== 'organisateur' || !$user->isApprovedOrganisateur()) {
             return response()->json(['message' => 'Unauthorized. Only approved organizers can create events.'], 403);
+        }
+
+        if (!$user->organisateur || !$user->organisateur->rib) {
+            return response()->json([
+                'message' => 'Bank information (RIB) is required to create events. Please complete your bank details first.',
+                'require_rib' => true
+            ], 422);
         }
 
         $request->validate([

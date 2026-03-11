@@ -19,6 +19,7 @@ trait ProfileValidationRules
             'email' => $this->emailRules($userId),
             'telephone' => ['nullable', 'string', 'max:20'],
             'about' => ['nullable', 'string', 'max:1000'],
+            'rib' => ['nullable', 'string', 'max:30'],
         ];
     }
 

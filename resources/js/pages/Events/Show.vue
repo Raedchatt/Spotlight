@@ -22,6 +22,7 @@ import { computed, ref } from 'vue';
 import AppFooter from '@/components/AppFooter.vue';
 import { useAuthModal } from '@/composables/useAuthModal';
 import AppLayout from '@/layouts/AppLayout.vue';
+import AppHeader from '@/components/AppHeader.vue';
 interface EventMedia {
     id: number;
     url: string;
@@ -105,21 +106,6 @@ const coverImage = computed(() => {
     return img ? img.url : null;
 });
 
-// --- Media Carousel ---
-const currentMediaIndex = ref(0);
-const allMedias = computed(() => props.event.medias ?? []);
-const currentMedia = computed(() => allMedias.value[currentMediaIndex.value] ?? null);
-
-const prevMedia = () => {
-    if (allMedias.value.length <= 1) return;
-    currentMediaIndex.value = (currentMediaIndex.value - 1 + allMedias.value.length) % allMedias.value.length;
-};
-
-const nextMedia = () => {
-    if (allMedias.value.length <= 1) return;
-    currentMediaIndex.value = (currentMediaIndex.value + 1) % allMedias.value.length;
-};
-
 const progressPercentage = (reserved: number, total: number) => {
     if (total === 0) return 0;
     return Math.min(100, (reserved / total) * 100);
@@ -178,29 +164,16 @@ const handleReserve = () => {
         
         <div class="min-h-screen bg-background pb-12">
             <!-- Guest Navbar -->
-            <header v-if="!auth?.user" class="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
-                <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-                    <div class="flex items-center gap-2">
-                        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
-                            <Ticket class="size-6" />
-                        </div>
-                        <Link href="/">
-                            <span class="text-xl font-bold tracking-tight text-foreground">Spotlight</span>
-                        </Link>
-                    </div>
-
-                    <nav class="flex items-center gap-4">
-                        <Link href="/login" class="text-sm font-medium text-muted-foreground hover:text-foreground">Log in</Link>
-                        <Link href="/register" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Get Started</Link>
-                    </nav>
-                </div>
-            </header>
+            <AppHeader />
 
             <!-- 1. HERO SECTION -->
-            <div class="relative h-72 md:h-[500px] w-full overflow-hidden bg-zinc-900">
-
-                <!-- No media fallback -->
-                <div v-if="allMedias.length === 0" class="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center">
+            <div class="relative h-72 md:h-96 w-full overflow-hidden bg-zinc-900">
+                <img 
+                    v-if="coverImage" 
+                    :src="coverImage" 
+                    class="w-full h-full object-cover opacity-60"
+                />
+                <div v-else class="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center">
                     <Calendar class="w-20 h-20 text-zinc-600" />
                 </div>
 
