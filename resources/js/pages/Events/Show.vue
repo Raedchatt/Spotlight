@@ -17,7 +17,7 @@ import {
     Edit,
     PlayCircle
 } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 
 import AppFooter from '@/components/AppFooter.vue';
 import AppHeader from '@/components/AppHeader.vue';
@@ -110,12 +110,32 @@ const currentMedia = computed(() => allMedias.value[currentMediaIndex.value] ?? 
 const prevMedia = () => {
     if (allMedias.value.length <= 1) return;
     currentMediaIndex.value = (currentMediaIndex.value - 1 + allMedias.value.length) % allMedias.value.length;
+    resetTimer();
 };
 
 const nextMedia = () => {
     if (allMedias.value.length <= 1) return;
     currentMediaIndex.value = (currentMediaIndex.value + 1) % allMedias.value.length;
+    resetTimer();
 };
+
+// Auto-advance every 5 seconds
+let timer: ReturnType<typeof setInterval> | null = null;
+
+const startTimer = () => {
+    if (allMedias.value.length <= 1) return;
+    timer = setInterval(() => {
+        currentMediaIndex.value = (currentMediaIndex.value + 1) % allMedias.value.length;
+    }, 5000);
+};
+
+const resetTimer = () => {
+    if (timer) clearInterval(timer);
+    startTimer();
+};
+
+onMounted(startTimer);
+onUnmounted(() => { if (timer) clearInterval(timer); });
 
 const progressPercentage = (reserved: number, total: number) => {
     if (total === 0) return 0;
