@@ -89,11 +89,7 @@ defineExpose({
 });
 
 const handleLogout = () => {
-    router.post(logout(), {}, {
-        onFinish: () => {
-            router.flushAll();
-        }
-    });
+    router.post(logout());
 };
 </script>
 
