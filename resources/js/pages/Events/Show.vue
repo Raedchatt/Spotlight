@@ -7,13 +7,15 @@ import {
     Users, 
     Trophy, 
     Ticket, 
-    ChevronRight, 
+    ChevronRight,
+    ChevronLeft,
     Star,
     Share2,
     CalendarDays,
     Gamepad2,
     Eye,
-    Edit
+    Edit,
+    PlayCircle
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
@@ -103,6 +105,21 @@ const coverImage = computed(() => {
     return img ? img.url : null;
 });
 
+// --- Media Carousel ---
+const currentMediaIndex = ref(0);
+const allMedias = computed(() => props.event.medias ?? []);
+const currentMedia = computed(() => allMedias.value[currentMediaIndex.value] ?? null);
+
+const prevMedia = () => {
+    if (allMedias.value.length <= 1) return;
+    currentMediaIndex.value = (currentMediaIndex.value - 1 + allMedias.value.length) % allMedias.value.length;
+};
+
+const nextMedia = () => {
+    if (allMedias.value.length <= 1) return;
+    currentMediaIndex.value = (currentMediaIndex.value + 1) % allMedias.value.length;
+};
+
 const progressPercentage = (reserved: number, total: number) => {
     if (total === 0) return 0;
     return Math.min(100, (reserved / total) * 100);
@@ -180,15 +197,80 @@ const handleReserve = () => {
             </header>
 
             <!-- 1. HERO SECTION -->
-            <div class="relative h-72 md:h-96 w-full overflow-hidden bg-zinc-900">
-                <img 
-                    v-if="coverImage" 
-                    :src="coverImage" 
-                    class="w-full h-full object-cover opacity-60"
-                />
-                <div v-else class="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center">
+            <div class="relative h-72 md:h-[500px] w-full overflow-hidden bg-zinc-900">
+
+                <!-- No media fallback -->
+                <div v-if="allMedias.length === 0" class="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center">
                     <Calendar class="w-20 h-20 text-zinc-600" />
                 </div>
+
+                <!-- Carousel -->
+                <template v-else>
+                    <!-- Current media: Image -->
+                    <img
+                        v-if="currentMedia?.type === 'image'"
+                        :src="currentMedia.url"
+                        :key="currentMedia.id"
+                        class="w-full h-full object-cover opacity-70 transition-opacity duration-500"
+                    />
+
+                    <!-- Current media: Video -->
+                    <video
+                        v-else-if="currentMedia?.type === 'video'"
+                        :src="currentMedia.url"
+                        :key="currentMedia.id"
+                        class="w-full h-full object-cover opacity-80"
+                        autoplay
+                        muted
+                        loop
+                        playsinline
+                    />
+
+                    <!-- Left Arrow -->
+                    <button
+                        v-if="allMedias.length > 1"
+                        @click.stop="prevMedia"
+                        class="absolute left-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center w-11 h-11 rounded-full bg-black/40 hover:bg-black/70 text-white backdrop-blur-sm border border-white/20 transition-all duration-200 hover:scale-110"
+                        aria-label="Previous media"
+                    >
+                        <ChevronLeft class="w-6 h-6" />
+                    </button>
+
+                    <!-- Right Arrow -->
+                    <button
+                        v-if="allMedias.length > 1"
+                        @click.stop="nextMedia"
+                        class="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center w-11 h-11 rounded-full bg-black/40 hover:bg-black/70 text-white backdrop-blur-sm border border-white/20 transition-all duration-200 hover:scale-110"
+                        aria-label="Next media"
+                    >
+                        <ChevronRight class="w-6 h-6" />
+                    </button>
+
+                    <!-- Dot Indicators -->
+                    <div v-if="allMedias.length > 1" class="absolute bottom-20 md:bottom-24 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+                        <button
+                            v-for="(media, idx) in allMedias"
+                            :key="idx"
+                            @click="currentMediaIndex = idx"
+                            :class="[
+                                'transition-all duration-300 rounded-full border border-white/40',
+                                idx === currentMediaIndex
+                                    ? 'w-6 h-2.5 bg-white'
+                                    : 'w-2.5 h-2.5 bg-white/40 hover:bg-white/70'
+                            ]"
+                        />
+                    </div>
+
+                    <!-- Video badge -->
+                    <div v-if="currentMedia?.type === 'video'" class="absolute top-5 right-5 z-20 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/20">
+                        <PlayCircle class="w-3.5 h-3.5" /> VIDEO
+                    </div>
+
+                    <!-- Media counter badge -->
+                    <div v-if="allMedias.length > 1" class="absolute top-5 left-5 z-20 bg-black/50 backdrop-blur-sm text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/20">
+                        {{ currentMediaIndex + 1 }} / {{ allMedias.length }}
+                    </div>
+                </template>
 
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                 
