@@ -42,7 +42,7 @@ class EvenementController extends Controller
                 ->count();
             $stats = [
                 'total_reserved' => $totalReserved,
-                'remaining'      => max(0, $event->capacite_spectateur - $totalReserved),
+                'remaining' => max(0, $event->capacite_spectateur - $totalReserved),
             ];
         } else {
             $participantReserved = Reservation::where('evenement_id', $id)
@@ -56,10 +56,10 @@ class EvenementController extends Controller
                 ->count();
 
             $stats = [
-                'participant_reserved'  => $participantReserved,
-                'spectator_reserved'    => $spectatorReserved,
+                'participant_reserved' => $participantReserved,
+                'spectator_reserved' => $spectatorReserved,
                 'participant_remaining' => max(0, $event->capacite_participant - $participantReserved),
-                'spectator_remaining'   => max(0, $event->capacite_spectateur - $spectatorReserved),
+                'spectator_remaining' => max(0, $event->capacite_spectateur - $spectatorReserved),
             ];
         }
 
@@ -81,9 +81,9 @@ class EvenementController extends Controller
             ->get();
 
         return Inertia::render('Events/Show', [
-            'event'          => $event,
-            'stats'          => $stats,
-            'is_reserved'    => $isReserved,
+            'event' => $event,
+            'stats' => $stats,
+            'is_reserved' => $isReserved,
             'similar_events' => $similarEvents->isEmpty() ? null : $similarEvents,
         ]);
     }
@@ -114,14 +114,14 @@ class EvenementController extends Controller
 
         $event = Evenement::create([
             'organisateur_id' => Auth::id(),
-            'titre' => $request->titre,
-            'description' => $request->description,
-            'date_debut' => $request->date_debut,
-            'date_fin' => $request->date_fin,
-            'lieu' => $request->lieu,
-            'prix_spectateur' => $request->prix_spectateur,
-            'capacite_spectateur' => $request->capacite_spectateur,
-            'categorie' => $request->categorie,
+            'titre' => $request->input('titre'),
+            'description' => $request->input('description'),
+            'date_debut' => $request->input('date_debut'),
+            'date_fin' => $request->input('date_fin'),
+            'lieu' => $request->input('lieu'),
+            'prix_spectateur' => $request->input('prix_spectateur'),
+            'capacite_spectateur' => $request->input('capacite_spectateur'),
+            'categorie' => $request->input('categorie'),
             // Tournament fields
             'is_tournoi' => $request->has('is_tournoi') ? $request->boolean('is_tournoi') : false,
             'type_tournoi' => $request->type_tournoi ?? null,
@@ -141,7 +141,7 @@ class EvenementController extends Controller
                     'folder' => 'events/media',
                     'resource_type' => $type === TypeMedia::Video ? 'video' : 'image'
                 ]);
-                
+
                 $url = $uploadResult['secure_url'];
 
                 // Create media record
@@ -175,24 +175,24 @@ class EvenementController extends Controller
         // Validate input (including tournament fields)
         try {
             $request->validate([
-            'titre' => 'required|string|max:255',
-            'description' => 'required',
-            'date_debut' => 'required|date',
-            'date_fin' => 'required|date',
-            'lieu' => 'required|string',
-            'prix_spectateur' => 'required|numeric',
-            'capacite_spectateur' => 'required|integer',
-            'categorie' => ['required', new Enum(CategorieEvenement::class)],
-            'statut' => ['required', new Enum(StatutEvenement::class)],
-            'is_tournoi' => 'sometimes|boolean',
-            'type_tournoi' => 'exclude_if:is_tournoi,0|required_if:is_tournoi,1|in:equipe,individuel',
-            'prix_participant' => 'exclude_if:is_tournoi,0|required_if:is_tournoi,1|numeric|min:0',
-            'capacite_participant' => 'exclude_if:is_tournoi,0|required_if:is_tournoi,1|integer|min:1',
-            'medias.*' => 'nullable|file|mimes:jpeg,png,jpg,webp,mp4,mov|max:20480', // Allow up to 20MB
-            'media_to_delete' => 'nullable|array',
-            'media_to_delete.*' => 'integer|exists:media,id',
-            'poster_url' => 'nullable|string',
-        ]);
+                'titre' => 'required|string|max:255',
+                'description' => 'required',
+                'date_debut' => 'required|date',
+                'date_fin' => 'required|date',
+                'lieu' => 'required|string',
+                'prix_spectateur' => 'required|numeric',
+                'capacite_spectateur' => 'required|integer',
+                'categorie' => ['required', new Enum(CategorieEvenement::class)],
+                'statut' => ['required', new Enum(StatutEvenement::class)],
+                'is_tournoi' => 'sometimes|boolean',
+                'type_tournoi' => 'exclude_if:is_tournoi,0|required_if:is_tournoi,1|in:equipe,individuel',
+                'prix_participant' => 'exclude_if:is_tournoi,0|required_if:is_tournoi,1|numeric|min:0',
+                'capacite_participant' => 'exclude_if:is_tournoi,0|required_if:is_tournoi,1|integer|min:1',
+                'medias.*' => 'nullable|file|mimes:jpeg,png,jpg,webp,mp4,mov|max:20480', // Allow up to 20MB
+                'media_to_delete' => 'nullable|array',
+                'media_to_delete.*' => 'integer|exists:media,id',
+                'poster_url' => 'nullable|string',
+            ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Illuminate\Support\Facades\Log::error('Event Update Validation Failed:', $e->errors());
             throw $e;
@@ -207,6 +207,7 @@ class EvenementController extends Controller
             'prix_spectateur' => $request->prix_spectateur,
             'capacite_spectateur' => $request->capacite_spectateur,
             'categorie' => $request->categorie,
+            'statut' => $request->statut,
             // Tournament fields
             'is_tournoi' => $request->has('is_tournoi') ? $request->boolean('is_tournoi') : false,
             'type_tournoi' => $request->type_tournoi ?? null,
@@ -219,13 +220,13 @@ class EvenementController extends Controller
         if ($request->has('media_to_delete')) {
             $mediaIds = $request->input('media_to_delete');
             $medias = $event->medias()->whereIn('id', $mediaIds)->get();
-            
+
             foreach ($medias as $media) {
                 // If it's the poster, clear it
                 if ($event->poster_url === $media->url) {
                     $event->update(['poster_url' => null]);
                 }
-                
+
                 // Try to delete from Cloudinary if possible (needs public_id storage, which we don't have yet, so just delete DB record)
                 // For now, we just delete the database record
                 $media->delete();
@@ -288,27 +289,27 @@ class EvenementController extends Controller
         $query = Evenement::with('medias')->withCount('reservations');
 
         if ($request->has('organisateur_id')) {
-            $query->parOrganisateur($request->organisateur_id);
+            $query->parOrganisateur($request->input('organisateur_id'));
         }
 
         if ($request->has('titre')) {
-            $query->parTitre($request->titre);
+            $query->parTitre($request->input('titre'));
         }
 
         if ($request->has('date')) {
-            $query->parDate($request->date);
+            $query->parDate($request->input('date'));
         }
 
         if ($request->has('prix_max')) {
-            $query->parPrix($request->prix_max);
+            $query->parPrix($request->input('prix_max'));
         }
 
         if ($request->has('categorie')) {
-            $query->parCategorie($request->categorie);
+            $query->parCategorie($request->input('categorie'));
         }
 
         if ($request->has('statut')) {
-            $statuts = explode(',', $request->statut);
+            $statuts = explode(',', $request->input('statut'));
             $query->whereIn('statut', $statuts);
         }
 

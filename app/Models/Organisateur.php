@@ -36,6 +36,15 @@ class Organisateur extends Model
         'rib_popup_seen',
     ];
 
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array
+     */
+    protected $hidden = [
+        'rib',
+    ];
+
     // -------------------------------------------------------------------------
     // Relationships
     // -------------------------------------------------------------------------

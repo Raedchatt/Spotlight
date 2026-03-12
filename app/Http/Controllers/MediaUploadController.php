@@ -21,9 +21,9 @@ class MediaUploadController extends Controller
             [
                 'folder' => 'spotlight/posters', // organized folder
                 'transformation' => [
-                    'width'   => 1200,
-                    'height'  => 630,
-                    'crop'    => 'fill',         // auto crop for event cards
+                    'width' => 1200,
+                    'height' => 630,
+                    'crop' => 'fill',         // auto crop for event cards
                     'quality' => 'auto',          // auto optimize quality
                     'fetch_format' => 'auto',     // auto best format (webp etc)
                 ]
@@ -31,7 +31,7 @@ class MediaUploadController extends Controller
         );
 
         return response()->json([
-            'url'       => $uploadedFile['secure_url'],  // https URL
+            'url' => $uploadedFile['secure_url'],  // https URL
             'public_id' => $uploadedFile['public_id'],    // to delete later
         ]);
     }
@@ -46,17 +46,17 @@ class MediaUploadController extends Controller
         $uploadedFile = cloudinary()->uploadApi()->upload(
             $request->file('video')->getRealPath(),
             [
-                'folder'             => 'spotlight/videos',
-                'resource_type'      => 'video',
-                'eager'              => [           // generate preview thumbnail
+                'folder' => 'spotlight/videos',
+                'resource_type' => 'video',
+                'eager' => [           // generate preview thumbnail
                     ['width' => 400, 'height' => 300, 'crop' => 'pad', 'format' => 'jpg']
                 ],
-                'eager_async'        => true,
+                'eager_async' => true,
             ]
         );
 
         return response()->json([
-            'url'       => $uploadedFile['secure_url'],
+            'url' => $uploadedFile['secure_url'],
             'public_id' => $uploadedFile['public_id'],
         ]);
     }

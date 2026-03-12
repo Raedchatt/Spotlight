@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Enum;
+use Inertia\Inertia;
 // use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class OrganisateurController extends Controller
@@ -36,7 +37,7 @@ class OrganisateurController extends Controller
 
         return response()->json([
             'organisateurs' => $organisateurs,
-            'total'         => $organisateurs->count(),
+            'total' => $organisateurs->count(),
         ]);
     }
 
@@ -54,7 +55,7 @@ class OrganisateurController extends Controller
 
         $organisateur->load([
             'user:id,username,email',
-            'evenements' => fn ($q) => $q->latest()->take(10),
+            'evenements' => fn($q) => $q->latest()->take(10),
         ]);
 
         return response()->json($organisateur);
@@ -87,19 +88,19 @@ class OrganisateurController extends Controller
         }
 
         $organisateur = Organisateur::create([
-            'user_id'          => Auth::id(),
+            'user_id' => Auth::id(),
             'nom_organisation' => $request->nom_organisation,
-            'description'      => $request->description,
-            'telephone'        => $request->telephone,
-            'adresse'          => $request->adresse,
-            'site_web'         => $request->site_web,
-            'logo'             => $logoPath,
-            'statut'           => 'pending',
+            'description' => $request->description,
+            'telephone' => $request->telephone,
+            'adresse' => $request->adresse,
+            'site_web' => $request->site_web,
+            'logo' => $logoPath,
+            'statut' => 'pending',
         ]);
 
         return response()->json([
-            'message'       => 'Your organizer application has been submitted and is pending review.',
-            'organisateur'  => $organisateur,
+            'message' => 'Your organizer application has been submitted and is pending review.',
+            'organisateur' => $organisateur,
         ], 201);
     }
 
@@ -119,7 +120,13 @@ class OrganisateurController extends Controller
         }
 
         $data = $request->only([
-            'nom_organisation', 'description', 'telephone', 'adresse', 'site_web', 'rib', 'rib_popup_seen'
+            'nom_organisation',
+            'description',
+            'telephone',
+            'adresse',
+            'site_web',
+            'rib',
+            'rib_popup_seen'
         ]);
 
         // Handle logo replacement
@@ -137,7 +144,7 @@ class OrganisateurController extends Controller
         }
 
         return response()->json([
-            'message'      => 'Organizer profile updated successfully.',
+            'message' => 'Organizer profile updated successfully.',
             'organisateur' => $organisateur->fresh(),
         ]);
     }
@@ -160,7 +167,7 @@ class OrganisateurController extends Controller
 
         return response()->json([
             'organisateurs' => $organisateurs,
-            'total'         => $organisateurs->count(),
+            'total' => $organisateurs->count(),
         ]);
     }
     // -------------------------------------------------------------------------
@@ -175,7 +182,7 @@ class OrganisateurController extends Controller
     public function creerEvenement(Request $request): JsonResponse
     {
         $user = Auth::user();
-        
+
         if ($user->role !== 'organisateur' || !$user->isApprovedOrganisateur()) {
             return response()->json(['message' => 'Unauthorized. Only approved organizers can create events.'], 403);
         }
@@ -278,22 +285,22 @@ class OrganisateurController extends Controller
     public function consulterStatistiques(): JsonResponse
     {
         $organisateurId = Auth::id();
-        
+
         $totalEvents = Evenement::where('organisateur_id', $organisateurId)->count();
         $activeEvents = Evenement::where('organisateur_id', $organisateurId)
             ->where('statut', StatutEvenement::Ouvert)
             ->count();
-            
-        $reservations = Reservation::whereHas('evenement', function($q) use ($organisateurId) {
+
+        $reservations = Reservation::whereHas('evenement', function ($q) use ($organisateurId) {
             $q->where('organisateur_id', $organisateurId);
         })->get();
 
         $totalReservations = $reservations->count();
         $confirmedReservations = $reservations->where('statut', \App\Enums\StatutReservation::Confirmed)->count();
-        
+
         $totalRevenue = $reservations->where('statut', \App\Enums\StatutReservation::Confirmed)
-            ->sum(function($r) {
-                return $r->nombre_tickets * (float)$r->evenement->prix_spectateur;
+            ->sum(function ($r) {
+                return $r->nombre_tickets * (float) $r->evenement->prix_spectateur;
             });
 
         return response()->json([
@@ -305,6 +312,123 @@ class OrganisateurController extends Controller
                 'total_revenue' => round($totalRevenue, 2),
                 'currency' => 'TND'
             ]
+        ]);
+    }
+
+    /**
+     * Return data for the organizer Inertia dashboard page.
+     *
+     * GET /dashboard  (web route, organizer only)
+     */
+    public function dashboardData()
+    {
+        $user = Auth::user();
+
+        if (!$user || !$user->isOrganisateur()) {
+            return Inertia::render('Dashboard', [
+                'dashboardData' => null,
+            ]);
+        }
+
+        $organisateurId = $user->id;
+
+        // ------------------------------------
+        // Revenue: confirmed vs pending
+        // ------------------------------------
+        $allReservations = Reservation::whereHas('evenement', function ($q) use ($organisateurId) {
+            $q->where('organisateur_id', $organisateurId);
+        })->with('evenement:id,prix_spectateur')->get();
+
+        $totalReceived = $allReservations
+            ->where('statut', \App\Enums\StatutReservation::Confirmed)
+            ->sum(fn($r) => $r->nombre_tickets * (float) $r->evenement->prix_spectateur);
+
+        $pendingPayout = $allReservations
+            ->where('statut', \App\Enums\StatutReservation::Pending)
+            ->sum(fn($r) => $r->nombre_tickets * (float) $r->evenement->prix_spectateur);
+
+        // ------------------------------------
+        // Category breakdown (% of events)
+        // ------------------------------------
+        $events = Evenement::where('organisateur_id', $organisateurId)->get();
+        $totalEvents = $events->count();
+
+        $categoryBreakdown = [];
+        if ($totalEvents > 0) {
+            $grouped = $events->groupBy(fn($e) => $e->categorie instanceof CategorieEvenement ? $e->categorie->value : $e->categorie);
+            foreach ($grouped as $cat => $catEvents) {
+                $categoryBreakdown[] = [
+                    'category' => $cat,
+                    'count'    => $catEvents->count(),
+                    'percent'  => round(($catEvents->count() / $totalEvents) * 100),
+                ];
+            }
+            usort($categoryBreakdown, fn($a, $b) => $b['count'] <=> $a['count']);
+        }
+
+        // ------------------------------------
+        // Current / active events with revenue
+        // ------------------------------------
+        $currentEvents = Evenement::where('organisateur_id', $organisateurId)
+            ->where('date_debut', '<=', now())
+            ->where('date_fin', '>=', now())
+            ->latest()
+            ->take(20)
+            ->get()
+            ->map(function ($event) use ($allReservations) {
+                $eventRevenue = $allReservations
+                    ->where('evenement_id', $event->id)
+                    ->where('statut', \App\Enums\StatutReservation::Confirmed)
+                    ->sum(fn($r) => $r->nombre_tickets * (float) $event->prix_spectateur);
+
+                return [
+                    'id'       => $event->id,
+                    'titre'    => $event->titre,
+                    'categorie'=> $event->categorie instanceof CategorieEvenement ? $event->categorie->value : $event->categorie,
+                    'lieu'     => $event->lieu,
+                    'statut'   => $event->statut instanceof StatutEvenement ? $event->statut->value : $event->statut,
+                    'revenue'  => round($eventRevenue, 2),
+                ];
+            });
+
+        // ------------------------------------
+        // Top 9 active participants
+        // ------------------------------------
+        $participantCounts = $allReservations
+            ->whereIn('statut', [\App\Enums\StatutReservation::Confirmed->value, \App\Enums\StatutReservation::Pending->value])
+            ->groupBy('user_id')
+            ->map(fn($group) => [
+                'user_id'     => $group->first()->user_id,
+                'event_count' => $group->count(),
+            ])
+            ->sortByDesc('event_count')
+            ->take(9)
+            ->values();
+
+        $participantUserIds = $participantCounts->pluck('user_id');
+        $participantUsers = \App\Models\User::whereIn('id', $participantUserIds)
+            ->get(['id', 'username'])
+            ->keyBy('id');
+
+        $activeParticipants = $participantCounts->map(function ($pc) use ($participantUsers) {
+            $u = $participantUsers->get($pc['user_id']);
+            return [
+                'id'          => $pc['user_id'],
+                'username'    => $u ? $u->username : 'Unknown',
+                'avatar'      => null,
+                'event_count' => $pc['event_count'],
+            ];
+        })->values();
+
+        return Inertia::render('Dashboard', [
+            'dashboardData' => [
+                'totalReceived'      => round($totalReceived, 2),
+                'pendingPayout'      => round($pendingPayout, 2),
+                'categoryBreakdown'  => $categoryBreakdown,
+                'currentEvents'      => $currentEvents,
+                'activeParticipants' => $activeParticipants,
+                'totalEvents'        => $totalEvents,
+            ],
         ]);
     }
 }

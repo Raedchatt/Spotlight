@@ -38,9 +38,11 @@ class ProfileController extends Controller
 
             $bestEvents = Evenement::where('organisateur_id', $user->id)
                 ->with(['medias'])
-                ->withCount(['reservations' => function ($query) {
-                    $query->confirmed();
-                }])
+                ->withCount([
+                    'reservations' => function ($query) {
+                        $query->confirmed();
+                    }
+                ])
                 ->orderBy('reservations_count', 'desc')
                 ->take(5)
                 ->get();
@@ -51,7 +53,7 @@ class ProfileController extends Controller
                 'stats' => $stats,
                 'bestEvents' => $bestEvents,
             ]);
-        } 
+        }
 
         // For Participants
         $stats = [
