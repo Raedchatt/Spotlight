@@ -244,18 +244,6 @@ onMounted(() => {
                                     </select>
                                     <InputError :message="errors.categorie?.[0]" />
                                 </div>
-                                
-                                <div class="space-y-2">
-                                    <label class="text-sm font-medium">Status *</label>
-                                    <select v-model="form.statut" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                                        <option value="ouvert">Ouvert</option>
-                                        <option value="ferme">Fermé</option>
-                                        <option value="encours">En Cours</option>
-                                        <option value="en_attente">En Attente</option>
-                                        <option value="annule">Annulé</option>
-                                    </select>
-                                    <InputError :message="errors.statut?.[0]" />
-                                </div>
                             </div>
                         </CardContent>
                     </Card>

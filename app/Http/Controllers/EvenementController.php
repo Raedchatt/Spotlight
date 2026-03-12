@@ -207,7 +207,6 @@ class EvenementController extends Controller
             'prix_spectateur' => $request->prix_spectateur,
             'capacite_spectateur' => $request->capacite_spectateur,
             'categorie' => $request->categorie,
-            'statut' => $request->statut,
             // Tournament fields
             'is_tournoi' => $request->has('is_tournoi') ? $request->boolean('is_tournoi') : false,
             'type_tournoi' => $request->type_tournoi ?? null,
@@ -267,20 +266,21 @@ class EvenementController extends Controller
     }
 
     // Delete Event
-    public function destroy($id)
-    {
-        $event = Evenement::findOrFail($id);
+  public function destroy($id)
+{
+    $event = Evenement::findOrFail($id);
 
-        if ($event->organisateur_id !== Auth::id()) {
-            return response()->json(['message' => 'Unauthorized action.'], 403);
-        }
-
-        $event->delete();
-
-        return response()->json([
-            'message' => 'Event deleted successfully'
-        ]);
+    if ($event->organisateur_id !== Auth::id()) {
+        return response()->json(['message' => 'Unauthorized action.'], 403);
     }
+
+    $event->statut = StatutEvenement::Annule;
+    $event->save(); // ✅ Actually persist the change
+
+    return response()->json([
+        'message' => 'Event cancelled successfully'
+    ], 200);
+}
 
     // Search events
     public function search(Request $request)
