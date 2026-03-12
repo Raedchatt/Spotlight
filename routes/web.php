@@ -59,9 +59,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/organisateurs/{organisateur}', [\App\Http\Controllers\OrganisateurController::class, 'update']);
     });
 
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [\App\Http\Controllers\OrganisateurController::class, 'dashboardData'])->name('dashboard');
     // routes/web.php (for Inertia) or api.php
 
 Route::middleware('auth')->group(function () {

@@ -29,7 +29,7 @@ const error = ref('');
 
 const closePopup = async (skip = false) => {
     if (skip && auth.user?.organisateur) {
-        router.put(`/api/organisateurs/${auth.user.organisateur.id}`, {
+        router.put(`/web-api/organisateurs/${auth.user.organisateur.id}`, {
             rib_popup_seen: true
         }, {
             preserveScroll: true,
@@ -51,7 +51,7 @@ const submitRib = async () => {
     processing.value = true;
     error.value = '';
 
-    router.put(`/api/organisateurs/${auth.user.organisateur.id}`, {
+    router.put(`/web-api/organisateurs/${auth.user.organisateur.id}`, {
         rib: rib.value,
         rib_popup_seen: true
     }, {
