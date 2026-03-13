@@ -30,8 +30,8 @@ const props = withDefaults(defineProps<Props>(), {
 const page = usePage();
 const auth = computed(() => page.props.auth as any);
 const isMissingRib = computed(() => {
-    return auth.value.user?.role === 'organisateur' && 
-           (!auth.value.user?.organisateur || !auth.value.user?.organisateur.rib);
+    // If they have an organizer profile, they must have a RIB
+    return auth.value.user?.organisateur && !auth.value.organisateur_has_rib;
 });
 
 const form = ref({

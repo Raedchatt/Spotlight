@@ -37,22 +37,22 @@ class EvenementController extends Controller
         // Stats calculation
         $stats = [];
         if (!$event->is_tournoi) {
-            $totalReserved = Reservation::where('evenement_id', $id)
-                ->where('statut', 'confirmed')
+            $totalReserved = Reservation::where('evenement_id', '=', $id)
+                ->where('statut', '=', 'confirmed')
                 ->count();
             $stats = [
                 'total_reserved' => $totalReserved,
                 'remaining' => max(0, $event->capacite_spectateur - $totalReserved),
             ];
         } else {
-            $participantReserved = Reservation::where('evenement_id', $id)
-                ->where('ticket_type', 'participant')
-                ->where('statut', 'confirmed')
+            $participantReserved = Reservation::where('evenement_id', '=', $id)
+                ->where('ticket_type', '=', 'participant')
+                ->where('statut', '=', 'confirmed')
                 ->count();
 
-            $spectatorReserved = Reservation::where('evenement_id', $id)
-                ->where('ticket_type', 'spectator')
-                ->where('statut', 'confirmed')
+            $spectatorReserved = Reservation::where('evenement_id', '=', $id)
+                ->where('ticket_type', '=', 'spectator')
+                ->where('statut', '=', 'confirmed')
                 ->count();
 
             $stats = [
@@ -104,7 +104,12 @@ class EvenementController extends Controller
 
         $user = Auth::user();
         if ($user->role === \App\Enums\Role::Organisateur) {
-            if (!$user->organisateur || !$user->organisateur->rib) {
+            // Query the DB directly to avoid encrypted-cast decryption issues
+            $hasRib = \App\Models\Organisateur::where('user_id', $user->id)
+                ->whereNotNull('rib')
+                ->exists();
+
+            if (!$hasRib) {
                 return response()->json([
                     'message' => 'Bank information (RIB) is required to create events. Please complete your bank details first.',
                     'require_rib' => true
@@ -199,15 +204,15 @@ class EvenementController extends Controller
         }
 
         $event->update([
-            'titre' => $request->input('titre'),
-            'description' => $request->input('description'),
-            'date_debut' => $request->input('date_debut'),
-            'date_fin' => $request->input('date_fin'),
-            'lieu' => $request->input('lieu'),
-            'prix_spectateur' => $request->input('prix_spectateur'),
-            'capacite_spectateur' => $request->input('capacite_spectateur'),
-            'categorie' => $request->input('categorie'),
-            'statut' => $request->input('statut'),
+            'titre' => $request->titre,
+            'description' => $request->description,
+            'date_debut' => $request->date_debut,
+            'date_fin' => $request->date_fin,
+            'lieu' => $request->lieu,
+            'prix_spectateur' => $request->prix_spectateur,
+            'capacite_spectateur' => $request->capacite_spectateur,
+            'categorie' => $request->categorie,
+            'statut' => $request->statut,
             // Tournament fields
             'is_tournoi' => $request->has('is_tournoi') ? $request->boolean('is_tournoi') : false,
             'type_tournoi' => $request->type_tournoi ?? null,
@@ -267,20 +272,21 @@ class EvenementController extends Controller
     }
 
     // Delete Event
-    public function destroy($id)
-    {
-        $event = Evenement::findOrFail($id);
+  public function destroy($id)
+{
+    $event = Evenement::findOrFail($id);
 
-        if ($event->organisateur_id !== Auth::id()) {
-            return response()->json(['message' => 'Unauthorized action.'], 403);
-        }
-
-        $event->delete();
-
-        return response()->json([
-            'message' => 'Event deleted successfully'
-        ]);
+    if ($event->organisateur_id !== Auth::id()) {
+        return response()->json(['message' => 'Unauthorized action.'], 403);
     }
+
+    $event->statut = StatutEvenement::Annule;
+    $event->save(); // ✅ Actually persist the change
+
+    return response()->json([
+        'message' => 'Event cancelled successfully'
+    ], 200);
+}
 
     // Search events
     public function search(Request $request)

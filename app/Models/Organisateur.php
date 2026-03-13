@@ -19,6 +19,7 @@ class Organisateur extends Model
      */
     protected $casts = [
         'rib' => 'encrypted',
+        'rib_popup_seen' => 'boolean',
     ];
 
     /**
@@ -35,6 +36,22 @@ class Organisateur extends Model
         'rib',
         'rib_popup_seen',
     ];
+
+    /**
+     * Appended attributes for JSON serialization.
+     */
+    protected $appends = ['has_rib'];
+
+    /**
+     * Accessor for has_rib.
+     * Checks if a RIB is stored without triggering decryption.
+     */
+    public function getHasRibAttribute(): bool
+    {
+        $hasRib = !empty($this->getRawOriginal('rib'));
+        // \Illuminate\Support\Facades\Log::info("Accessor has_rib called for Org ID {$this->id}: " . ($hasRib ? 'TRUE' : 'FALSE'));
+        return $hasRib;
+    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -62,7 +79,7 @@ class Organisateur extends Model
      */
     public function evenements(): HasMany
     {
-        return $this->hasMany(Evenement::class, 'organisateur_id', 'user_id');
+        return $this->hasMany(Evenement::class , 'organisateur_id', 'user_id');
     }
 
 }

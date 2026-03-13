@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import { usePage, router } from '@inertiajs/vue3';
+import { CreditCard, Info } from 'lucide-vue-next';
+import { ref } from 'vue';
+import { Button } from '@/components/ui/button';
 import { 
     Dialog, 
     DialogContent, 
@@ -9,13 +11,12 @@ import {
     DialogTitle, 
     DialogFooter 
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CreditCard, Info } from 'lucide-vue-next';
-import axios from 'axios';
 
-const props = defineProps<{
+
+defineProps<{
     open: boolean;
 }>();
 

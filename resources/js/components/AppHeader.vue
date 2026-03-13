@@ -189,14 +189,12 @@ const handleLogout = () => {
                                 <Button variant="outline" size="icon" class="h-10 w-10">
                                     <User class="h-5 w-5 text-neutral-700 dark:text-neutral-300" />
                                 </Button>
-                                <!--X
-                                -- RIB Warning Indicator --
+                                <!-- RIB Warning Indicator -->
                                 <div v-if="auth.user?.role === 'organisateur' && (!auth.user?.organisateur || !auth.user?.organisateur.rib)" 
                                      class="absolute -top-0.5 -right-0.5 flex h-3 w-3 z-50">
                                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                                     <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500 border-2 border-white dark:border-neutral-900 shadow-sm"></span>
                                 </div>
-                                -->
                             </Link>
                             <Button variant="outline" size="icon" class="h-10 w-10" @click="handleLogout">
                                 <LogOut class="h-5 w-5 text-neutral-700 dark:text-neutral-300" />

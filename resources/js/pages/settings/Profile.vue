@@ -246,12 +246,12 @@ const user = page.props.auth.user as any;
                                             id="rib"
                                             name="rib"
                                             class="font-mono"
-                                            :default-value="user.organisateur?.rib"
-                                            placeholder="Enter your 20-digit RIB"
+                                            :placeholder="page.props.auth.organisateur_has_rib ? '••••••••••••••••••• (already saved — enter new value to change)' : 'Enter your 20-digit RIB'"
                                             maxlength="30"
                                         />
                                         <p class="text-[10px] text-muted-foreground italic">
                                             Required to receive payments from event registrations.
+                                            <span v-if="page.props.auth.organisateur_has_rib" class="text-emerald-600 font-semibold">✓ RIB is saved.</span>
                                         </p>
                                         <InputError class="mt-2" :message="errors.rib" />
                                     </div>

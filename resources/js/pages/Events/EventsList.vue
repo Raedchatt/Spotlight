@@ -17,7 +17,6 @@ import {
     ChevronRight,
 } from 'lucide-vue-next';
 import { ref, onMounted, watch, computed } from 'vue';
-import AppFooter from '@/components/AppFooter.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,6 +60,9 @@ const fetchEvents = async () => {
         if (filters.value.titre) params.append('titre', filters.value.titre);
         if (filters.value.categorie !== 'all') params.append('categorie', filters.value.categorie);
         if (filters.value.date) params.append('date', filters.value.date);
+
+        // Always exclude cancelled events
+        params.append('statut', 'ouvert,ferme,encours,en_attente');
         
         // Pagination params
         params.append('page', filters.value.page.toString());
