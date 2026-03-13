@@ -119,7 +119,7 @@ class MessageController extends Controller
         ]);
     }
 
-    private function getConversationList(int $limit = null)
+    private function getConversationList(?int $limit = null)
     {
         $userId = Auth::id();
         
