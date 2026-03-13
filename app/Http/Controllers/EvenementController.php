@@ -28,7 +28,7 @@ class EvenementController extends Controller
     // Show Event Details (Public)
     public function show(Request $request, $id)
     {
-        $event = Evenement::with(['organisateur', 'medias'])->findOrFail($id);
+        $event = Evenement::with(['organisateur.organisateur', 'medias'])->findOrFail($id);
 
         if ($request->wantsJson()) {
             return response()->json($event);

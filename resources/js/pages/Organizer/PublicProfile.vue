@@ -80,9 +80,13 @@ const formatDate = (dateString: string) => {
 
                     <!-- Contact Side -->
                     <div class="flex flex-col items-start md:items-end gap-3 mb-2">
-                        <button class="bg-black hover:bg-zinc-800 text-white px-8 py-2.5 rounded-full font-medium transition-all shadow-lg active:scale-95">
+                        <Link 
+                            v-if="$page.props.auth.user && $page.props.auth.user.id !== props.organizer.id"
+                            :href="`/messages/${props.organizer.id}`"
+                            class="bg-black hover:bg-zinc-800 text-white px-8 py-2.5 rounded-full font-medium transition-all shadow-lg active:scale-95 text-center"
+                        >
                             Contact
-                        </button>
+                        </Link>
                         <div class="space-y-1 text-sm text-zinc-600">
                             <div v-if="props.organizer.phone" class="flex items-center gap-2 md:justify-end">
                                 <Phone class="w-4 h-4" /> {{ props.organizer.phone }}

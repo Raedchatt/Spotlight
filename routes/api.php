@@ -13,6 +13,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Messages
     Route::post('/messages/envoyer', [MessageController::class, 'envoyer']);
     Route::get('/messages/conversation/{id}', [MessageController::class, 'conversation']);
+    Route::get('/messages/recent', [MessageController::class, 'recent']);
 
     // Events
     Route::apiResource('/events', EvenementController::class);

@@ -6,6 +6,7 @@ import {
   LockClosedIcon
 } from "@heroicons/vue/24/outline"
 import axios from "axios"
+import { router } from "@inertiajs/vue3"
 import { ref } from "vue"
 import {
   Dialog,
@@ -27,31 +28,28 @@ const confirmPassword = ref("")
 const errors = ref<Record<string, any>>({})
 const message = ref("")
 
-const register = async () => {
+const register = () => {
     errors.value = {}
     message.value = ""
-    try {
-        const response = await axios.post("/register", {
-            username: username.value,
-            role: role.value,
-            email: email.value,
-            telephone: phone.value,
-            password: password.value,
-            password_confirmation: confirmPassword.value
-        })
-        if (response.data.status) {
-            message.value = response.data.message
+    
+    router.post("/register", {
+        username: username.value,
+        role: role.value,
+        email: email.value,
+        telephone: phone.value,
+        password: password.value,
+        password_confirmation: confirmPassword.value
+    }, {
+        onSuccess: (page) => {
+            message.value = "Registration successful! You can now login."
             setTimeout(() => {
                 emit('switchToLogin')
             }, 2000)
+        },
+        onError: (errs) => {
+            errors.value = errs
         }
-    } catch (e: any) {
-        if (e.response && e.response.data.errors) {
-            errors.value = e.response.data.errors
-        } else {
-            message.value = e.response?.data?.message || "An error occurred during registration"
-        }
-    }
+    })
 }
 </script>
 

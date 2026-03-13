@@ -86,6 +86,10 @@ const getInitials = (name: string) => {
     return name?.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) || '??';
 };
 
+const organizerName = computed(() => {
+    return props.event.organisateur?.organisateur?.nom_organisation || props.event.organisateur?.name || 'Unknown Organizer';
+});
+
 const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
         day: 'numeric',
@@ -599,7 +603,7 @@ const handleReserve = () => {
                             <!-- Organizer Card -->
                             <div class="bg-card rounded-2xl shadow-sm border border-border p-6 flex flex-col items-center text-center">
                                 <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center font-bold text-xl text-muted-foreground mb-4 border border-border shadow-sm">
-                                    {{ getInitials(props.event.organisateur.name) }}
+                                    {{ getInitials(organizerName) }}
                                 </div>
                                 <h4 class="font-bold text-foreground text-lg">
                                     <template v-if="isOwner">
@@ -610,7 +614,7 @@ const handleReserve = () => {
                                         :href="`/organizer/${props.event.organisateur.id}`"
                                         class="hover:text-blue-600 transition-colors duration-200"
                                     >
-                                        {{ props.event.organisateur.name }}
+                                        {{ organizerName }}
                                     </Link>
                                 </h4>
                                 <span class="text-xs font-bold text-blue-600 uppercase tracking-widest mt-1 mb-6">Organisateur</span>

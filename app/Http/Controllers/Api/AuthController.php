@@ -55,52 +55,34 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required'
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+            $user = Auth::user();
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'status' => true,
+                    'user' => $user,
+                    'message' => 'Login successful'
+                ]);
+            }
+
+            return redirect()->intended($user->role === 'participant' ? '/discovery' : '/dashboard');
         }
 
-        $throttleKey = 'login' . Str::lower($request->email) . $request->ip();
-
-        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
-
-            $seconds = RateLimiter::availableIn($throttleKey);
-
-            return response()->json([
-                'status' => false,
-                'message' => 'Too many login attempts. Try again in ' . $seconds . ' seconds.'
-            ], 429);
-        }
-
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
-
-            RateLimiter::hit($throttleKey);
-
+        if ($request->wantsJson()) {
             return response()->json([
                 'status' => false,
                 'message' => 'Invalid credentials'
             ], 401);
         }
 
-        RateLimiter::clear($throttleKey);
-
-        Auth::login($user);
-        $request->session()->regenerate();
-
-        return response()->json([
-            'status' => true,
-            'user' => $user
-        ]);
+        return back()->withErrors(['email' => 'Invalid credentials']);
     }
     /**
      * Logout user

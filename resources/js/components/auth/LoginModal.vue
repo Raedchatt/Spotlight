@@ -19,25 +19,22 @@ const password = ref("")
 const message = ref("")
 const isError = ref(false)
 
-const login = async () => {
+const login = () => {
     message.value = ""
     isError.value = false
-    try {
-        const response = await axios.post("/login", {
-            email: email.value,
-            password: password.value
-        })
-        if (response.data.status) {
-            message.value = response.data.message
-            setTimeout(() => {
-                emit('update:open', false)
-                router.visit(response.data.user?.role === 'participant' ? '/discovery' : '/dashboard')
-            }, 800)
+    
+    router.post("/login", {
+        email: email.value,
+        password: password.value
+    }, {
+        onSuccess: () => {
+            emit('update:open', false)
+        },
+        onError: (errors) => {
+            isError.value = true
+            message.value = Object.values(errors)[0] as string
         }
-    } catch (e: any) {
-        isError.value = true
-        message.value = e.response?.data?.message || "Invalid credentials"
-    }
+    })
 }
 </script>
 

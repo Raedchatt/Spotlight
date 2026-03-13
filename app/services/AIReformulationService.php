@@ -1,71 +1,116 @@
 <?php
+
 namespace App\Services;
+
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log; 
+use Illuminate\Support\Facades\Log;
 
 class AIReformulationService
 {
     private string $apiKey;
-    private string $apiUrl = 'https://api.anthropic.com/v1/messages';
-    private string $model  = 'claude-sonnet-4-20250514';
+    private string $apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent';
 
     public function __construct()
     {
-        $this->apiKey = config('services.anthropic.key');
+        $this->apiKey = config('services.gemini.key');
     }
 
     public function reformuler(string $message): string
     {
+        if (empty(trim($message))) {
+            return $message;
+        }
+
         try {
             $response = Http::withHeaders([
-                'x-api-key'         => $this->apiKey,
-                'anthropic-version' => '2023-06-01',
-                'content-type'      => 'application/json',
-            ])->post($this->apiUrl, [
-                'model'      => $this->model,
-                'max_tokens' => 1024,
-                'messages'   => [
-                    [
-                        'role'    => 'user',
-                        'content' => $this->buildPrompt($message),
+                'Content-Type' => 'application/json',
+            ])->post($this->apiUrl . '?key=' . $this->apiKey, [
+                'system_instruction' => [
+                    'parts' => [
+                        ['text' => $this->buildSystemPrompt()]
                     ]
+                ],
+                'contents' => [
+                    [
+                        'parts' => [
+                            ['text' => $message]
+                        ]
+                    ]
+                ],
+                'generationConfig' => [
+                    'temperature'     => 0.7,
+                    'maxOutputTokens' => 1024,
                 ],
             ]);
 
             if ($response->successful()) {
                 $data = $response->json();
-                return $data['content'][0]['text'] ?? $message;
+
+                Log::info('Gemini API success', [
+                    'input'  => $message,
+                    'output' => $data['candidates'][0]['content']['parts'][0]['text'] ?? 'NULL',
+                ]);
+
+                $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
+
+                return $this->cleanOutput($text, $message);
             }
 
-            // Si erreur API → retourner message original
-            Log::error('Claude API error', ['response' => $response->json()]);
+            Log::error('Gemini API error', [
+                'status'   => $response->status(),
+                'response' => $response->json(),
+            ]);
+
             return $message;
 
         } catch (\Exception $e) {
-            Log::error('AIReformulationService error', ['error' => $e->getMessage()]);
+            Log::error('AIReformulationService exception', [
+                'error' => $e->getMessage(),
+            ]);
+
             return $message;
         }
     }
 
-    private function buildPrompt(string $message): string
+    private function buildSystemPrompt(): string
     {
-        return <<<PROMPT
-        Tu es un assistant de communication professionnelle dans une plateforme d'événements.
+        return implode("\n", [
+            'Tu es un assistant de communication professionnelle dans une plateforme d\'événements.',
+            '',
+            'Règles STRICTES :',
+            '- Détecte automatiquement la langue du message (français, arabe, anglais)',
+            '- Reformule le message dans LA MÊME langue détectée',
+            '- Rends le message professionnel, clair et compréhensible',
+            '- Garde le sens original du message',
+            '- Réponds UNIQUEMENT avec le message reformulé, rien d\'autre',
+            '- Ne rajoute PAS d\'explication, de préambule ou de commentaire',
+            '- Ne mets PAS de guillemets autour du résultat',
+            '- Ne commence PAS par une étiquette comme "Message reformulé :" ou similaire',
+            '- Si le message est déjà professionnel, améliore-le légèrement',
+            '- Garde un ton respectueux et courtois',
+        ]);
+    }
 
-        Règles STRICTES :
-        - Détecte automatiquement la langue du message (français, arabe, anglais)
-        - Reformule le message dans LA MÊME langue détectée
-        - Rends le message professionnel, clair et compréhensible
-        - Garde le sens original du message
-        - Ne rajoute PAS d'explication, juste le message reformulé
-        - Ne mets PAS de guillemets autour du résultat
-        - Si le message est déjà professionnel, améliore-le légèrement
-        - Garde un ton respectueux et courtois
+    private function cleanOutput(string $text, string $fallback): string
+    {
+        if (empty(trim($text))) {
+            return $fallback;
+        }
 
-        Message original :
-        {$message}
+        $prefixes = [
+            'Message reformulé\s*:\s*',
+            'Reformulated message\s*:\s*',
+            'رسالة معاد صياغتها\s*:\s*',
+            'Voici le message reformulé\s*:\s*',
+            'Here is the reformulated message\s*:\s*',
+        ];
 
-        Message reformulé :
-        PROMPT;
+        foreach ($prefixes as $prefix) {
+            $text = preg_replace('/^' . $prefix . '/ui', '', $text);
+        }
+
+        $text = trim($text, '"\'«»„"');
+
+        return trim($text) ?: $fallback;
     }
 }

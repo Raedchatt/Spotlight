@@ -231,7 +231,7 @@ const submitReservation = async () => {
     successMessage.value = ''
     errorMessage.value = ''
 
-    const response = await axios.post('/api/reservations', {
+    const response = await axios.post('/web-api/reservations', {
       evenement_id: props.event.id,
       nombre_tickets: quantity.value,
       ticket_type: ticketType.value

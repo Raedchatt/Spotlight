@@ -29,7 +29,7 @@ const loading = ref(true);
 const fetchReservations = async () => {
     loading.value = true;
     try {
-        const response = await axios.get('/api/my-reservations');
+        const response = await axios.get('/web-api/my-reservations');
         reservations.value = response.data.reservations;
     } catch (error) {
         console.error('Error fetching reservations:', error);
@@ -42,7 +42,7 @@ const cancelReservation = async (id: number) => {
     if (!confirm('Voulez-vous vraiment annuler cette réservation ?')) return;
 
     try {
-        await axios.patch(`/api/reservations/${id}/annuler`);
+        await axios.patch(`/web-api/reservations/${id}/annuler`);
         await fetchReservations();
     } catch (error: any) {
         alert(error.response?.data?.message || 'Une erreur est survenue lors de l\'annulation.');

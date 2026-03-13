@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\EvenementController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\MediaUploadController;
+use App\Http\Controllers\MessageController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -57,6 +58,10 @@ Route::middleware(['auth'])->group(function () {
         
         // Organizers Profile Management (via Session)
         Route::put('/organisateurs/{organisateur}', [\App\Http\Controllers\OrganisateurController::class, 'update']);
+
+        // Messages (Session-based for Inertia)
+        Route::get('/messages/recent', [MessageController::class, 'recent']);
+        Route::post('/messages', [MessageController::class, 'envoyer'])->name('messages.envoyer');
     });
 
     Route::get('/dashboard', [\App\Http\Controllers\OrganisateurController::class, 'dashboardData'])->name('dashboard');
@@ -85,6 +90,9 @@ Route::middleware('auth')->group(function () {
             return Inertia::render('Events/MyReservations');
         })->name('reservations.index');
     });
+
+    Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+    Route::get('/messages/{user}', [MessageController::class, 'show'])->name('messages.show');
 });
 
 require __DIR__ . '/settings.php';
