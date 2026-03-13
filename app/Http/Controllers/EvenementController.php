@@ -37,22 +37,22 @@ class EvenementController extends Controller
         // Stats calculation
         $stats = [];
         if (!$event->is_tournoi) {
-            $totalReserved = Reservation::where('evenement_id', $id)
-                ->where('statut', 'confirmed')
+            $totalReserved = Reservation::where('evenement_id', '=', $id)
+                ->where('statut', '=', 'confirmed')
                 ->count();
             $stats = [
                 'total_reserved' => $totalReserved,
                 'remaining' => max(0, $event->capacite_spectateur - $totalReserved),
             ];
         } else {
-            $participantReserved = Reservation::where('evenement_id', $id)
-                ->where('ticket_type', 'participant')
-                ->where('statut', 'confirmed')
+            $participantReserved = Reservation::where('evenement_id', '=', $id)
+                ->where('ticket_type', '=', 'participant')
+                ->where('statut', '=', 'confirmed')
                 ->count();
 
-            $spectatorReserved = Reservation::where('evenement_id', $id)
-                ->where('ticket_type', 'spectator')
-                ->where('statut', 'confirmed')
+            $spectatorReserved = Reservation::where('evenement_id', '=', $id)
+                ->where('ticket_type', '=', 'spectator')
+                ->where('statut', '=', 'confirmed')
                 ->count();
 
             $stats = [
@@ -104,7 +104,12 @@ class EvenementController extends Controller
 
         $user = Auth::user();
         if ($user->role === \App\Enums\Role::Organisateur) {
-            if (!$user->organisateur || !$user->organisateur->rib) {
+            // Query the DB directly to avoid encrypted-cast decryption issues
+            $hasRib = \App\Models\Organisateur::where('user_id', $user->id)
+                ->whereNotNull('rib')
+                ->exists();
+
+            if (!$hasRib) {
                 return response()->json([
                     'message' => 'Bank information (RIB) is required to create events. Please complete your bank details first.',
                     'require_rib' => true

@@ -17,7 +17,6 @@ import {
     ChevronRight,
 } from 'lucide-vue-next';
 import { ref, onMounted, watch, computed } from 'vue';
-import AppFooter from '@/components/AppFooter.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
