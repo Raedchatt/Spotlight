@@ -15,10 +15,18 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Enum;
 use Inertia\Inertia;
+use App\Services\NotificationService;
 // use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class OrganisateurController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     // -------------------------------------------------------------------------
     // Public Routes
     // -------------------------------------------------------------------------
@@ -218,6 +226,13 @@ class OrganisateurController extends Controller
             'statut' => StatutEvenement::Ouvert, // Organizer events start as open by default
         ]);
 
+        // Notify all participants about the new event
+        $this->notificationService->notifieParticipantsNouvelEvenement(
+            $event->titre,
+            $event->date_debut->format('M d, Y'),
+            $event->lieu
+        );
+
         return response()->json([
             'message' => 'Event created successfully and is awaiting review.',
             'event' => $event
@@ -248,6 +263,9 @@ class OrganisateurController extends Controller
 
         $evenement->update($request->all());
 
+        // Notify all participants about the event update
+        $this->notificationService->notifieParticipantsEvenementModifie($evenement->titre);
+
         return response()->json([
             'message' => 'Event updated successfully.',
             'event' => $evenement->fresh()
@@ -270,6 +288,9 @@ class OrganisateurController extends Controller
         }
 
         $evenement->update(['statut' => StatutEvenement::Annule]);
+
+        // Notify all participants about the event cancellation
+        $this->notificationService->notifieParticipantsEvenementAnnule($evenement->titre);
 
         return response()->json([
             'message' => 'Event cancelled successfully.',

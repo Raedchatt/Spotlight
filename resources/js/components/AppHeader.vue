@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage, router } from '@inertiajs/vue3';
-import { Folder, LayoutGrid, Menu, Search, Calendar, Bell, User, LogOut } from 'lucide-vue-next';
+import { Folder, LayoutGrid, Menu, Search, Calendar, User, LogOut } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 
@@ -8,6 +8,7 @@ import LoginModal from '@/components/auth/LoginModal.vue';
 import RegisterModal from '@/components/auth/RegisterModal.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import MessagesDropdown from '@/components/MessagesDropdown.vue';
+import NotificationsDropdown from '@/components/NotificationsDropdown.vue';
 import Button from '@/components/ui/button/Button.vue';
 import {
     NavigationMenu,
@@ -181,9 +182,7 @@ const handleLogout = () => {
                 <div class="ml-auto flex items-center space-x-2">
                     <div class="hidden lg:flex items-center gap-2">
                         <template v-if="auth.user">
-                            <Button variant="outline" size="icon" class="h-10 w-10">
-                                <Bell class="h-5 w-5 text-neutral-700 dark:text-neutral-300" />
-                            </Button>
+                            <NotificationsDropdown :user-id="auth.user.id" />
                             <MessagesDropdown />
                             <Link href="/settings/profile" class="relative">
                                 <Button variant="outline" size="icon" class="h-10 w-10">

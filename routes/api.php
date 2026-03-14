@@ -5,6 +5,7 @@ use App\Http\Controllers\EvenementController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\OrganisateurController;
+use App\Http\Controllers\NotificationController;
 
 Route::get('/events/search', [EvenementController::class, 'search']);
 
@@ -36,11 +37,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/organisateurs/events/{evenement}', [OrganisateurController::class, 'modifierEvenement']);
     Route::patch('/organisateurs/events/{evenement}/annuler', [OrganisateurController::class, 'annulerEvenement']);
 
+    // Notification Routes (Moved to web.php for session auth)
+    
     // Admin Routes
     Route::middleware('admin')->prefix('admin')->group(function () {
-        Route::get('/organisateurs/pending', [OrganisateurController::class, 'pending']);
-        Route::patch('/organisateurs/{organisateur}/approve', [OrganisateurController::class, 'approve']);
-        Route::patch('/organisateurs/{organisateur}/reject', [OrganisateurController::class, 'reject']);
+    Route::get('/organisateurs/pending', [OrganisateurController::class, 'pending']);
+    Route::patch('/organisateurs/{organisateur}/approve', [OrganisateurController::class, 'approve']);
+    Route::patch('/organisateurs/{organisateur}/reject', [OrganisateurController::class, 'reject']);
     });
 });
 

@@ -7,6 +7,7 @@ use App\Http\Controllers\EvenementController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\MediaUploadController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\NotificationController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -62,6 +63,12 @@ Route::middleware(['auth'])->group(function () {
         // Messages (Session-based for Inertia)
         Route::get('/messages/recent', [MessageController::class, 'recent']);
         Route::post('/messages', [MessageController::class, 'envoyer'])->name('messages.envoyer');
+
+        // Notifications
+        Route::get('/notifications', [NotificationController::class, 'index']);
+        Route::get('/notifications/{id}', [NotificationController::class, 'show']);
+        Route::patch('/notifications/{id}/read', [NotificationController::class, 'marquerCommeLue']);
+        Route::patch('/notifications/read-all', [NotificationController::class, 'marquerToutesCommeLues']);
     });
 
     Route::get('/dashboard', [\App\Http\Controllers\OrganisateurController::class, 'dashboardData'])->name('dashboard');
@@ -90,6 +97,10 @@ Route::middleware('auth')->group(function () {
             return Inertia::render('Events/MyReservations');
         })->name('reservations.index');
     });
+
+    Route::get('/notifications', function () {
+        return Inertia::render('Notifications/Index');
+    })->name('notifications.index');
 
     Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
     Route::get('/messages/{user}', [MessageController::class, 'show'])->name('messages.show');

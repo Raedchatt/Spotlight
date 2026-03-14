@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Enums\StatutReservation;
+use App\Enums\TypeNotification;
 use App\Models\Evenement;
+use App\Models\Notification;
 use App\Models\Reservation;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,6 +15,13 @@ use Illuminate\Validation\ValidationException;
 
 class ReservationController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * Store a new reservation.
      *
@@ -76,6 +86,15 @@ class ReservationController extends Controller
             'note' => $validated['note'] ?? null,
             'statut' => StatutReservation::Pending,
         ]);
+
+        // Notify the event organizer about the new reservation
+        $user = Auth::user();
+        $this->notificationService->notifieOrganisateurNouvelleReservation(
+            $evenement->organisateur_id,
+            $user->username,
+            $validated['nombre_tickets'],
+            $evenement->titre
+        );
 
         return response()->json([
             'message' => 'Reservation created successfully and is pending confirmation.',
@@ -176,6 +195,15 @@ class ReservationController extends Controller
         }
 
         $reservation->cancel();
+
+        // Notify the event organizer about the cancellation
+        $user = Auth::user();
+        $evenement = $reservation->evenement;
+        $this->notificationService->notifieOrganisateurReservationAnnulee(
+            $evenement->organisateur_id,
+            $user->username,
+            $evenement->titre
+        );
 
         return response()->json([
             'message' => 'Reservation cancelled successfully.',

@@ -9,14 +9,25 @@ use App\Enums\StatutEvenement;
 use App\Enums\CategorieEvenement;
 use Illuminate\Validation\Rules\Enum;
 use App\Enums\TypeMedia;
+use App\Enums\TypeNotification;
 use App\Models\Media;
+use App\Models\Notification;
 use App\Models\Reservation;
+use App\Models\User;
+use App\Services\NotificationService;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 // use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class EvenementController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     // List Events
     public function index()
     {
@@ -162,6 +173,13 @@ class EvenementController extends Controller
             }
         }
 
+        // Notify all participants about the new event
+        $this->notificationService->notifieParticipantsNouvelEvenement(
+            $event->titre,
+            $event->date_debut->format('M d, Y'),
+            $event->lieu
+        );
+
         return response()->json([
             'message' => 'Event created successfully',
             'event' => $event->load('medias')
@@ -265,6 +283,9 @@ class EvenementController extends Controller
             }
         }
 
+        // Notify all participants about the event update
+        $this->notificationService->notifieParticipantsEvenementModifie($event->titre);
+
         return response()->json([
             'message' => 'Event updated successfully',
             'event' => $event->load('medias')
@@ -281,7 +302,10 @@ class EvenementController extends Controller
     }
 
     $event->statut = StatutEvenement::Annule;
-    $event->save(); // ✅ Actually persist the change
+    $event->save();
+
+    // Notify all participants about the event cancellation
+    $this->notificationService->notifieParticipantsEvenementAnnule($event->titre);
 
     return response()->json([
         'message' => 'Event cancelled successfully'
