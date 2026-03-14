@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Message;
 use App\Models\User;
 use App\Services\AIReformulationService;
+use App\Events\MessageSent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -40,6 +41,8 @@ class MessageController extends Controller
             'receiver_id'      => $request->receiver_id,
             'lu'               => false,
         ]);
+
+        broadcast(new MessageSent($message))->toOthers();
 
         return response()->json([
             'status'            => true,

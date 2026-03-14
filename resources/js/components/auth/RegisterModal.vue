@@ -11,7 +11,10 @@ import { ref } from "vue"
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog'
+import { useAuthModal } from "@/composables/useAuthModal"
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{
@@ -27,6 +30,7 @@ const password = ref("")
 const confirmPassword = ref("")
 const errors = ref<Record<string, any>>({})
 const message = ref("")
+const { closeAll } = useAuthModal()
 
 const register = () => {
     errors.value = {}
@@ -56,6 +60,8 @@ const register = () => {
 <template>
   <Dialog :open="open" @update:open="emit('update:open', $event)">
     <DialogContent class="sm:max-w-[420px] p-8 rounded-2xl border-none">
+      <DialogTitle class="sr-only">Register Modal</DialogTitle>
+      <DialogDescription class="sr-only">Create a new account to join Spotlight.</DialogDescription>
       <!-- LOGO -->
       <div class="text-center mb-8 mt-2">
         <img src="/images/logo_Black.png" alt="Spotlight Logo" class="mx-auto w-42 mb-4 dark:hidden" />

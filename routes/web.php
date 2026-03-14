@@ -10,7 +10,9 @@ use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
 
 Route::get('/', function () {
-    return Inertia::render('Welcome');
+    return Inertia::render('Welcome', [
+        'canRegister' => Route::has('register'),
+    ]);
 })->name('home');
 
 Route::get('/organizer/{id}', [\App\Http\Controllers\OrganizerProfileController::class, 'show'])->name('organizer.profile');

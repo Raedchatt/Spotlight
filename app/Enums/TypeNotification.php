@@ -11,4 +11,5 @@ enum TypeNotification: string
     case RESERVATION_ANNULEE = 'reservation_annulee';
     case INVITATION_COLLABORATION = 'invitation_collaboration';
     case COLLABORATION_ACCEPTEE = 'collaboration_acceptee';
+    case COLLABORATION_REJECTED = 'collaboration_rejected';
 }

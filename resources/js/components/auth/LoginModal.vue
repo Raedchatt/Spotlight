@@ -6,7 +6,10 @@ import { UserIcon, LockClosedIcon } from "@heroicons/vue/24/outline"
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog'
+import { useAuthModal } from "@/composables/useAuthModal"
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{
@@ -18,6 +21,7 @@ const email = ref("")
 const password = ref("")
 const message = ref("")
 const isError = ref(false)
+const { closeAll } = useAuthModal()
 
 const login = () => {
     message.value = ""
@@ -28,7 +32,7 @@ const login = () => {
         password: password.value
     }, {
         onSuccess: () => {
-            emit('update:open', false)
+            closeAll()
         },
         onError: (errors) => {
             isError.value = true
@@ -41,6 +45,8 @@ const login = () => {
 <template>
   <Dialog :open="open" @update:open="emit('update:open', $event)">
     <DialogContent class="sm:max-w-[420px] p-8 rounded-2xl border-none">
+      <DialogTitle class="sr-only">Login Modal</DialogTitle>
+      <DialogDescription class="sr-only">Enter your credentials to access your account.</DialogDescription>
       <!-- LOGO -->
       <div class="text-center mb-8 mt-2 text-foreground">
         <img src="/images/logo_Black.png" alt="Spotlight Logo" class="mx-auto w-36 mb-4 dark:hidden" />

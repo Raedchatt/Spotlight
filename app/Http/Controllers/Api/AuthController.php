@@ -72,7 +72,11 @@ class AuthController extends Controller
                 ]);
             }
 
-            return redirect()->intended($user->role === 'participant' ? '/discovery' : '/dashboard');
+            if ($user->role === \App\Enums\Role::Participant) {
+                return redirect()->to('/discovery');
+            }
+
+            return redirect()->intended('/dashboard');
         }
 
         if ($request->wantsJson()) {
