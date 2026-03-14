@@ -20,6 +20,7 @@ trait ProfileValidationRules
             'telephone' => ['nullable', 'string', 'max:20'],
             'about' => ['nullable', 'string', 'max:1000'],
             'rib' => ['nullable', 'string', 'max:30'],
+            'interests' => ['nullable', 'array'],
         ];
     }
 

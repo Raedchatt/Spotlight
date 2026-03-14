@@ -55,13 +55,13 @@ const toggleInterest = (slug: string) => {
 };
 
 const updateProfile = () => {
-    profileForm.patch(route('participant.settings.update'), {
+    profileForm.patch('/settings/participant', {
         preserveScroll: true,
     });
 };
 
 const updateInterests = () => {
-    interestsForm.patch(route('participant.settings.update'), {
+    interestsForm.patch('/settings/participant', {
         preserveScroll: true,
     });
 };

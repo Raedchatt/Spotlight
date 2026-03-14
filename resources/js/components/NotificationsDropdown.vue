@@ -4,7 +4,6 @@ import axios from 'axios';
 import { Bell, CalendarPlus, CalendarX, Pencil, Trash2, Users, UserCheck, UserX, Check, CheckCheck, Ticket } from 'lucide-vue-next';
 import { ref, onMounted, computed } from 'vue';
 import Badge from '@/components/ui/badge/Badge.vue';
-import Button from '@/components/ui/button/Button.vue';
 import {
     DropdownMenu,
     DropdownMenuContent,
