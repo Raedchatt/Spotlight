@@ -50,17 +50,15 @@ onMounted(() => {
 
 <template>
     <DropdownMenu>
-        <DropdownMenuTrigger as-child>
-            <Button variant="outline" size="icon" class="h-10 w-10 relative">
-                <MessageCircle class="h-5 w-5 text-neutral-700 dark:text-neutral-300" />
-                <Badge 
-                    v-if="totalUnread > 0" 
-                    variant="destructive" 
-                    class="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-[10px] rounded-full border-2 border-white dark:border-neutral-900"
-                >
-                    {{ totalUnread > 9 ? '9+' : totalUnread }}
-                </Badge>
-            </Button>
+        <DropdownMenuTrigger class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium border border-neutral-200 bg-white shadow-sm hover:bg-neutral-100 hover:text-neutral-900 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:bg-neutral-800 dark:hover:text-neutral-50 h-10 w-10 relative focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950">
+            <MessageCircle class="h-5 w-5 text-neutral-700 dark:text-neutral-300 pointer-events-none" />
+            <Badge 
+                v-if="totalUnread > 0" 
+                variant="destructive" 
+                class="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-[10px] rounded-full border-2 border-white dark:border-neutral-900 pointer-events-none"
+            >
+                {{ totalUnread > 9 ? '9+' : totalUnread }}
+            </Badge>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" class="w-80 p-0 overflow-hidden rounded-2xl shadow-2xl border-neutral-200 dark:border-neutral-800">
             <DropdownMenuLabel class="p-4 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-900/50">
@@ -120,11 +118,20 @@ onMounted(() => {
                     </DropdownMenuItem>
                 </template>
 
-                <div v-else class="p-8 text-center">
-                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-400 mb-3">
+                <div v-else class="p-8 text-center flex flex-col items-center">
+                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted text-muted-foreground mb-3">
                         <MessageCircle class="w-6 h-6" />
                     </div>
-                    <p class="text-sm text-neutral-500 dark:text-neutral-400">No messages yet</p>
+                    <p class="text-sm text-foreground font-medium">No messages yet</p>
+                    <p class="text-xs text-muted-foreground mt-1 mb-4 capitalize">Start a chat to see it here</p>
+                    
+                    <Link 
+                        v-if="$page.props.auth.user.role === 'participant'"
+                        href="/discovery" 
+                        class="inline-flex items-center px-4 py-2 bg-[#1a56db] text-white text-xs font-bold rounded-xl hover:bg-[#1a56db]/90 transition-all active:scale-95 shadow-sm"
+                    >
+                        Explore Events
+                    </Link>
                 </div>
             </div>
 

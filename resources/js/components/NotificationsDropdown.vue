@@ -113,17 +113,15 @@ onMounted(() => {
 
 <template>
     <DropdownMenu>
-        <DropdownMenuTrigger as-child>
-            <Button variant="outline" size="icon" class="h-10 w-10 relative">
-                <Bell class="h-5 w-5 text-neutral-700 dark:text-neutral-300" />
-                <Badge 
-                    v-if="unreadCount > 0" 
-                    variant="destructive" 
-                    class="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-[10px] rounded-full border-2 border-white dark:border-neutral-900"
-                >
-                    {{ unreadCount > 9 ? '9+' : unreadCount }}
-                </Badge>
-            </Button>
+        <DropdownMenuTrigger class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium border border-neutral-200 bg-white shadow-sm hover:bg-neutral-100 hover:text-neutral-900 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:bg-neutral-800 dark:hover:text-neutral-50 h-10 w-10 relative focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950">
+            <Bell class="h-5 w-5 text-neutral-700 dark:text-neutral-300 pointer-events-none" />
+            <Badge 
+                v-if="unreadCount > 0" 
+                variant="destructive" 
+                class="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-[10px] rounded-full border-2 border-white dark:border-neutral-900 pointer-events-none"
+            >
+                {{ unreadCount > 9 ? '9+' : unreadCount }}
+            </Badge>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" class="w-96 p-0 overflow-hidden rounded-2xl shadow-2xl border-neutral-200 dark:border-neutral-800">
             <DropdownMenuLabel class="p-4 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-900/50">

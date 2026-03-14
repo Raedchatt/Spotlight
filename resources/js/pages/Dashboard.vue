@@ -85,7 +85,7 @@ const initials = (name: string) =>
     name.trim().split(/\s+/).slice(0, 2).map(p => p[0]?.toUpperCase() ?? '').join('');
 
 onMounted(() => {
-    console.log('Props:', page.props);
+
     const user = auth.value.user;
     if (user && user.role === 'organisateur') {
         const org = user.organisateur;
