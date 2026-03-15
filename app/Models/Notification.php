@@ -67,7 +67,7 @@ class Notification extends Model
             'lu' => false,
         ]);
 
-        broadcast(new \App\Events\NotificationSent($notification))->toOthers();
+        broadcast(new \App\Events\NotificationSent($notification));
 
         return $notification;
     }
