@@ -38,6 +38,13 @@ class ReservationController extends Controller
 
         $evenement = Evenement::findOrFail($validated['evenement_id']);
 
+        // 0. Only participants can reserve events
+        if (Auth::user()->role !== \App\Enums\Role::Participant) {
+            return response()->json([
+                'message' => 'Only participants can reserve events. Organizers are not allowed to make reservations.',
+            ], 403);
+        }
+
         // Set default ticket type if not provided
         $ticketType = $validated['ticket_type'] ?? 'standard';
         if ($evenement->is_tournoi && $ticketType === 'standard') {

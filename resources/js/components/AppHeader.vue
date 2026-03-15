@@ -77,7 +77,7 @@ const mainNavItems = computed<NavItem[]>(() => {
             icon: LayoutGrid,
         },
         {
-            title: 'Events',
+            title: 'My Hosted Events',
             href: '/dashboard/events',
             icon: Folder,
         },

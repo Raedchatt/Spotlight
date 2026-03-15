@@ -57,6 +57,9 @@ interface Props {
         organisateur: {
             id: number;
             name: string;
+            organisateur?: {
+                nom_organisation?: string;
+            };
         };
         medias: EventMedia[];
     };
@@ -164,6 +167,10 @@ const isFullyBooked = computed(() => {
 const reserveButtonText = computed(() => {
     if (!auth.value.user) return 'Login to Reserve';
     
+    // Check if user is an organizer
+    if (auth.value.user.role === 'organisateur') return 'Organizers Cannot Reserve';
+    if (auth.value.user.role === 'admin') return 'Admins Cannot Reserve';
+
     if (props.is_reserved) return 'Already Reserved';
     
     if (!props.event.is_tournoi) {
@@ -182,13 +189,39 @@ const reserveButtonText = computed(() => {
 
 const { openLogin } = useAuthModal();
 
-const handleReserve = () => {
+import axios from 'axios';
+
+const isReserving = ref(false);
+
+const handleReserve = async () => {
     if (!auth.value.user) {
         openLogin();
         return;
     }
-    // Reservation logic would go here
-    console.log('Reserving:', selectedTicketType.value);
+
+    if (auth.value.user.role !== 'participant') {
+        alert('Only participants can reserve events.');
+        return;
+    }
+
+    isReserving.value = true;
+    try {
+        const response = await axios.post('/web-api/reservations', {
+            evenement_id: props.event.id,
+            nombre_tickets: 1,
+            ticket_type: selectedTicketType.value,
+        });
+
+        alert(response.data.message || 'Reservation submitted successfully!');
+        // Refresh page or update state
+        location.reload(); 
+    } catch (error: any) {
+        console.error('Reservation error:', error);
+        const message = error.response?.data?.message || 'Failed to create reservation. Please try again.';
+        alert(message);
+    } finally {
+        isReserving.value = false;
+    }
 };
 </script>
 
@@ -580,15 +613,16 @@ const handleReserve = () => {
                                     <!-- Action Button -->
                                     <button 
                                         @click="handleReserve"
-                                        :disabled="props.is_reserved || isFullyBooked"
+                                        :disabled="(auth.user && auth.user.role !== 'participant') || props.is_reserved || isFullyBooked || isReserving"
                                         :class="[
                                             'w-full py-4 rounded-xl font-bold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg mb-4',
-                                            (props.is_reserved || isFullyBooked) 
+                                            ((auth.user && auth.user.role !== 'participant') || props.is_reserved || isFullyBooked || isReserving) 
                                                 ? 'bg-muted text-muted-foreground cursor-not-allowed shadow-none' 
                                                 : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/10'
                                         ]"
                                     >
-                                        <Ticket class="w-5 h-5" v-if="!isFullyBooked && !props.is_reserved" />
+                                        <Ticket class="w-5 h-5" v-if="!isFullyBooked && !props.is_reserved && (!auth.user || auth.user.role === 'participant') && !isReserving" />
+                                        <div v-if="isReserving" class="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                                         {{ reserveButtonText }}
                                     </button>
 

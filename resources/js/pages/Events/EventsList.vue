@@ -57,6 +57,9 @@ const fetchEvents = async () => {
     loading.value = true;
     try {
         const params = new URLSearchParams();
+        if (auth.value.user?.id) {
+            params.append('organisateur_id', auth.value.user.id.toString());
+        }
         if (filters.value.titre) params.append('titre', filters.value.titre);
         if (filters.value.categorie !== 'all') params.append('categorie', filters.value.categorie);
         if (filters.value.date) params.append('date', filters.value.date);
