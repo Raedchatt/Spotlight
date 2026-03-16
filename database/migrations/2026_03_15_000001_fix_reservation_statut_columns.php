@@ -20,30 +20,30 @@ return new class extends Migration
         DB::statement("ALTER TABLE reservations MODIFY COLUMN status ENUM('pending', 'paid', 'cancelled', 'confirmed') DEFAULT 'pending'");
 
         // Sync data from 'statut' to 'status' if 'status' is still 'pending' but 'statut' has info
-        DB::table('reservations')
-            ->where('status', 'pending')
-            ->whereIn('statut', ['confirmed', 'cancelled'])
-            ->update([
-                'status' => DB::raw('statut')
-            ]);
-            
-        // Map 'paid' to 'confirmed' if that's the intention (usually it is for reservations)
-        DB::table('reservations')
-            ->where('status', 'paid')
-            ->update(['status' => 'confirmed']);
+        if (Schema::hasColumn('reservations', 'statut')) {
+            DB::table('reservations')
+                ->where('status', 'pending')
+                ->whereIn('statut', ['confirmed', 'cancelled'])
+                ->update([
+                    'status' => DB::raw('statut')
+                ]);
+                
+            // Map 'paid' to 'confirmed' if that's the intention (usually it is for reservations)
+            DB::table('reservations')
+                ->where('status', 'paid')
+                ->update(['status' => 'confirmed']);
 
-        // 2. Drop the redundant string 'statut' column
-        Schema::table('reservations', function (Blueprint $table) {
-            $table->dropColumn('statut');
-        });
+            // 2. Drop the redundant string 'statut' column
+            Schema::table('reservations', function (Blueprint $table) {
+                $table->dropColumn('statut');
+            });
+        }
 
-        // 3. Rename 'status' to 'statut'
-        Schema::table('reservations', function (Blueprint $table) {
-            $table->renameColumn('status', 'statut');
-        });
-
-        // 4. Finalize the enum values for the new 'statut' column
-        DB::statement("ALTER TABLE reservations MODIFY COLUMN statut ENUM('pending', 'confirmed', 'cancelled') DEFAULT 'pending'");
+        // 3. Rename 'status' to 'statut' and finalize the enum values for the new 'statut' column
+        // Check if we still have 'status' before renaming
+        if (Schema::hasColumn('reservations', 'status')) {
+            DB::statement("ALTER TABLE reservations CHANGE COLUMN status statut ENUM('pending', 'confirmed', 'cancelled') DEFAULT 'pending'");
+        }
     }
 
     /**

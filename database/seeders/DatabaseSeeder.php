@@ -13,11 +13,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
+        // Create a test participant
         User::factory()->create([
-            'name' => 'Test User',
+            'username' => 'TestParticipant',
             'email' => 'test@example.com',
+            'role' => 'participant',
+        ]);
+
+        // Create a test organiser
+        User::factory()->create([
+            'username' => 'TestOrganiser',
+            'email' => 'organiser@example.com',
+            'role' => 'organisateur',
         ]);
 
         $this->call(EventSeeder::class);

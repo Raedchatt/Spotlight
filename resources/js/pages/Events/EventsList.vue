@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { Evenement,StatutEvenement } from '@/types/event';
-
+import CancelEventButton from '@/components/organizer/CancelEventButton.vue';
 
 
 const breadcrumbs = [
@@ -253,9 +253,12 @@ const getStatusLabel = (statut: StatutEvenement) => {
                                         <Pencil class="w-4 h-4 text-black group-hover/btn:text-white transition-colors" />
                                     </Button>
                                 </Link>
-                                <Button @click="deleteEvent(event.id)" size="icon" variant="destructive" class="h-8 w-8 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity ">
-                                    <Trash2 class="w-4 h-4" />
-                                </Button>
+                                <CancelEventButton 
+                                    v-if="event.organisateur_id === auth.user.id && event.statut !== 'annule'"
+                                    :event-id="event.id"
+                                    :event-title="event.titre"
+                                    @cancelled="fetchEvents"
+                                />
                             </div>
                         </div>
 

@@ -54,10 +54,14 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/events/{id}', [EvenementController::class, 'destroy']);
         Route::patch('/events/{id}/ouvrir', [EvenementController::class, 'ouvrirReservation']);
         Route::patch('/events/{id}/fermer', [EvenementController::class, 'fermerReservation']);
+        Route::post('/events/{id}/cancel', [EvenementController::class, 'cancelWithRefund']);
 
         Route::post('/reservations', [ReservationController::class, 'store']);
         Route::get('/my-reservations', [ReservationController::class, 'chercherReservationParParticipant']);
         Route::patch('/reservations/{reservation}/annuler', [ReservationController::class, 'annuler']);
+        
+        // Stripe Payments
+        Route::post('/paiement/checkout/{reservation}', [\App\Http\Controllers\StripeController::class, 'createCheckoutSession'])->name('paiement.checkout');
         
         // Organizers Profile Management (via Session)
         Route::put('/organisateurs/{organisateur}', [\App\Http\Controllers\OrganisateurController::class, 'update']);
@@ -106,6 +110,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
     Route::get('/messages/{user}', [MessageController::class, 'show'])->name('messages.show');
+
+    // Stripe Payment Routes
+    Route::get('/paiement/success', [\App\Http\Controllers\StripeController::class, 'success'])->name('paiement.success');
+    Route::get('/paiement/cancel', [\App\Http\Controllers\StripeController::class, 'cancel'])->name('paiement.cancel');
 });
 
 require __DIR__ . '/settings.php';

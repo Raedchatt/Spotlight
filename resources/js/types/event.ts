@@ -43,6 +43,7 @@ export interface Evenement {
     organisateur?: User;
     medias?: Media[];
     tournoi?: Tournoi;
+    is_reserved?: boolean;
     reservations_count?: number;
     created_at: string;
     updated_at: string;

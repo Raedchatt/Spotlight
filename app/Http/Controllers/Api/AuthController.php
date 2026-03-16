@@ -43,11 +43,23 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return response()->json([
-            'status' => true,
-            'message' => 'User registered successfully',
-            'user' => $user
-        ]);
+        // Auto login after registration
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'status' => true,
+                'message' => 'User registered successfully',
+                'user' => $user
+            ]);
+        }
+
+        if ($user->role === \App\Enums\Role::Participant) {
+            return redirect()->to('/discovery');
+        }
+
+        return redirect()->to('/dashboard');
     }
 
     /**

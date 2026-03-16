@@ -51,6 +51,50 @@ class ReservationController extends Controller
             $ticketType = 'spectator'; // Default for tournaments if not specified
         }
 
+        // 0.1 Check if user already has a reservation for this event
+        $existingReservation = Reservation::where('user_id', '=', Auth::id(), 'and')
+            ->where('evenement_id', '=', $evenement->id, 'and')
+            ->first();
+
+        if ($existingReservation) {
+            if ($existingReservation->statut === StatutReservation::Confirmed) {
+                return response()->json([
+                    'message' => 'You have already confirmed your reservation for this event.',
+                ], 422);
+            }
+            
+            // If it's pending and paid, we update the quantity and type then "re-initiate" the payment flow
+            $unitPrice = (float) $evenement->prix_spectateur;
+            if ($evenement->is_tournoi && $ticketType === 'participant') {
+                $unitPrice = (float) $evenement->prix_participant;
+            }
+
+            if ($unitPrice > 0) {
+                // Update with new choice before payment
+                $existingReservation->update([
+                    'nombre_tickets' => $validated['nombre_tickets'],
+                    'ticket_type'    => $ticketType,
+                ]);
+
+                $stripeController = app(\App\Http\Controllers\StripeController::class);
+                $response = $stripeController->createCheckoutSession($request, $existingReservation);
+                $data = json_decode($response->getContent(), true);
+
+                if (isset($data['checkout_url'])) {
+                    return response()->json([
+                        'message' => 'Updating reservation and redirecting to payment...',
+                        'checkout_url' => $data['checkout_url'],
+                        'reservation' => $existingReservation->load('evenement'),
+                    ], 201);
+                }
+            }
+
+            return response()->json([
+                'message' => 'You already have a pending reservation for this event.',
+                'reservation' => $existingReservation,
+            ], 422);
+        }
+
         // 1. Check if the event is open for reservations
         if ($evenement->statut->value !== 'ouvert') {
             return response()->json([
@@ -103,8 +147,51 @@ class ReservationController extends Controller
             $evenement->titre
         );
 
+        // 4. Handle Payment if necessary
+        $unitPrice = (float) $evenement->prix_spectateur;
+        if ($evenement->is_tournoi && $ticketType === 'participant') {
+            $unitPrice = (float) $evenement->prix_participant;
+        }
+
+        $totalAmount = $unitPrice * $validated['nombre_tickets'];
+
+        \Illuminate\Support\Facades\Log::info("Reservation Attempt", [
+            'event_id' => $evenement->id,
+            'unit_price' => $unitPrice,
+            'tickets' => $validated['nombre_tickets'],
+            'total' => $totalAmount,
+            'ticket_type' => $ticketType
+        ]);
+
+        if ($totalAmount > 0) {
+            // Initiate Stripe Checkout
+            $stripeController = app(\App\Http\Controllers\StripeController::class);
+            $response = $stripeController->createCheckoutSession($request, $reservation);
+            
+            $data = json_decode($response->getContent(), true);
+
+            if (isset($data['checkout_url'])) {
+                return response()->json([
+                    'message' => 'Reservation created. Redirecting to payment...',
+                    'checkout_url' => $data['checkout_url'],
+                    'reservation' => $reservation->load('evenement'),
+                ], 201);
+            }
+
+            // If we are here, payment initialization failed!
+            // We should return an error instead of letting the reservation "pass"
+            return response()->json([
+                'message' => 'Payment initialization failed. Please try again.',
+                'error' => $data['error'] ?? 'Stripe session could not be created.',
+                'reservation' => $reservation->load('evenement'),
+            ], 500);
+        }
+
+        // Auto-confirm free events
+        $reservation->update(['statut' => StatutReservation::Confirmed]);
+
         return response()->json([
-            'message' => 'Reservation created successfully and is pending confirmation.',
+            'message' => 'Reservation confirmed successfully!',
             'reservation' => $reservation->load('evenement'),
         ], 201);
     }

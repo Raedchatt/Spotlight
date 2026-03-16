@@ -17,7 +17,11 @@ use App\Models\User;
 use App\Services\NotificationService;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
-// use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use App\Models\Paiement;
+use App\Enums\StatutReservation;
+use App\Enums\StatutPaiement;
+use Stripe\Stripe;
+use Stripe\Refund;
 
 class EvenementController extends Controller
 {
@@ -77,9 +81,9 @@ class EvenementController extends Controller
         // Check if already reserved by auth user
         $isReserved = false;
         if (Auth::check()) {
-            $isReserved = Reservation::where('evenement_id', $id)
-                ->where('user_id', Auth::id())
-                ->where('statut', 'confirmed')
+            $isReserved = Reservation::where('evenement_id', '=', $id, 'and')
+                ->where('user_id', '=', Auth::id(), 'and')
+                ->whereIn('statut', ['confirmed', 'pending'])
                 ->exists();
         }
 
@@ -292,25 +296,69 @@ class EvenementController extends Controller
         ]);
     }
 
-    // Delete Event
-  public function destroy($id)
-{
-    $event = Evenement::findOrFail($id);
+    // Cancel Event with Refunds
+    public function cancelWithRefund($id)
+    {
+        $event = Evenement::findOrFail($id);
 
-    if ($event->organisateur_id !== Auth::id()) {
-        return response()->json(['message' => 'Unauthorized action.'], 403);
+        if ($event->organisateur_id !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+
+        if ($event->statut === StatutEvenement::Annule) {
+            return response()->json(['message' => 'Event is already cancelled.'], 422);
+        }
+
+        Stripe::setApiKey(config('services.stripe.secret'));
+
+        $reservations = Reservation::where('evenement_id', '=', $id, 'and')
+            ->where('statut', '=', StatutReservation::Confirmed->value, 'and')
+            ->get();
+
+        $refundedCount = 0;
+        $failedCount = 0;
+
+        foreach ($reservations as $reservation) {
+            $paiement = Paiement::where('reservation_id', '=', $reservation->id, 'and')
+                ->where('statut', '=', StatutPaiement::Succeeded->value, 'and')
+                ->first();
+
+            if ($paiement && $paiement->stripe_payment_intent_id) {
+                try {
+                    Refund::create([
+                        'payment_intent' => $paiement->stripe_payment_intent_id,
+                    ]);
+
+                    $paiement->update(['statut' => StatutPaiement::Refunded]);
+                    $refundedCount++;
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("Refund failed for reservation {$reservation->id}: " . $e->getMessage());
+                    $failedCount++;
+                    // Even if refund fails in Stripe (e.g. key issue), we proceed with status updates for record keeping
+                }
+            }
+            
+            $reservation->update(['statut' => StatutReservation::Cancelled]);
+        }
+
+        $event->update(['statut' => StatutEvenement::Annule]);
+
+        // Notify all participants about the event cancellation
+        $this->notificationService->notifieParticipantsEvenementAnnule($event->titre);
+
+        return response()->json([
+            'message' => 'Event cancelled successfully.',
+            'refunded_count' => $refundedCount,
+            'failed_count' => $failedCount,
+            'status' => 'cancelled'
+        ]);
     }
 
-    $event->statut = StatutEvenement::Annule;
-    $event->save();
-
-    // Notify all participants about the event cancellation
-    $this->notificationService->notifieParticipantsEvenementAnnule($event->titre);
-
-    return response()->json([
-        'message' => 'Event cancelled successfully'
-    ], 200);
-}
+    // Legacy delete (keeping signature for internal consistency)
+    public function destroy($id)
+    {
+        return $this->cancelWithRefund($id);
+    }
 
     // Search events
     public function search(Request $request)
@@ -337,22 +385,39 @@ class EvenementController extends Controller
             $query->parCategorie($request->input('categorie'));
         }
 
-        if ($request->has('statut')) {
-            $statuts = explode(',', $request->input('statut'));
-            $query->whereIn('statut', $statuts);
-        }
-
         $limit = $request->input('limit');
-        if ($limit) {
-            return response()->json($query->latest()->limit($limit)->get());
-        }
-
         $perPage = $request->input('per_page');
-        if ($perPage) {
-            return response()->json($query->latest()->paginate($perPage));
+
+        if ($limit) {
+            $events = $query->latest()->limit($limit)->get();
+        } elseif ($perPage) {
+            $events = $query->latest()->paginate($perPage);
+        } else {
+            $events = $query->latest()->get();
         }
 
-        return response()->json($query->latest()->get());
+        // Add is_reserved flag for authenticated users
+        if (Auth::check()) {
+            $userId = Auth::id();
+            $userReservations = Reservation::where('user_id', '=', $userId, 'and')
+                ->whereIn('statut', ['confirmed', 'pending'])
+                ->pluck('evenement_id')
+                ->toArray();
+
+            $items = ($perPage && $events instanceof \Illuminate\Pagination\LengthAwarePaginator) 
+                ? $events->getCollection() 
+                : $events;
+
+            foreach ($items as $event) {
+                $event->is_reserved = in_array($event->id, $userReservations);
+            }
+
+            if ($perPage && $events instanceof \Illuminate\Pagination\LengthAwarePaginator) {
+                $events->setCollection($items);
+            }
+        }
+
+        return response()->json($events);
     }
 
     // Open reservation

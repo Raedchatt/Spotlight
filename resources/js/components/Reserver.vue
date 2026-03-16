@@ -237,6 +237,11 @@ const submitReservation = async () => {
       ticket_type: ticketType.value
     })
 
+    if (response.data.checkout_url) {
+      window.location.href = response.data.checkout_url
+      return
+    }
+
     successMessage.value = 'Reservation confirmed successfully!'
     quantity.value = 1 
     

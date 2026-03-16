@@ -44,11 +44,8 @@ const register = () => {
         password: password.value,
         password_confirmation: confirmPassword.value
     }, {
-        onSuccess: (page) => {
-            message.value = "Registration successful! You can now login."
-            setTimeout(() => {
-                emit('switchToLogin')
-            }, 2000)
+        onSuccess: () => {
+            closeAll()
         },
         onError: (errs) => {
             errors.value = errs

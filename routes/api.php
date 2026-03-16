@@ -50,3 +50,6 @@ Route::middleware('auth:sanctum')->group(function () {
 // Public Organizer Routes
 Route::get('/organisateurs', [OrganisateurController::class, 'index']);
 Route::get('/organisateurs/{organisateur}', [OrganisateurController::class, 'show']);
+
+// Stripe Webhook
+Route::post('/stripe/webhook', [\App\Http\Controllers\StripeController::class, 'webhook'])->name('stripe.webhook');

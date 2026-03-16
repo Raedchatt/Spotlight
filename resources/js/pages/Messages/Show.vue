@@ -34,7 +34,7 @@ onMounted(() => {
     
     // Listen for real-time messages
     window.Echo.private(`chat.${page.props.auth.user.id}`)
-        .listen('MessageSent', (e) => {
+        .listen('.message.sent', (e) => {
             if (e.message.sender_id === props.otherUser.id) {
                 messages.value.push(e.message);
                 scrollToBottom();

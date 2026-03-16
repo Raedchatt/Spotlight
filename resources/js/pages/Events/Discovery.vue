@@ -23,7 +23,6 @@ import type { Evenement } from '@/types/event';
 
 
 const breadcrumbs = [
-    { title: 'Dashboard', href: '/dashboard' },
     { title: 'Discovery', href: '/discovery' },
 ];
 

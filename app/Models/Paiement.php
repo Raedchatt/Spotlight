@@ -16,6 +16,10 @@ class Paiement extends Model
     protected $fillable = [
         'reservation_id',
         'montant',
+        'currency',                    // ← ajouté
+        'stripe_payment_intent_id',    // ← ajouté
+        'stripe_session_id',           // ← ajouté
+        'payment_method',              // ← ajouté
         'statut',
         'transferred_at',
     ];
@@ -28,8 +32,9 @@ class Paiement extends Model
     protected function casts(): array
     {
         return [
-            'statut' => StatutPaiement::class,
+            'statut'         => StatutPaiement::class,
             'transferred_at' => 'datetime',
+            'montant'        => 'decimal:2',  // ← ajouté pour cohérence avec decimal(10,2)
         ];
     }
 
@@ -39,5 +44,23 @@ class Paiement extends Model
     public function reservation(): BelongsTo
     {
         return $this->belongsTo(Reservation::class);
+    }
+
+    // ─── Helpers Stripe ───────────────────────────────────────────
+
+    /**
+     * Check if payment is successful.
+     */
+    public function isSucceeded(): bool
+    {
+        return $this->statut === StatutPaiement::Succeeded;
+    }
+
+    /**
+     * Check if payment is still pending.
+     */
+    public function isPending(): bool
+    {
+        return $this->statut === StatutPaiement::Pending;
     }
 }

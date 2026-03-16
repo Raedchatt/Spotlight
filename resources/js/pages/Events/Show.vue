@@ -22,6 +22,17 @@ import AppHeader from '@/components/AppHeader.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import { useAuthModal } from '@/composables/useAuthModal';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { Button } from '@/components/ui/button/index';
+import { Badge } from '@/components/ui/badge/index';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import Reserver from '@/components/Reserver.vue';
 
 interface EventMedia {
     id: number;
@@ -192,8 +203,19 @@ const { openLogin } = useAuthModal();
 import axios from 'axios';
 
 const isReserving = ref(false);
+const showReservationModal = ref(false);
 
-const handleReserve = async () => {
+const onReservationSuccess = (data: any) => {
+    // If it's a free event or payment was confirmed immediately
+    if (!data.checkout_url) {
+        showReservationModal.value = false;
+        // The modal component already shows a success message, 
+        // but we can add extra logic here if needed.
+        setTimeout(() => location.reload(), 2000);
+    }
+};
+
+const handleReserveClick = () => {
     if (!auth.value.user) {
         openLogin();
         return;
@@ -204,24 +226,7 @@ const handleReserve = async () => {
         return;
     }
 
-    isReserving.value = true;
-    try {
-        const response = await axios.post('/web-api/reservations', {
-            evenement_id: props.event.id,
-            nombre_tickets: 1,
-            ticket_type: selectedTicketType.value,
-        });
-
-        alert(response.data.message || 'Reservation submitted successfully!');
-        // Refresh page or update state
-        location.reload(); 
-    } catch (error: any) {
-        console.error('Reservation error:', error);
-        const message = error.response?.data?.message || 'Failed to create reservation. Please try again.';
-        alert(message);
-    } finally {
-        isReserving.value = false;
-    }
+    showReservationModal.value = true;
 };
 </script>
 
@@ -612,19 +617,28 @@ const handleReserve = async () => {
 
                                     <!-- Action Button -->
                                     <button 
-                                        @click="handleReserve"
-                                        :disabled="(auth.user && auth.user.role !== 'participant') || props.is_reserved || isFullyBooked || isReserving"
+                                        @click="handleReserveClick"
+                                        :disabled="(auth.user && auth.user.role !== 'participant') || props.is_reserved || isFullyBooked"
                                         :class="[
                                             'w-full py-4 rounded-xl font-bold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg mb-4',
-                                            ((auth.user && auth.user.role !== 'participant') || props.is_reserved || isFullyBooked || isReserving) 
+                                            ((auth.user && auth.user.role !== 'participant') || props.is_reserved || isFullyBooked) 
                                                 ? 'bg-muted text-muted-foreground cursor-not-allowed shadow-none' 
                                                 : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/10'
                                         ]"
                                     >
-                                        <Ticket class="w-5 h-5" v-if="!isFullyBooked && !props.is_reserved && (!auth.user || auth.user.role === 'participant') && !isReserving" />
-                                        <div v-if="isReserving" class="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                                        <Ticket class="w-5 h-5" v-if="!isFullyBooked && !props.is_reserved && (!auth.user || auth.user.role === 'participant')" />
                                         {{ reserveButtonText }}
                                     </button>
+
+                                    <!-- Reservation Modal -->
+                                    <Dialog v-model:open="showReservationModal">
+                                        <DialogContent class="sm:max-w-[425px] p-0 border-none bg-transparent shadow-none overflow-visible">
+                                            <Reserver 
+                                                :event="props.event" 
+                                                @reservation-success="onReservationSuccess"
+                                            />
+                                        </DialogContent>
+                                    </Dialog>
 
                                     <div class="flex items-center justify-center gap-4 text-xs font-semibold text-zinc-400 uppercase tracking-widest">
                                         <span class="flex items-center gap-1"><Share2 class="w-3.5 h-3.5" /> Share</span>

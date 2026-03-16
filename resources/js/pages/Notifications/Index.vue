@@ -131,7 +131,7 @@ onMounted(() => {
 
     if (window.Echo && authUser.value?.id) {
         window.Echo.private(`notifications.${authUser.value.id}`)
-            .listen('NotificationSent', (e: { notification: Notification }) => {
+            .listen('.notification.sent', (e: { notification: Notification }) => {
                 notifications.value.unshift(e.notification);
             });
     }
