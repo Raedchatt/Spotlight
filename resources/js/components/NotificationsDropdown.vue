@@ -23,14 +23,17 @@ interface Notification {
     updated_at: string;
 }
 
+
+
 const props = defineProps<{
     userId?: number;
 }>();
 
 const notifications = ref<Notification[]>([]);
 const loading = ref(true);
+const unreadNotificationsCount = ref(0);
 
-const unreadCount = computed(() => notifications.value.filter(n => !n.lu).length);
+const unreadCount = computed(() => unreadNotificationsCount.value);
 
 const typeConfig: Record<string, { icon: any; color: string; bg: string }> = {
     evenement_cree: { icon: CalendarPlus, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
@@ -68,6 +71,7 @@ const fetchNotifications = async () => {
     try {
         const response = await axios.get('/web-api/notifications');
         notifications.value = response.data;
+        unreadNotificationsCount.value = notifications.value.filter(n => !n.lu).length;
     } catch (error) {
         console.error('Error fetching notifications:', error);
     } finally {
@@ -80,6 +84,9 @@ const markAsRead = async (notification: Notification) => {
     try {
         await axios.patch(`/web-api/notifications/${notification.id}/read`);
         notification.lu = true;
+        if (unreadNotificationsCount.value > 0) {
+            unreadNotificationsCount.value--;
+        }
     } catch (error) {
         console.error('Error marking notification as read:', error);
     }
@@ -89,6 +96,7 @@ const markAllAsRead = async () => {
     try {
         await axios.patch('/web-api/notifications/read-all');
         notifications.value.forEach(n => n.lu = true);
+        unreadNotificationsCount.value = 0;
     } catch (error) {
         console.error('Error marking all as read:', error);
     }
@@ -99,8 +107,9 @@ onMounted(() => {
 
     if (window.Echo && props.userId) {
         window.Echo.private(`notifications.${props.userId}`)
-            .listen('NotificationSent', (e: { notification: Notification }) => {
+            .listen('.notification.sent', (e: { notification: Notification }) => {
                 notifications.value.unshift(e.notification);
+                unreadNotificationsCount.value++;
                 // Keep only top 20 or similar if needed for the dropdown
                 if (notifications.value.length > 20) {
                     notifications.value.pop();

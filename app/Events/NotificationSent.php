@@ -35,4 +35,12 @@ class NotificationSent implements ShouldBroadcastNow
             new PrivateChannel('notifications.' . $this->notification->user_id),
         ];
     }
+
+    /**
+     * The event's broadcast name.
+     */
+    public function broadcastAs(): string
+    {
+        return 'notification.sent';
+    }
 }

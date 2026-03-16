@@ -30,6 +30,13 @@ const { isCurrentUrl } = useCurrentUrl();
                     <Link :href="item.href">
                         <component :is="item.icon" />
                         <span>{{ item.title }}</span>
+                        <Badge 
+                            v-if="item.count && item.count > 0" 
+                            variant="destructive" 
+                            class="ml-auto h-5 min-w-5 flex items-center justify-center rounded-full text-[10px] px-1"
+                        >
+                            {{ item.count }}
+                        </Badge>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>

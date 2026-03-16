@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import { MessageCircle } from 'lucide-vue-next';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
 import {
@@ -25,16 +25,20 @@ interface Conversation {
     unread_count: number;
 }
 
+
+
 const conversations = ref<Conversation[]>([]);
 const loading = ref(true);
-const totalUnread = ref(0);
+const unreadMessagesCount = ref(0);
+
+const totalUnread = computed(() => unreadMessagesCount.value);
 
 const fetchRecentMessages = async () => {
     try {
         const response = await axios.get('/web-api/messages/recent');
         if (response.data.status) {
             conversations.value = response.data.conversations;
-            totalUnread.value = conversations.value.reduce((acc, curr) => acc + curr.unread_count, 0);
+            unreadMessagesCount.value = conversations.value.reduce((acc, curr) => acc + curr.unread_count, 0);
         }
     } catch (error) {
         console.error('Error fetching recent messages:', error);
@@ -45,6 +49,15 @@ const fetchRecentMessages = async () => {
 
 onMounted(() => {
     fetchRecentMessages();
+
+    if (window.Echo) {
+        const userId = usePage().props.auth.user.id;
+        window.Echo.private(`chat.${userId}`)
+            .listen('.message.sent', (e: any) => {
+                // Update local list if it already exists, or just re-fetch
+                fetchRecentMessages();
+            });
+    }
 });
 </script>
 

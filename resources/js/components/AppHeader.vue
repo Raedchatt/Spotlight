@@ -26,6 +26,11 @@ import { useAuthModal } from '@/composables/useAuthModal';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { dashboard, logout } from '@/routes';
 import type { BreadcrumbItem, NavItem } from '@/types';
+import { ref, onMounted, watch } from 'vue';
+import axios from 'axios';
+import Badge from '@/components/ui/badge/Badge.vue';
+import { MessageSquare, Bell } from 'lucide-vue-next';
+import { useUnreadCounts } from '@/composables/useUnreadCounts';
 
 
 
@@ -86,6 +91,12 @@ const mainNavItems = computed<NavItem[]>(() => {
 
 const { isLoginOpen, isRegisterOpen, openLogin, openRegister } = useAuthModal();
 
+const { unreadMessagesCount, unreadNotificationsCount, totalUnreadCount } = useUnreadCounts();
+
+onMounted(() => {
+    // Initialization is handled by watch in useUnreadCounts
+});
+
 defineExpose({
     openLogin,
     openRegister
@@ -98,14 +109,22 @@ const handleLogout = () => {
 
 <template>
     <div>
-        <div class="border-b border-sidebar-border/80 bg-white dark:bg-neutral-900 shadow-sm">
+        <!-- Fixed Header Container -->
+        <header class="fixed top-0 left-0 right-0 z-50 border-b border-sidebar-border/80 bg-white/80 backdrop-blur-md dark:bg-neutral-900/80 shadow-sm">
             <div class="mx-auto flex h-16 items-center px-4 md:max-w-7xl">
                 <!-- Mobile Menu -->
                 <div class="lg:hidden">
                     <Sheet>
                         <SheetTrigger :as-child="true">
-                            <Button variant="ghost" size="icon" class="mr-2 h-9 w-9">
+                            <Button variant="ghost" size="icon" class="mr-2 h-9 w-9 relative">
                                 <Menu class="h-5 w-5" />
+                                <Badge 
+                                    v-if="totalUnreadCount > 0" 
+                                    variant="destructive" 
+                                    class="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[8px] rounded-full border border-white dark:border-neutral-900 pointer-events-none"
+                                >
+                                    {{ totalUnreadCount > 9 ? '9+' : totalUnreadCount }}
+                                </Badge>
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="left" class="w-[300px] p-6">
@@ -127,7 +146,27 @@ const handleLogout = () => {
                                     </Link>
                                 </nav>
                                 <div class="flex flex-col space-y-4" v-if="auth.user">
-                                    <Link href="/settings/profile" class="flex items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent">
+                                    <div class="space-y-1 mb-2 border-b border-sidebar-border/50 pb-4">
+                                        <Link href="/messages" class="flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent" :class="whenCurrentUrl('/messages', activeItemStyles)">
+                                            <div class="flex items-center gap-x-3">
+                                                <MessageSquare class="h-5 w-5" /> Messages
+                                            </div>
+                                            <Badge v-if="unreadMessagesCount > 0" variant="destructive" class="h-5 min-w-5 flex items-center justify-center rounded-full text-[10px] px-1">
+                                                {{ unreadMessagesCount }}
+                                            </Badge>
+                                        </Link>
+                                        
+                                        <Link href="/notifications" class="flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent" :class="whenCurrentUrl('/notifications', activeItemStyles)">
+                                            <div class="flex items-center gap-x-3">
+                                                <Bell class="h-5 w-5" /> Notifications
+                                            </div>
+                                            <Badge v-if="unreadNotificationsCount > 0" variant="destructive" class="h-5 min-w-5 flex items-center justify-center rounded-full text-[10px] px-1">
+                                                {{ unreadNotificationsCount }}
+                                            </Badge>
+                                        </Link>
+                                    </div>
+
+                                    <Link href="/settings/profile" class="flex items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent" :class="whenCurrentUrl('/settings/profile', activeItemStyles)">
                                         <User class="h-5 w-5" /> Profile
                                     </Link>
                                     <button @click="handleLogout" class="flex w-full items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent">
@@ -188,13 +227,6 @@ const handleLogout = () => {
                                 <Button variant="outline" size="icon" class="h-10 w-10">
                                     <User class="h-5 w-5 text-neutral-700 dark:text-neutral-300" />
                                 </Button>
-                                <!-- RIB Warning Indicator 
-                                <div v-if="auth.user?.role === 'organisateur' && (!auth.user?.organisateur || !auth.user?.organisateur.rib)" 
-                                     class="absolute -top-0.5 -right-0.5 flex h-3 w-3 z-50">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500 border-2 border-white dark:border-neutral-900 shadow-sm"></span>
-                                </div>
-                                -->
                             </Link>
                             <Button variant="outline" size="icon" class="h-10 w-10" @click="handleLogout">
                                 <LogOut class="h-5 w-5 text-neutral-700 dark:text-neutral-300" />
@@ -207,16 +239,20 @@ const handleLogout = () => {
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div
-            v-if="props.breadcrumbs.length > 1"
-            class="hidden w-full border-b border-sidebar-border/70 bg-white dark:bg-neutral-900"
-        >
-            <div class="mx-auto flex h-12 w-full items-center justify-start px-4 text-neutral-500 md:max-w-7xl">
-                <Breadcrumbs :breadcrumbs="breadcrumbs" />
+            <!-- Breadcrumbs -->
+            <div
+                v-if="props.breadcrumbs.length > 1"
+                class="hidden w-full border-t border-sidebar-border/70 bg-white dark:bg-neutral-900 lg:block"
+            >
+                <div class="mx-auto flex h-10 w-full items-center justify-start px-4 text-neutral-500 md:max-w-7xl">
+                    <Breadcrumbs :breadcrumbs="breadcrumbs" />
+                </div>
             </div>
-        </div>
+        </header>
+
+        <!-- Spacer for fixed header -->
+        <div :class="[props.breadcrumbs.length > 1 ? 'h-16 lg:h-[104px]' : 'h-16']"></div>
 
         <LoginModal v-model:open="isLoginOpen" @switchToRegister="isLoginOpen = false; isRegisterOpen = true" />
         <RegisterModal v-model:open="isRegisterOpen" @switchToLogin="isRegisterOpen = false; isLoginOpen = true" />
