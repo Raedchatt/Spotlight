@@ -242,7 +242,7 @@ class ReservationController extends Controller
         }
 
         $reservations = Reservation::where('user_id', $targetId)
-            ->with('evenement:id,titre,date_debut,date_fin,lieu,prix_spectateur')
+            ->with(['evenement:id,titre,date_debut,date_fin,lieu,prix_spectateur', 'billets'])
             ->latest()
             ->get();
 

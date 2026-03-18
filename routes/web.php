@@ -114,6 +114,10 @@ Route::middleware('auth')->group(function () {
     // Stripe Payment Routes
     Route::get('/paiement/success', [\App\Http\Controllers\StripeController::class, 'success'])->name('paiement.success');
     Route::get('/paiement/cancel', [\App\Http\Controllers\StripeController::class, 'cancel'])->name('paiement.cancel');
+
+    // Billet Routes
+    Route::get('/tickets/{billet}', [\App\Http\Controllers\BilletController::class, 'show'])->name('billet.show');
+    Route::get('/tickets/{billet}/download', [\App\Http\Controllers\BilletController::class, 'downloadPdf'])->name('billet.download');
 });
 
 require __DIR__ . '/settings.php';

@@ -100,10 +100,16 @@ class StripeController extends Controller
                 'transferred_at'           => now(),
             ]);
             
+            // Confirming the reservation will trigger the ticket generation via Model Event
             $paiement->reservation->confirm();
+
+            // Load the generated billet to redirect to its page
+            $billet = $paiement->reservation->billets()->latest()->first();
+
+            return redirect()->route('billet.show', $billet->id)->with('success', 'Paiement effectué avec succès !');
         }
 
-        return redirect()->route('discovery')->with('success', 'Paiement effectué avec succès !');
+        return redirect()->route('discovery')->with('error', 'Le paiement n\'a pas pu être validé.');
     }
 
     // ─────────────────────────────────────────────
@@ -137,11 +143,15 @@ class StripeController extends Controller
 
             case 'payment_intent.succeeded':
                 $paymentIntent = $event->data->object;
-                Paiement::where('stripe_payment_intent_id', $paymentIntent->id)
-                    ->update([
+                
+                $paiement = Paiement::where('stripe_payment_intent_id', $paymentIntent->id)->first();
+                if ($paiement) {
+                    $paiement->update([
                         'statut'         => StatutPaiement::Succeeded,
                         'transferred_at' => now(),
                     ]);
+                    $paiement->reservation->confirm();
+                }
                 break;
 
             case 'payment_intent.payment_failed':

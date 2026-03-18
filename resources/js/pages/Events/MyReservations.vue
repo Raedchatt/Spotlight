@@ -18,11 +18,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 
-const breadcrumbs = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'My Reservations', href: '/dashboard/reservations' },
-];
-
 const reservations = ref<any[]>([]);
 const loading = ref(true);
 
@@ -82,7 +77,7 @@ const formatPrice = (price: number) => {
 <template>
     <Head title="My Reservations - Spotlight" />
 
-    <AppLayout :breadcrumbs="breadcrumbs">
+    <AppLayout>
         <div class="p-6 space-y-6">
             <div class="flex justify-between items-center">
                 <div>
@@ -152,16 +147,29 @@ const formatPrice = (price: number) => {
                                     {{ formatPrice(res.nombre_tickets * res.evenement.prix_spectateur) }}
                                 </span>
                             </div>
-                            
-                            <Button 
-                                v-if="res.statut !== 'cancelled'"
-                                @click="cancelReservation(res.id)" 
-                                size="sm" 
-                                variant="outline" 
-                                class="text-destructive hover:bg-destructive/5 border-destructive"
-                            >
-                                <XCircle class="w-4 h-4 mr-1" /> Annuler
-                            </Button>
+                            <div class="flex items-center gap-2">
+                                <a v-if="res.statut === 'confirmed' && res.billets && res.billets.length > 0" 
+                                   :href="`/tickets/${res.billets[0].id}`" 
+                                   target="_blank">
+                                    <Button 
+                                        type="button"
+                                        size="sm" 
+                                        variant="default" 
+                                        class="bg-blue-600 hover:bg-blue-700"
+                                    >
+                                        <Ticket class="w-4 h-4 mr-1" /> Ticket
+                                    </Button>
+                                </a>
+                                <Button 
+                                    v-if="res.statut !== 'cancelled'"
+                                    @click="cancelReservation(res.id)" 
+                                    size="sm" 
+                                    variant="outline" 
+                                    class="text-destructive hover:bg-destructive/5 border-destructive"
+                                >
+                                    <XCircle class="w-4 h-4 mr-1" /> Annuler
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </div>

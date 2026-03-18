@@ -6,6 +6,7 @@ use App\Enums\StatutReservation;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Services\TicketService;
 
 class Reservation extends Model
 {
@@ -121,5 +122,47 @@ class Reservation extends Model
     public function cancel(): bool
     {
         return $this->update(['statut' => StatutReservation::Cancelled]);
+    }
+
+    /**
+     * The tickets (billets) associated with this reservation.
+     */
+    public function billets()
+    {
+        return $this->hasMany(Billet::class);
+    }
+
+    /**
+     * The payments associated with this reservation.
+     */
+    public function paiements()
+    {
+        return $this->hasMany(Paiement::class);
+    }
+
+    /**
+     * Boot the model.
+     */
+    protected static function booted()
+    {
+        static::updated(function (Reservation $reservation) {
+            // Check if status changed to confirmed 
+            if ($reservation->isDirty('statut') && $reservation->statut === StatutReservation::Confirmed) {
+                // Generate ticket if it doesn't already have one
+                if ($reservation->billets()->count() === 0) {
+                    $ticketService = app(TicketService::class);
+                    $ticketService->generate($reservation);
+                }
+            }
+        });
+        
+        static::created(function (Reservation $reservation) {
+            // Check if created with confirmed status right away (e.g. for free events)
+            if ($reservation->statut === StatutReservation::Confirmed) {
+                // Generate ticket
+                $ticketService = app(TicketService::class);
+                $ticketService->generate($reservation);
+            }
+        });
     }
 }
