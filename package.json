@@ -35,6 +35,7 @@
     "dependencies": {
         "@heroicons/vue": "^2.2.0",
         "@inertiajs/vue3": "^2.3.13",
+        "@stripe/stripe-js": "^8.11.0",
         "@vueuse/core": "^12.8.2",
         "axios": "^1.13.6",
         "class-variance-authority": "^0.7.1",
