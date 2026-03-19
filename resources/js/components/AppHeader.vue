@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Link, usePage, router } from '@inertiajs/vue3';
 import { Folder, LayoutGrid, Menu, Search, Calendar, User, LogOut } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { MessageSquare, Bell } from 'lucide-vue-next';
+import { computed,onMounted } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 
 import LoginModal from '@/components/auth/LoginModal.vue';
@@ -9,6 +10,7 @@ import RegisterModal from '@/components/auth/RegisterModal.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import MessagesDropdown from '@/components/MessagesDropdown.vue';
 import NotificationsDropdown from '@/components/NotificationsDropdown.vue';
+import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
 import {
     NavigationMenu,
@@ -24,13 +26,14 @@ import {
 } from '@/components/ui/sheet';
 import { useAuthModal } from '@/composables/useAuthModal';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
+import { useUnreadCounts } from '@/composables/useUnreadCounts';
 import { dashboard, logout } from '@/routes';
 import type { BreadcrumbItem, NavItem } from '@/types';
-import { ref, onMounted, watch } from 'vue';
-import axios from 'axios';
-import Badge from '@/components/ui/badge/Badge.vue';
-import { MessageSquare, Bell } from 'lucide-vue-next';
-import { useUnreadCounts } from '@/composables/useUnreadCounts';
+
+
+
+
+
 
 
 
