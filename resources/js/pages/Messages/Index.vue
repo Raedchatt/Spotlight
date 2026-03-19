@@ -1,7 +1,8 @@
+
 <script setup>
-import AppLayout from '@/layouts/AppLayout.vue';
 import { Link, Head } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 import { discovery } from '@/routes';
 import { show } from '@/routes/messages';
 

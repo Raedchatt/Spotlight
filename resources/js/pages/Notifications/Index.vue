@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import {
     Bell,
@@ -12,12 +13,11 @@ import {
     UserX,
     Check,
     CheckCheck,
-    Filter,
     Inbox,
     Ticket,
 } from 'lucide-vue-next';
 import { ref, onMounted, computed } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
