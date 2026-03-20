@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\StatutPaiement;
 use App\Models\Paiement;
 use App\Models\Reservation;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -14,9 +15,11 @@ use Stripe\Webhook;
 
 class StripeController extends Controller
 {
-    public function __construct()
+    protected NotificationService $notificationService;
+    public function __construct(NotificationService $notificationService)
     {
         Stripe::setApiKey(config('services.stripe.secret'));
+        $this->notificationService = $notificationService;
     }
 
     // ─────────────────────────────────────────────
@@ -101,10 +104,21 @@ class StripeController extends Controller
             ]);
             
             // Confirming the reservation will trigger the ticket generation via Model Event
-            $paiement->reservation->confirm();
+            $reservation = $paiement->reservation;
+            $reservation->confirm();
+
+            // Notify the organizer now that the reservation is confirmed (paid)
+            $evenement   = $reservation->evenement;
+            $participant = $reservation->user;
+            $this->notificationService->notifieOrganisateurNouvelleReservation(
+                $evenement->organisateur_id,
+                $participant->username,
+                $reservation->nombre_tickets,
+                $evenement->titre
+            );
 
             // Load the generated billet to redirect to its page
-            $billet = $paiement->reservation->billets()->latest()->first();
+            $billet = $reservation->billets()->latest()->first();
 
             return redirect()->route('billet.show', $billet->id)->with('success', 'Paiement effectué avec succès !');
         }

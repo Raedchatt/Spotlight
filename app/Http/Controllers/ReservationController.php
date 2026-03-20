@@ -138,15 +138,6 @@ class ReservationController extends Controller
             'statut' => StatutReservation::Pending,
         ]);
 
-        // Notify the event organizer about the new reservation
-        $user = Auth::user();
-        $this->notificationService->notifieOrganisateurNouvelleReservation(
-            $evenement->organisateur_id,
-            $user->username,
-            $validated['nombre_tickets'],
-            $evenement->titre
-        );
-
         // 4. Handle Payment if necessary
         $unitPrice = (float) $evenement->prix_spectateur;
         if ($evenement->is_tournoi && $ticketType === 'participant') {
@@ -187,8 +178,16 @@ class ReservationController extends Controller
             ], 500);
         }
 
-        // Auto-confirm free events
+        // Auto-confirm free events — notify organizer right away
         $reservation->update(['statut' => StatutReservation::Confirmed]);
+
+        $user = Auth::user();
+        $this->notificationService->notifieOrganisateurNouvelleReservation(
+            $evenement->organisateur_id,
+            $user->username,
+            $validated['nombre_tickets'],
+            $evenement->titre
+        );
 
         return response()->json([
             'message' => 'Reservation confirmed successfully!',

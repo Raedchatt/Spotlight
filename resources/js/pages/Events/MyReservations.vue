@@ -10,7 +10,8 @@ import {
     Ticket,
     AlertCircle,
     CheckCircle2,
-    XCircle
+    XCircle,
+    CreditCard
 } from 'lucide-vue-next';
 import { ref, onMounted} from 'vue';
 //import AppHeader from '@/components/AppHeader.vue';
@@ -41,6 +42,17 @@ const cancelReservation = async (id: number) => {
         await fetchReservations();
     } catch (error: any) {
         alert(error.response?.data?.message || 'Une erreur est survenue lors de l\'annulation.');
+    }
+};
+
+const checkoutReservation = async (id: number) => {
+    try {
+        const response = await axios.post(`/web-api/paiement/checkout/${id}`);
+        if (response.data.checkout_url) {
+            window.location.href = response.data.checkout_url;
+        }
+    } catch (error: any) {
+        alert(error.response?.data?.message || 'Une erreur est survenue lors du paiement.');
     }
 };
 
@@ -160,6 +172,15 @@ const formatPrice = (price: number) => {
                                         <Ticket class="w-4 h-4 mr-1" /> Ticket
                                     </Button>
                                 </a>
+                                <Button
+                                    v-if="res.statut === 'pending'"
+                                    @click="checkoutReservation(res.id)"
+                                    size="sm"
+                                    variant="default"
+                                    class="bg-green-600 hover:bg-green-700 text-white"
+                                >
+                                    <CreditCard class="w-4 h-4 mr-1" /> Checkout
+                                </Button>
                                 <Button 
                                     v-if="res.statut !== 'cancelled'"
                                     @click="cancelReservation(res.id)" 
