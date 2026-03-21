@@ -70,6 +70,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/messages/recent', [MessageController::class, 'recent']);
         Route::post('/messages', [MessageController::class, 'envoyer'])->name('messages.envoyer');
 
+        // AI Suggestions
+        Route::post('/ai/suggest-event', [\App\Http\Controllers\GenerateImagesController::class, 'generate']);
+        Route::post('/ai/upload-image', [\App\Http\Controllers\GenerateImagesController::class, 'uploadSelectedImage']);
+
         // Notifications
         Route::get('/notifications', [NotificationController::class, 'index']);
         Route::get('/notifications/{id}', [NotificationController::class, 'show']);

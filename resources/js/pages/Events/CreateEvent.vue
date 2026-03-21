@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import axios from 'axios';
-import { ChevronLeft, CircleDollarSign, Info, MapPin, Save, Users } from 'lucide-vue-next';
+import { ChevronLeft, CircleDollarSign, Info, MapPin, Save, Sparkles, Users } from 'lucide-vue-next';
 import { ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,14 @@ const breadcrumbs = [
 type Props = {
     breadcrumbs?: BreadcrumbItem[];
 };
+
+interface Suggestion {
+    prompt: string;
+    url: string;
+    loaded?: boolean;
+    error?: boolean;
+    isUploading?: boolean;
+}
 
 const props = withDefaults(defineProps<Props>(), {
     breadcrumbs: () => [],
@@ -47,11 +55,82 @@ const form = ref({
     type_tournoi: '',
     prix_participant: 0,
     capacite_participant: 0,
-    medias: [] as File[]
+    medias: [] as File[],
+    ai_media_urls: [] as string[]
 });
 
 const formErrors = ref<Record<string, string[]>>({});
 const processing = ref(false);
+
+// AI suggestions
+const suggestions = ref<Suggestion[]>([]);
+const isGenerating = ref(false);
+const generateError = ref<string | null>(null);
+const generationAttempts = ref(0);
+const MAX_ATTEMPTS = 3;
+
+const generateIdeas = async () => {
+    if (generationAttempts.value >= MAX_ATTEMPTS) {
+        generateError.value = 'Limit reached: You can generate AI covers up to 3 times per event.';
+        return;
+    }
+
+    if (!form.value.titre) {
+        generateError.value = 'Please enter an event title first to generate covers.';
+        return;
+    }
+    isGenerating.value = true;
+    generateError.value = null;
+    
+    try {
+        const res = await axios.post('/web-api/ai/suggest-event', {
+            titre: form.value.titre,
+            description: form.value.description,
+            categorie: form.value.categorie,
+        });
+        const newItems = (res.data.suggestions ?? []).filter((s: any) => {
+            return s.url && s.url.startsWith('data:image/') && s.url.length > 1000;
+        }).map((s: any) => ({
+            ...s,
+            loaded: false,
+            error: false,
+            isUploading: false
+        }));
+        
+        // Append to history instead of replacing
+        suggestions.value = [...suggestions.value, ...newItems];
+        generationAttempts.value++;
+    } catch (e: any) {
+        console.error('AI Generation Error:', e.response || e);
+        generateError.value = e.response?.data?.error ?? 'Failed to generate covers. Please try again.';
+    } finally {
+        isGenerating.value = false;
+    }
+};
+
+const applySuggestion = async (s: Suggestion) => {
+    try {
+        s.isUploading = true;
+        
+        // Upload the selected Base64 image to Cloudinary via our new endpoint
+        const response = await axios.post('/web-api/ai/upload-image', {
+            image_base64: s.url,
+            prompt: s.prompt
+        });
+
+        if (response.data.success) {
+            // Store the Cloudinary URL
+            form.value.ai_media_urls.push(response.data.secure_url);
+            // Clear suggestions after successful selection
+            suggestions.value = [];
+        }
+    } catch (e: any) {
+        console.error('Error selecting image:', e);
+        alert(e.response?.data?.error || 'Failed to upload the selected image. Please try again.');
+    } finally {
+        s.isUploading = false;
+    }
+};
 
 const handleFileChange = (event: Event) => {
     const input = event.target as HTMLInputElement;
@@ -70,6 +149,10 @@ const submit = async () => {
             if (key === 'medias') {
                 (value as File[]).forEach(file => {
                     formData.append('medias[]', file);
+                });
+            } else if (key === 'ai_media_urls') {
+                (value as string[]).forEach(url => {
+                    formData.append('ai_media_urls[]', url);
                 });
             } else if (value !== null && value !== '') {
                 // For boolean values, send 1 or 0 so Laravel handles it correctly
@@ -222,10 +305,67 @@ const submit = async () => {
                                 <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold">3</div>
                                 <CardTitle>Media Uploads</CardTitle>
                             </div>
+                            <div class="mb-4 flex items-center justify-between">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    class="gap-2 border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400 dark:border-purple-700 dark:text-purple-300 dark:hover:bg-purple-900/30 transition-all"
+                                    :disabled="isGenerating || generationAttempts >= MAX_ATTEMPTS"
+                                    @click.stop="generateIdeas"
+                                >
+                                    <Sparkles class="w-4 h-4" :class="{ 'animate-spin': isGenerating }" />
+                                    {{ isGenerating ? 'Generating...' : (generationAttempts >= MAX_ATTEMPTS ? 'Limit Reached' : '✨ Generate Covers') }}
+                                </Button>
+                                <span v-if="generationAttempts < MAX_ATTEMPTS" class="text-[10px] font-medium text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                                    {{ MAX_ATTEMPTS - generationAttempts }} attempts left
+                                </span>
+                            </div>
                             <CardDescription>Upload up to 5 images or videos for your event.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div class="space-y-4">
+                                <!-- AI Suggestions Panel with Horizontal Scroll -->
+                                <div v-if="suggestions.length > 0" class="space-y-3 mb-6 p-4 rounded-xl bg-purple-50/50 dark:bg-purple-950/10 border border-purple-100 dark:border-purple-900/30">
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-xs font-semibold text-purple-600 uppercase tracking-wide">✨ AI Suggested Generation History</p>
+                                        <button @click="suggestions = []; generationAttempts = 0" class="text-xs text-muted-foreground hover:text-foreground">Clear All</button>
+                                    </div>
+                                    <div class="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-purple-200">
+                                        <button
+                                            v-for="(s, i) in suggestions"
+                                            :key="i"
+                                            type="button"
+                                            class="relative flex-shrink-0 w-64 aspect-video rounded-lg overflow-hidden border-2 border-transparent hover:border-purple-500 transition-all group bg-slate-200 dark:bg-slate-800"
+                                            @click="applySuggestion(s)"
+                                        >
+                                            <div v-if="s.isUploading" class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white z-10">
+                                                <div class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mb-2"></div>
+                                                <span class="text-[10px] font-medium">Uploading...</span>
+                                            </div>
+                                            <div v-if="!s.loaded && !s.error && !s.isUploading" class="absolute inset-0 flex items-center justify-center text-slate-400">
+                                                <Sparkles class="w-8 h-8 animate-pulse" />
+                                            </div>
+                                            <div v-if="s.error" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-900 text-slate-500 p-2 text-center">
+                                                <AlertCircle class="w-6 h-6 text-red-400 mb-1" />
+                                                <span class="text-[10px] font-medium leading-tight">Image load failed</span>
+                                            </div>
+                                            <img 
+                                                v-if="!s.error"
+                                                :src="s.url" 
+                                                alt="AI Suggestion" 
+                                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                                @load="s.loaded = true"
+                                                @error="s.error = true"
+                                            />
+                                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                <span class="text-white text-xs font-medium px-2 py-1 bg-purple-600 rounded">Use this cover</span>
+                                            </div>
+                                        </button>
+                                    </div>
+                                    <p v-if="generateError" class="text-xs text-red-500 mt-2">{{ generateError }}</p>
+                                </div>
+
                                 <div class="flex items-center justify-center w-full">
                                     <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-slate-700">
                                         <div class="flex flex-col items-center justify-center pt-5 pb-6">
@@ -239,10 +379,21 @@ const submit = async () => {
                                     </label>
                                 </div>
                                 
-                                <div v-if="form.medias.length > 0" class="flex flex-col space-y-2 mt-4">
-                                    <h4 class="text-sm font-medium">Selected files:</h4>
-                                    <ul class="text-sm text-muted-foreground list-disc list-inside">
-                                        <li v-for="file in form.medias" :key="file.name">{{ file.name }} ({{ (file.size / 1024 / 1024).toFixed(2) }} MB)</li>
+                                <div v-show="form.medias.length > 0 || form.ai_media_urls.length > 0" class="flex flex-col space-y-2 mt-4">
+                                    <h4 class="text-sm font-medium">Selected media:</h4>
+                                    <ul class="text-sm space-y-2">
+                                        <!-- Local Files -->
+                                        <li v-for="(file, idx) in form.medias" :key="'file-'+idx" class="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-100 dark:border-slate-800">
+                                            <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/40 rounded flex items-center justify-center text-blue-600 dark:text-blue-400 text-[10px] font-bold">FILE</div>
+                                            <span class="truncate flex-1 text-xs">{{ file.name }}</span>
+                                            <button @click="form.medias.splice(idx, 1)" class="text-slate-400 hover:text-red-500 p-1">✕</button>
+                                        </li>
+                                        <!-- AI URLs -->
+                                        <li v-for="(url, idx) in form.ai_media_urls" :key="'ai-'+idx" class="flex items-center gap-2 p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-100 dark:border-purple-900/30">
+                                            <img :src="url" class="w-8 h-8 object-cover rounded bg-slate-200" />
+                                            <span class="truncate flex-1 text-xs text-purple-700 dark:text-purple-300 italic font-medium">AI Generated Cover</span>
+                                            <button @click="form.ai_media_urls.splice(idx, 1)" class="text-slate-400 hover:text-red-500 p-1">✕</button>
+                                        </li>
                                     </ul>
                                 </div>
                                 
@@ -357,9 +508,9 @@ const submit = async () => {
                             <p class="text-xs text-muted-foreground">Check out our documentation for organizers.</p>
                             <Button variant="link" size="sm" class="text-blue-600 h-auto p-0">View Guide</Button>
                         </div>
-                    </div>
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </div>
+</AppLayout>
 </template>

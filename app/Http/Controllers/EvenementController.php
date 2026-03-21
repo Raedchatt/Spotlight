@@ -177,6 +177,24 @@ class EvenementController extends Controller
             }
         }
 
+        // Handle pre-uploaded AI media URLs
+        if ($request->has('ai_media_urls')) {
+            $urls = $request->input('ai_media_urls');
+            $urlArray = is_array($urls) ? $urls : (is_string($urls) ? [$urls] : []);
+            
+            foreach ($urlArray as $url) {
+                $event->medias()->create([
+                    'url' => $url,
+                    'type' => TypeMedia::Image,
+                ]);
+
+                // Set as poster if not set
+                if (!$event->poster_url) {
+                    $event->update(['poster_url' => $url]);
+                }
+            }
+        }
+
         // Notify all participants about the new event
         $this->notificationService->notifieParticipantsNouvelEvenement(
             $event->titre,

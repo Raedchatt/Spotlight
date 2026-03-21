@@ -19,6 +19,8 @@ return [    /*
 
    'gemini' => [
     'key' => env('GEMINI_API_KEY'),
+    'model' => env('GEMINI_MODEL', 'gemini-2.0-flash'),
+    'imagen_model' => env('GEMINI_IMAGEN_MODEL', 'imagen-3.0-generate-001'),
     ],
 
     'resend' => [
