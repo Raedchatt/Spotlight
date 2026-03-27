@@ -7,7 +7,6 @@ import {
     Search,
     Plus,
     Pencil,
-    Trash2,
     Calendar,
     MapPin,
     X,
@@ -15,14 +14,16 @@ import {
     Eye,
     ChevronLeft,
     ChevronRight,
+    Trash2,
 } from 'lucide-vue-next';
 import { ref, onMounted, watch, computed } from 'vue';
+import CancelEventButton from '@/components/organizer/CancelEventButton.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { Evenement,StatutEvenement } from '@/types/event';
-import CancelEventButton from '@/components/organizer/CancelEventButton.vue';
+
 
 
 const breadcrumbs = [
@@ -259,6 +260,15 @@ const getStatusLabel = (statut: StatutEvenement) => {
                                     :event-title="event.titre"
                                     @cancelled="fetchEvents"
                                 />
+                                <Button 
+                                    v-if="event.organisateur_id === auth.user.id && (event.statut === 'annule' || event.statut === 'en_attente')"
+                                    size="icon" 
+                                    variant="secondary" 
+                                    class="group/btn h-8 w-8 rounded-full shadow-md hover:bg-black/20 backdrop-blur-sm bg-white/80 transition-all hover:scale-110 hover:text-red-600"
+                                    @click="deleteEvent(event.id)"
+                                >
+                                    <Trash2 class="w-4 h-4 transition-colors" />
+                                </Button>
                             </div>
                         </div>
 

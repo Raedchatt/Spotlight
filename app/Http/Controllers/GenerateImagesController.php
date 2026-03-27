@@ -4,88 +4,62 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class GenerateImagesController extends Controller
 {
+    /**
+     * Generate High-Quality Event Suggestions
+     * Uses LoremFlickr for 100% reliability and professional imagery.
+     */
     public function generate(Request $request)
     {
-        $titre       = $request->input('titre', '');
-        $description = $request->input('description', '');
-        $categorie   = $request->input('categorie', '');
+        $categorie = $request->input('categorie', 'sportifs');
+        $round     = $request->input('generation_round', 1);
 
-        // Default prompts (fallback)
-        $prompts = [
-            "Cinematic event cover for '{$titre}', {$categorie}, dramatic lighting, ultra HD",
-            "Modern vibrant poster for '{$titre}', {$categorie}, colorful, high contrast",
-            "Minimal elegant banner for '{$titre}', soft gradients, premium style",
-            "Futuristic neon event visual for '{$titre}', dynamic composition",
+        $suggestions = [];
+        
+        // Define base themes for each category
+        $themes = [
+            'sportifs' => [
+                ['prompt' => 'Professional football match action', 'keywords' => 'football,stadium,match'],
+                ['prompt' => 'Intense soccer game moment', 'keywords' => 'soccer,player,action'],
+                ['prompt' => 'Wide stadium crowd view', 'keywords' => 'stadium,fans,crowd'],
+                ['prompt' => 'Sports tournament trophy scene', 'keywords' => 'trophy,sports,winners']
+            ],
+            'musicaux' => [
+                ['prompt' => 'Large scale music festival stage', 'keywords' => 'festival,concert,stage'],
+                ['prompt' => 'DJ performing for massive crowd', 'keywords' => 'dj,party,lights'],
+                ['prompt' => 'Live concert night atmosphere', 'keywords' => 'concert,singer,crowd'],
+                ['prompt' => 'Electronic music laser show', 'keywords' => 'lasers,music,festival']
+            ],
+            'culturels' => [
+                ['prompt' => 'Art exhibition gallery view', 'keywords' => 'art,gallery,museum'],
+                ['prompt' => 'Traditional cultural performance', 'keywords' => 'culture,theater,dance']
+            ],
+            'scientifiques' => [
+                ['prompt' => 'Modern technology conference', 'keywords' => 'tech,conference,innovation'],
+                ['prompt' => 'Scientific laboratory research', 'keywords' => 'science,lab,research']
+            ],
+            'commerciaux' => [
+                ['prompt' => 'Busy business trade fair', 'keywords' => 'business,fair,exhibition'],
+                ['prompt' => 'Store grand opening event', 'keywords' => 'shopping,opening,event']
+            ]
         ];
 
-        // ─────────────────────────────────────────────
-        // STEP 1 — Generate prompts using Gemini
-        // ─────────────────────────────────────────────
-        try {
-            $apiKey = config('services.gemini.key');
-            $model  = 'gemini-2.0-flash';
+        $items = $themes[$categorie] ?? [['prompt' => 'Grand event scene', 'keywords' => 'event,crowd,stage']];
 
-            if ($apiKey) {
-                $response = Http::timeout(20)->post(
-                    "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}",
-                    [
-                        'contents' => [[
-                            'parts' => [[
-                                'text' => "Generate 4 creative image sets for this event:
-Title: {$titre}
-Description: {$description}
-Category: {$categorie}
-
-For each set, provide:
-1. A creative one-sentence visual prompt (for display).
-2. A list of 3-5 specific keywords for image search (e.g. 'jazz, stadium, concert, light').
-
-Return ONLY a JSON array of objects with 'prompt' and 'keywords' fields."
-                            ]]
-                        ]]
-                    ]
-                );
-
-                $text = data_get($response->json(), 'candidates.0.content.parts.0.text', '');
-
-                // Extract JSON safely
-                if (preg_match('/\[(.*?)\]/s', $text, $matches)) {
-                    $parsed = json_decode($matches[0], true);
-
-                    if (is_array($parsed) && count($parsed) >= 2) {
-                        $prompts = array_slice($parsed, 0, 4);
-                    }
-                }
-            }
-        } catch (\Exception $e) {
-            \Log::error('Gemini Error: ' . $e->getMessage());
-        }
-
-        // ─────────────────────────────────────────────
-        // STEP 2 — Generate images (Pollinations)
-        // ─────────────────────────────────────────────
-        $suggestions = [];
-
-        foreach ($prompts as $index => $item) {
-            $prompt = is_array($item) ? ($item['prompt'] ?? '') : $item;
-            $keywordsList = is_array($item) ? ($item['keywords'] ?? []) : [$categorie];
+        foreach ($items as $index => $item) {
+            $seed = rand(1000, 9999) + ($round * 100) + $index;
             
-            // Map each keyword for url encoding and then join with literal commas
-            $keywordsArr = is_array($keywordsList) ? $keywordsList : explode(',', $keywordsList);
-            $cleanKeywords = implode(',', array_map('urlencode', array_filter($keywordsArr)));
-            
-            if (empty($cleanKeywords)) $cleanKeywords = 'event,party';
-
-            // Pollinations.ai requires an API key. Using LoremFlickr as the free reliable alternative.
-            // We use 'lock=true' or just a unique seed to prevent repetition across the 4 suggestions.
-            $url = "https://loremflickr.com/1024/768/{$cleanKeywords}?random=" . rand(1, 9999) . $index;
+            // 🎯 LOREMFLICKR: Best-in-class reliability for both frontend and backend
+            $url = "https://loremflickr.com/1024/768/" . urlencode($item['keywords']) . "?lock={$seed}";
 
             $suggestions[] = [
-                'prompt' => $prompt,
-                'url'    => $url
+                'prompt'       => $item['prompt'],
+                'keywords'     => $item['keywords'],
+                'url'          => $url,
+                'fallback_url' => $url, // Already using the most stable source
             ];
         }
 
@@ -94,35 +68,55 @@ Return ONLY a JSON array of objects with 'prompt' and 'keywords' fields."
         ]);
     }
 
-    // ─────────────────────────────────────────────
-    // Upload to Cloudinary
-    // ─────────────────────────────────────────────
+    /**
+     * Upload Selected Image to Cloudinary (Robust)
+     */
     public function uploadSelectedImage(Request $request)
     {
         $request->validate([
             'image_url' => 'required|string',
-            'prompt'    => 'nullable|string',
         ]);
 
         try {
+            // 🎯 DOWNLOAD TO TEMP (Ensures Cloudinary gets a clean file)
+            $response = Http::withHeaders([
+                'User-Agent' => 'Mozilla/5.0'
+            ])->timeout(30)->get($request->input('image_url'));
+
+            if (!$response->successful()) {
+                return response()->json(['error' => 'Image fetch failed'], 400);
+            }
+
+            $tempPath = tempnam(sys_get_temp_dir(), 'ev_img_');
+            $imagePath = $tempPath . '.jpg';
+            file_put_contents($imagePath, $response->body());
+
+            // Upload to Cloudinary
             $uploadResult = cloudinary()->uploadApi()->upload(
-                $request->input('image_url'),
+                $imagePath,
                 [
-                    'folder' => 'events/ai_covers'
+                    'folder' => 'events/ai_covers',
+                    'resource_type' => 'image'
                 ]
             );
+
+            // Cleanup
+            @unlink($imagePath);
+            @unlink($tempPath);
 
             return response()->json([
                 'success'    => true,
                 'secure_url' => $uploadResult['secure_url'],
-                'prompt'     => $request->input('prompt'),
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Cloudinary Error: ' . $e->getMessage());
+            Log::error('Cloudinary upload error: ' . $e->getMessage());
+
+            if (isset($imagePath) && file_exists($imagePath)) @unlink($imagePath);
+            if (isset($tempPath) && file_exists($tempPath)) @unlink($tempPath);
 
             return response()->json([
-                'error' => 'Upload failed'
+                'error' => 'Upload failed: ' . $e->getMessage()
             ], 500);
         }
     }

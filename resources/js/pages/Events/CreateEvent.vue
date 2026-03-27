@@ -1,519 +1,486 @@
-    <script setup lang="ts">
-    import { Head, Link, router } from '@inertiajs/vue3';
-    import { usePage } from '@inertiajs/vue3';
-    import axios from 'axios';
-    import { ChevronLeft, CircleDollarSign, Info, MapPin, Save, Sparkles, Users } from 'lucide-vue-next';
-    import { AlertCircle } from 'lucide-vue-next';
-    import { ref } from 'vue';
-    import { computed } from 'vue';
-    import InputError from '@/components/InputError.vue';
-    import { Button } from '@/components/ui/button';
-    import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-    import { Input } from '@/components/ui/input';
-    import AppLayout from '@/layouts/AppLayout.vue';
-    const breadcrumbs = [
-        { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Events', href: '/dashboard/events' },
-        { title: 'Create Event', href: '/dashboard/events/create' },
-    ];
+<script setup lang="ts">
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import axios from 'axios';
+import { ChevronLeft, CircleDollarSign, Info, MapPin, Save, Sparkles, Users, AlertCircle } from 'lucide-vue-next';
+import { ref, computed, onUnmounted } from 'vue';
 
+import InputError from '@/components/InputError.vue';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import AppLayout from '@/layouts/AppLayout.vue';
 
+// Breadcrumbs
+const breadcrumbs = [
+    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'Events', href: '/dashboard/events' },
+    { title: 'Create Event', href: '/dashboard/events/create' },
+];
 
-    interface Suggestion {
-        prompt: string;
-        url: string;
-        loaded?: boolean;
-        error?: boolean;
-        isUploading?: boolean;
+// Types
+interface Suggestion {
+    prompt: string;
+    keywords?: string;
+    url: string;
+    fallback_url?: string;
+    loaded?: boolean;
+    error?: boolean;
+    isUploading?: boolean;
+}
+
+// Auth
+const page = usePage();
+const auth = computed(() => page.props.auth as any);
+
+const isMissingRib = computed(() => {
+    return auth.value.user?.organisateur && !auth.value.organisateur_has_rib;
+});
+
+// Form
+const form = ref({
+    titre: '',
+    description: '',
+    date_debut: '',
+    date_fin: '',
+    lieu: '',
+    prix_spectateur: 0,
+    capacite_spectateur: 0,
+    categorie: '',
+    is_tournoi: false,
+    type_tournoi: '',
+    prix_participant: 0,
+    capacite_participant: 0,
+    medias: [] as File[],
+    ai_media_urls: [] as string[]
+});
+
+const formErrors = ref<Record<string, string[]>>({});
+const processing = ref(false);
+
+// AI
+const suggestions = ref<Suggestion[]>([]);
+const isGenerating = ref(false);
+const generateError = ref<string | null>(null);
+const generationAttempts = ref(0);
+const MAX_ATTEMPTS = 3;
+
+// Timeout manager
+const timeouts = new Set<ReturnType<typeof setTimeout>>();
+
+const clearSuggestedTimeouts = () => {
+    timeouts.forEach(t => clearTimeout(t));
+    timeouts.clear();
+};
+
+const generateIdeas = async () => {
+    if (generationAttempts.value >= MAX_ATTEMPTS) {
+        generateError.value = 'Limit reached';
+        return;
     }
-    const page = usePage();
-    const auth = computed(() => page.props.auth as any);
-    const isMissingRib = computed(() => {
-        // If they have an organizer profile, they must have a RIB
-        return auth.value.user?.organisateur && !auth.value.organisateur_has_rib;
-    });
 
-    const form = ref({
-        titre: '',
-        description: '',
-        date_debut: '',
-        date_fin: '',
-        lieu: '',
-        prix_spectateur: 0,
-        capacite_spectateur: 0,
-        categorie: '',
-        is_tournoi: false,
-        type_tournoi: '',
-        prix_participant: 0,
-        capacite_participant: 0,
-        medias: [] as File[],
-        ai_media_urls: [] as string[]
-    });
+    if (!form.value.titre) {
+        generateError.value = 'Enter title first';
+        return;
+    }
 
-    const formErrors = ref<Record<string, string[]>>({});
-    const processing = ref(false);
+    clearSuggestedTimeouts();
+    isGenerating.value = true;
+    generateError.value = null;
 
-    // AI suggestions
-    const suggestions = ref<Suggestion[]>([]);
-    const isGenerating = ref(false);
-    const generateError = ref<string | null>(null);
-    const generationAttempts = ref(0);
-    const MAX_ATTEMPTS = 3;
+    try {
+        const res = await axios.post('/web-api/ai/suggest-event', {
+            titre: form.value.titre,
+            description: form.value.description,
+            categorie: form.value.categorie
+        });
 
-    const generateIdeas = async () => {
-        if (generationAttempts.value >= MAX_ATTEMPTS) {
-            generateError.value = 'Limit reached: You can generate AI covers up to 3 times per event.';
-            return;
-        }
+        const newItems = (res.data.suggestions ?? []).map((s: any) => ({
+            ...s,
+            loaded: false,
+            error: false,
+            isUploading: false
+        }));
 
-        if (!form.value.titre) {
-            generateError.value = 'Please enter an event title first to generate covers.';
-            return;
-        }
-        isGenerating.value = true;
-        generateError.value = null;
-        
-        try {
-            const res = await axios.post('/web-api/ai/suggest-event', {
-                titre: form.value.titre,
-                description: form.value.description,
-                categorie: form.value.categorie,
-            });
-            const newItems = (res.data.suggestions ?? []).filter((s: any) => {
-                return s.url && (s.url.startsWith('http') || (s.url.startsWith('data:image/') && s.url.length > 100));
-            }).map((s: any) => ({
-                ...s,
-                loaded: false,
-                error: false,
-                isUploading: false
-            }));
-            
-            // Append to history instead of replacing
-            suggestions.value = [...suggestions.value, ...newItems];
-            generationAttempts.value++;
-        } catch (e: any) {
-            console.error('AI Generation Error:', e.response || e);
-            generateError.value = e.response?.data?.error ?? 'Failed to generate covers. Please try again.';
-        } finally {
-            isGenerating.value = false;
-        }
-    };
+        suggestions.value = [...suggestions.value, ...newItems];
+        generationAttempts.value++;
 
-    const applySuggestion = async (s: Suggestion) => {
-        try {
-            s.isUploading = true;
-
-            // LoremFlickr redirects to a random image. We need to catch the FINAL URL
-            // so that the backend uploads the exact same image that is displayed.
-            let finalUrl = s.url;
-            try {
-                const response = await fetch(s.url);
-                if (response.ok && response.url) {
-                    finalUrl = response.url;
+        newItems.forEach((s: Suggestion) => {
+            const timer = setTimeout(() => {
+                if (!s.loaded) {
+                    s.url = s.fallback_url || s.url;
                 }
-            } catch (e) {
-                console.warn('Could not resolve final redirect URL, using original.', e);
-            }
-            
-            // Upload the selected image (Base64 or URL) to Cloudinary via our new endpoint
-            const response = await axios.post('/web-api/ai/upload-image', {
-                image_url: finalUrl,
-                prompt: s.prompt
-            });
+            }, 6000);
+            timeouts.add(timer);
+        });
 
-            if (response.data.success) {
-                // Store the Cloudinary URL
-                form.value.ai_media_urls.push(response.data.secure_url);
-                // Clear suggestions after successful selection
-                suggestions.value = [];
-            }
-        } catch (e: any) {
-            console.error('Error selecting image:', e);
-            alert(e.response?.data?.error || 'Failed to upload the selected image. Please try again.');
-        } finally {
-            s.isUploading = false;
+    } catch {
+        generateError.value = 'Generation failed';
+    } finally {
+        isGenerating.value = false;
+    }
+};
+
+// Upload selected image
+const applySuggestion = async (s: Suggestion) => {
+    try {
+        s.isUploading = true;
+
+        const response = await axios.post('/web-api/ai/upload-image', {
+            image_url: s.url,
+            prompt: s.prompt,
+            keywords: s.keywords
+        });
+
+        if (response.data.success) {
+            form.value.ai_media_urls.push(response.data.secure_url);
         }
-    };
+    } catch {
+        alert('Upload failed');
+    } finally {
+        s.isUploading = false;
+    }
+};
 
-    const handleFileChange = (event: Event) => {
-        const input = event.target as HTMLInputElement;
-        if (input.files) {
-            form.value.medias = Array.from(input.files);
-        }
-    };
+// File upload
+const handleFileChange = (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    if (input.files) {
+        form.value.medias = Array.from(input.files);
+    }
+};
 
-    const submit = async () => {
-        processing.value = true;
-        formErrors.value = {};
-        
-        try {
-            const formData = new FormData();
-            Object.entries(form.value).forEach(([key, value]) => {
-                if (key === 'medias') {
-                    (value as File[]).forEach(file => {
-                        formData.append('medias[]', file);
-                    });
-                } else if (key === 'ai_media_urls') {
-                    (value as string[]).forEach(url => {
-                        formData.append('ai_media_urls[]', url);
-                    });
-                } else if (value !== null && value !== '') {
-                    // For boolean values, send 1 or 0 so Laravel handles it correctly
-                    if (typeof value === 'boolean') {
-                        formData.append(key, value ? '1' : '0');
-                    } else {
-                        formData.append(key, String(value));
-                    }
-                }
-            });
+// Submit form
+const submit = async () => {
+    if (processing.value || isMissingRib.value) return;
 
-            await axios.post('/web-api/events', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            
-            // Successful creation, redirect to list using Inertia router
-            router.visit('/dashboard/events', {
-                method: 'get',
-                replace: true,
-                preserveScroll: false,
-                onFinish: () => {
-                    // Dual-safety: fallback redirect if Inertia transition fails
-                    setTimeout(() => {
-                        if (window.location.pathname !== '/dashboard/events') {
-                            window.location.href = '/dashboard/events';
-                        }
-                    }, 1000);
-                }
-            });
-        } catch (error: any) {
-            console.error('Error creating event:', error);
-            if (error.response && error.response.data && error.response.data.errors) {
-                formErrors.value = error.response.data.errors;
+    processing.value = true;
+    formErrors.value = {};
+
+    try {
+        const formData = new FormData();
+        Object.keys(form.value).forEach(key => {
+            const value = (form.value as any)[key];
+            if (key === 'medias') {
+                value.forEach((f: File) => formData.append('medias[]', f));
+            } else if (key === 'ai_media_urls') {
+                value.forEach((u: string) => formData.append('ai_media_urls[]', u));
             } else {
-                // Fallback for non-validation errors
-                alert(error.response?.data?.message || 'An unexpected error occurred. Please try again.');
+                formData.append(key, String(value));
             }
-        } finally {
-            processing.value = false;
+        });
+
+        await axios.post('/web-api/events', formData);
+        router.visit('/dashboard/events');
+
+    } catch (error: any) {
+        if (error.response?.data?.errors) {
+            formErrors.value = error.response.data.errors;
+        } else {
+            alert('Error occurred');
         }
-    };
-    </script>
+    } finally {
+        processing.value = false;
+    }
+};
 
-    <template>
-        <Head title="Create Event" />
+onUnmounted(() => {
+    clearSuggestedTimeouts();
+});
+</script>
 
-        <AppLayout :breadcrumbs="breadcrumbs">
-            <div class="max-w-4xl mx-auto p-6 space-y-8">
-                <div class="flex items-center justify-between">
-                    <div class="space-y-1">
-                        <Link href="/dashboard/events" class="flex items-center text-sm text-muted-foreground hover:text-blue-600 transition-colors mb-2">
-                            <ChevronLeft class="w-4 h-4 mr-1" />
-                            Back to events
-                        </Link>
-                        <h1 class="text-3xl font-bold tracking-tight">Host an Event</h1>
-                        <p class="text-muted-foreground">Fill in the details below to publish your event to the platform.</p>
-                    </div>
-                    <Button @click="submit" :disabled="processing || isMissingRib" class="bg-blue-600 hover:bg-blue-700">
-                        <Save class="w-4 h-4 mr-2" />
-                        {{ processing ? 'Publishing...' : 'Publish Event' }}
-                    </Button>
-                </div>
+<template>
+    <Head title="Create Event" />
 
-                <!-- RIB Missing Warning -->
-                <div v-if="isMissingRib" class="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-xl p-4 flex gap-4 items-center">
-                    <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center flex-shrink-0">
-                        <AlertCircle class="w-6 h-6 text-red-600 dark:text-red-400" />
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="text-sm font-semibold text-red-900 dark:text-red-300">Bank Information Missing</h3>
-                        <p class="text-sm text-red-800 dark:text-red-400">You must add your bank account information (RIB) before you can publish events.</p>
-                    </div>
-                    <Link href="/settings/profile">
-                        <Button variant="outline" size="sm" class="border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-900/30 text-red-700 dark:text-red-400">
-                            Add RIB Now
-                        </Button>
+    <AppLayout :breadcrumbs="breadcrumbs">
+        <div class="max-w-4xl mx-auto p-6 space-y-8">
+            <div class="flex items-center justify-between">
+                <div class="space-y-1">
+                    <Link href="/dashboard/events" class="flex items-center text-sm text-muted-foreground hover:text-blue-600 transition-colors mb-2">
+                        <ChevronLeft class="w-4 h-4 mr-1" />
+                        Back to events
                     </Link>
+                    <h1 class="text-3xl font-bold tracking-tight">Host an Event</h1>
+                    <p class="text-muted-foreground">Fill in the details below to publish your event to the platform.</p>
+                </div>
+                <Button @click="submit" :disabled="processing || isMissingRib" class="bg-blue-600 hover:bg-blue-700">
+                    <Save class="w-4 h-4 mr-2" />
+                    {{ processing ? 'Publishing...' : 'Publish Event' }}
+                </Button>
+            </div>
+
+            <!-- RIB Missing Warning -->
+            <div v-if="isMissingRib" class="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-xl p-4 flex gap-4 items-center">
+                <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center flex-shrink-0">
+                    <AlertCircle class="w-6 h-6 text-red-600 dark:text-red-400" />
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-sm font-semibold text-red-900 dark:text-red-300">Bank Information Missing</h3>
+                    <p class="text-sm text-red-800 dark:text-red-400">You must add your bank account information (RIB) before you can publish events.</p>
+                </div>
+                <Link href="/settings/profile">
+                    <Button variant="outline" size="sm" class="border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-900/30 text-red-700 dark:text-red-400">
+                        Add RIB Now
+                    </Button>
+                </Link>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Main Form Section -->
+                <div class="md:col-span-2 space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <div class="flex items-center gap-2 text-blue-600 mb-2">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold">1</div>
+                                <CardTitle>Basic Information</CardTitle>
+                            </div>
+                        </CardHeader>
+                        <CardContent class="space-y-4">
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium">Event Title *</label>
+                                <Input v-model="form.titre" placeholder="e.g. Summer Beats Festival 2026" />
+                                <InputError :message="formErrors?.titre?.[0]" />
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium">Description *</label>
+                                <textarea v-model="form.description" placeholder="Describe what makes your event special..." class="flex min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"></textarea>
+                                <InputError :message="formErrors?.description?.[0]" />
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium">Category *</label>
+                                <select v-model="form.categorie" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                                    <option value="" disabled>Select a category</option>
+                                    <option value="sportifs">Sportifs</option>
+                                    <option value="culturels">Culturels</option>
+                                    <option value="scientifiques">Scientifiques</option>
+                                    <option value="musicaux">Musicaux</option>
+                                    <option value="commerciaux">Commerciaux</option>
+                                </select>
+                                <InputError :message="formErrors?.categorie?.[0]" />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <div class="flex items-center gap-2 text-blue-600 mb-2">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold">2</div>
+                                <CardTitle>Location & Time</CardTitle>
+                            </div>
+                        </CardHeader>
+                        <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="md:col-span-2 space-y-2">
+                                <label class="text-sm font-medium">Venue / Location *</label>
+                                <div class="relative">
+                                    <MapPin class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                                    <Input v-model="form.lieu" placeholder="Online or Physical Address" class="pl-10" />
+                                </div>
+                                <InputError :message="formErrors?.lieu?.[0]" />
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium">Start Date & Time *</label>
+                                <Input v-model="form.date_debut" type="datetime-local" />
+                                <InputError :message="formErrors?.date_debut?.[0]" />
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium">End Date & Time *</label>
+                                <Input v-model="form.date_fin" type="datetime-local" />
+                                <InputError :message="formErrors?.date_fin?.[0]" />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <div class="flex items-center gap-2 text-blue-600 mb-2">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold">3</div>
+                                <CardTitle>Media Uploads</CardTitle>
+                            </div>
+                            <div class="mb-4 flex items-center justify-between">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    class="gap-2 border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400 transition-all"
+                                    :disabled="isGenerating || generationAttempts >= MAX_ATTEMPTS"
+                                    @click.stop="generateIdeas"
+                                >
+                                    <Sparkles class="w-4 h-4" :class="{ 'animate-spin': isGenerating }" />
+                                    {{ isGenerating ? 'Generating...' : (generationAttempts >= MAX_ATTEMPTS ? 'Limit Reached' : '✨ Generate Covers') }}
+                                </Button>
+                                <span v-if="generationAttempts < MAX_ATTEMPTS" class="text-[10px] font-medium text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                                    {{ MAX_ATTEMPTS - generationAttempts }} attempts left
+                                </span>
+                            </div>
+                            <CardDescription>Upload up to 5 images or videos for your event.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div class="space-y-4">
+                                <!-- AI Suggestions Panel -->
+                                <div v-if="suggestions.length > 0" class="space-y-3 mb-6 p-4 rounded-xl bg-purple-50/50 dark:bg-purple-950/10 border border-purple-100 dark:border-purple-900/30">
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-xs font-semibold text-purple-600 uppercase tracking-wide">✨ AI Suggested Generation History</p>
+                                        <button @click="suggestions = []; generationAttempts = 0" class="text-xs text-muted-foreground hover:text-foreground">Clear All</button>
+                                    </div>
+                                    <div class="flex gap-4 overflow-x-auto pb-4 scrollbar-thin">
+                                        <button
+                                            v-for="(s, i) in suggestions"
+                                            :key="i"
+                                            type="button"
+                                            class="relative flex-shrink-0 w-64 aspect-video rounded-lg overflow-hidden group bg-slate-200"
+                                            @click="applySuggestion(s)"
+                                        >
+                                            <div v-if="s.isUploading" class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white z-10">
+                                                <div class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mb-2"></div>
+                                                <span class="text-[10px]">Uploading...</span>
+                                            </div>
+                                            <div v-if="!s.loaded && !s.error && !s.isUploading" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-2">
+                                                <Sparkles class="w-8 h-8 animate-pulse text-purple-500" />
+                                                <span class="text-[10px]">Generating vision...</span>
+                                            </div>
+                                            <img 
+                                                v-if="!s.error"
+                                                :src="s.url" 
+                                                alt="AI Suggestion" 
+                                                class="w-full h-full object-cover group-hover:scale-105 transition-transform" 
+                                                @load="s.loaded = true"
+                                                @error="(e) => {
+                                                    const target = e.target as HTMLImageElement;
+                                                    if (s.fallback_url && target.src !== s.fallback_url) {
+                                                        target.src = s.fallback_url;
+                                                    }
+                                                    s.error = false;
+                                                }"
+                                            />
+                                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                <span class="text-white text-xs font-medium px-2 py-1 bg-purple-600 rounded">Use this cover</span>
+                                            </div>
+                                        </button>
+                                    </div>
+                                    <p v-if="generateError" class="text-xs text-red-500 mt-2">{{ generateError }}</p>
+                                </div>
+
+                                <div class="flex items-center justify-center w-full">
+                                    <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 border-slate-300">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <p class="mb-2 text-sm text-muted-foreground"><span class="font-bold text-foreground">Click to upload</span> or drag and drop</p>
+                                            <p class="text-xs text-muted-foreground">PNG, JPG, MP4 or MOV (MAX. 20MB)</p>
+                                        </div>
+                                        <input id="dropzone-file" type="file" multiple accept="image/*,video/*" class="hidden" @change="handleFileChange" />
+                                    </label>
+                                </div>
+                                
+                                <div v-show="form.medias.length > 0 || form.ai_media_urls.length > 0" class="flex flex-col space-y-2 mt-4">
+                                    <h4 class="text-sm font-medium">Selected media:</h4>
+                                    <ul class="text-sm space-y-2">
+                                        <li v-for="(file, idx) in form.medias" :key="'file-'+idx" class="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
+                                            <span class="truncate flex-1 text-xs">{{ file.name }}</span>
+                                            <button @click="form.medias.splice(idx, 1)" class="text-slate-400 hover:text-red-500">✕</button>
+                                        </li>
+                                        <li v-for="(url, idx) in form.ai_media_urls" :key="'ai-'+idx" class="flex items-center gap-2 p-2 bg-purple-50 rounded-lg">
+                                            <img :src="url" class="w-8 h-8 object-cover rounded" />
+                                            <span class="truncate flex-1 text-xs italic">AI Generated Cover</span>
+                                            <button @click="form.ai_media_urls.splice(idx, 1)" class="text-slate-400 hover:text-red-500">✕</button>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <InputError :message="formErrors?.medias?.[0]" />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <div class="flex items-center gap-2 text-blue-600 mb-2">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold">4</div>
+                                <CardTitle>Tickets & Capacity</CardTitle>
+                            </div>
+                        </CardHeader>
+                        <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium">Maximum Seats *</label>
+                                <div class="relative">
+                                    <Users class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                                    <Input v-model.number="form.capacite_spectateur" type="number" class="pl-10" />
+                                </div>
+                                <InputError :message="formErrors?.capacite_spectateur?.[0]" />
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium">Ticket Price (TND) *</label>
+                                <div class="relative">
+                                    <CircleDollarSign class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                                    <Input v-model.number="form.prix_spectateur" type="number" step="0.01" class="pl-10" />
+                                </div>
+                                <InputError :message="formErrors?.prix_spectateur?.[0]" />
+                            </div>
+
+                            <!-- Tournament Options -->
+                            <div class="md:col-span-2 space-y-4 mt-2 p-4 border border-slate-200 rounded-lg bg-slate-50">
+                                <label class="flex items-center space-x-2 text-sm font-medium cursor-pointer">
+                                    <input type="checkbox" v-model="form.is_tournoi" class="w-4 h-4 text-blue-600 rounded border-gray-300" />
+                                    <span>Is a Tournament?</span>
+                                </label>
+                                
+                                <div v-if="form.is_tournoi" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-200">
+                                    <div class="md:col-span-2 space-y-2">
+                                        <label class="text-sm font-medium">Tournament Type *</label>
+                                        <select v-model="form.type_tournoi" class="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm">
+                                            <option value="" disabled>Select type</option>
+                                            <option value="equipe">Équipe</option>
+                                            <option value="individuel">Individuel</option>
+                                        </select>
+                                        <InputError :message="formErrors?.type_tournoi?.[0]" />
+                                    </div>
+                                    
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium">Participant Price (TND) *</label>
+                                        <Input v-model.number="form.prix_participant" type="number" step="0.01" />
+                                        <InputError :message="formErrors?.prix_participant?.[0]" />
+                                    </div>
+                                    
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium">Participant Seats *</label>
+                                        <Input v-model.number="form.capacite_participant" type="number" />
+                                        <InputError :message="formErrors?.capacite_participant?.[0]" />
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    
+                    <div class="flex justify-end gap-3 pt-4">
+                        <Link href="/dashboard/events">
+                            <Button variant="ghost">Cancel</Button>
+                        </Link>
+                        <Button @click="submit" :disabled="processing || isMissingRib" class="bg-blue-600 hover:bg-blue-700 min-w-[150px]">
+                            {{ processing ? 'Publishing...' : 'Publish Event' }}
+                        </Button>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <!-- Main Form Section -->
-                    <div class="md:col-span-2 space-y-6">
-                        <Card>
-                            <CardHeader>
-                                <div class="flex items-center gap-2 text-blue-600 mb-2">
-                                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold">1</div>
-                                    <CardTitle>Basic Information</CardTitle>
-                                </div>
-                            </CardHeader>
-                            <CardContent class="space-y-4">
-                                <div class="space-y-2">
-                                    <label class="text-sm font-medium">Event Title *</label>
-                                    <Input v-model="form.titre" placeholder="e.g. Summer Beats Festival 2026" />
-                                    <InputError :message="formErrors?.titre?.[0]" />
-                                </div>
-
-                                <div class="space-y-2">
-                                    <label class="text-sm font-medium">Description *</label>
-                                    <textarea v-model="form.description" placeholder="Describe what makes your event special..." class="flex min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"></textarea>
-                                    <InputError :message="formErrors?.description?.[0]" />
-                                </div>
-
-                                <div class="space-y-2">
-                                    <label class="text-sm font-medium">Category *</label>
-                                    <select v-model="form.categorie" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                                        <option value="" disabled>Select a category</option>
-                                        <option value="sportifs">Sportifs</option>
-                                        <option value="culturels">Culturels</option>
-                                        <option value="scientifiques">Scientifiques</option>
-                                        <option value="musicaux">Musicaux</option>
-                                        <option value="commerciaux">Commerciaux</option>
-                                    </select>
-                                    <InputError :message="formErrors?.categorie?.[0]" />
-                                </div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader>
-                                <div class="flex items-center gap-2 text-blue-600 mb-2">
-                                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold">2</div>
-                                    <CardTitle>Location & Time</CardTitle>
-                                </div>
-                            </CardHeader>
-                            <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="md:col-span-2 space-y-2">
-                                    <label class="text-sm font-medium">Venue / Location *</label>
-                                    <div class="relative">
-                                        <MapPin class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                                        <Input v-model="form.lieu" placeholder="Online or Physical Address" class="pl-10" />
-                                    </div>
-                                    <InputError :message="formErrors?.lieu?.[0]" />
-                                </div>
-
-                                <div class="space-y-2">
-                                    <label class="text-sm font-medium">Start Date & Time *</label>
-                                    <Input v-model="form.date_debut" type="datetime-local" />
-                                    <InputError :message="formErrors?.date_debut?.[0]" />
-                                </div>
-
-                                <div class="space-y-2">
-                                    <label class="text-sm font-medium">End Date & Time *</label>
-                                    <Input v-model="form.date_fin" type="datetime-local" />
-                                    <InputError :message="formErrors?.date_fin?.[0]" />
-                                </div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader>
-                                <div class="flex items-center gap-2 text-blue-600 mb-2">
-                                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold">3</div>
-                                    <CardTitle>Media Uploads</CardTitle>
-                                </div>
-                                <div class="mb-4 flex items-center justify-between">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        class="gap-2 border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400 dark:border-purple-700 dark:text-purple-300 dark:hover:bg-purple-900/30 transition-all"
-                                        :disabled="isGenerating || generationAttempts >= MAX_ATTEMPTS"
-                                        @click.stop="generateIdeas"
-                                    >
-                                        <Sparkles class="w-4 h-4" :class="{ 'animate-spin': isGenerating }" />
-                                        {{ isGenerating ? 'Generating...' : (generationAttempts >= MAX_ATTEMPTS ? 'Limit Reached' : '✨ Generate Covers') }}
-                                    </Button>
-                                    <span v-if="generationAttempts < MAX_ATTEMPTS" class="text-[10px] font-medium text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full uppercase tracking-tighter">
-                                        {{ MAX_ATTEMPTS - generationAttempts }} attempts left
-                                    </span>
-                                </div>
-                                <CardDescription>Upload up to 5 images or videos for your event.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div class="space-y-4">
-                                    <!-- AI Suggestions Panel with Horizontal Scroll -->
-                                    <div v-if="suggestions.length > 0" class="space-y-3 mb-6 p-4 rounded-xl bg-purple-50/50 dark:bg-purple-950/10 border border-purple-100 dark:border-purple-900/30">
-                                        <div class="flex items-center justify-between">
-                                            <p class="text-xs font-semibold text-purple-600 uppercase tracking-wide">✨ AI Suggested Generation History</p>
-                                            <button @click="suggestions = []; generationAttempts = 0" class="text-xs text-muted-foreground hover:text-foreground">Clear All</button>
-                                        </div>
-                                        <div class="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-purple-200">
-                                            <button
-                                                v-for="(s, i) in suggestions"
-                                                :key="i"
-                                                type="button"
-                                                class="relative flex-shrink-0 w-64 aspect-video rounded-lg overflow-hidden border-2 border-transparent hover:border-purple-500 transition-all group bg-slate-200 dark:bg-slate-800"
-                                                @click="applySuggestion(s)"
-                                            >
-                                                <div v-if="s.isUploading" class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white z-10">
-                                                    <div class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mb-2"></div>
-                                                    <span class="text-[10px] font-medium">Uploading...</span>
-                                                </div>
-                                                <div v-if="!s.loaded && !s.error && !s.isUploading" class="absolute inset-0 flex items-center justify-center text-slate-400">
-                                                    <Sparkles class="w-8 h-8 animate-pulse" />
-                                                </div>
-                                                <div v-if="s.error" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-900 text-slate-500 p-2 text-center">
-                                                    <AlertCircle class="w-6 h-6 text-red-400 mb-1" />
-                                                    <span class="text-[10px] font-medium leading-tight">Image load failed</span>
-                                                </div>
-                                                <img 
-                                                    v-if="!s.error"
-                                                    :src="s.url" 
-                                                    alt="AI Suggestion" 
-                                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                                                    @load="s.loaded = true"
-                                                    @error="s.error = true"
-                                                />
-                                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                                    <span class="text-white text-xs font-medium px-2 py-1 bg-purple-600 rounded">Use this cover</span>
-                                                </div>
-                                            </button>
-                                        </div>
-                                        <p v-if="generateError" class="text-xs text-red-500 mt-2">{{ generateError }}</p>
-                                    </div>
-
-                                    <div class="flex items-center justify-center w-full">
-                                        <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-slate-700">
-                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                                <svg class="w-8 h-8 mb-3 text-muted-foreground" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-                                                </svg>
-                                                <p class="mb-2 text-sm text-muted-foreground"><span class="font-bold text-foreground">Click to upload</span> or drag and drop</p>
-                                                <p class="text-xs text-muted-foreground">PNG, JPG, MP4 or MOV (MAX. 20MB)</p>
-                                            </div>
-                                            <input id="dropzone-file" type="file" multiple accept="image/*,video/*" class="hidden" @change="handleFileChange" />
-                                        </label>
-                                    </div>
-                                    
-                                    <div v-show="form.medias.length > 0 || form.ai_media_urls.length > 0" class="flex flex-col space-y-2 mt-4">
-                                        <h4 class="text-sm font-medium">Selected media:</h4>
-                                        <ul class="text-sm space-y-2">
-                                            <!-- Local Files -->
-                                            <li v-for="(file, idx) in form.medias" :key="'file-'+idx" class="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-100 dark:border-slate-800">
-                                                <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/40 rounded flex items-center justify-center text-blue-600 dark:text-blue-400 text-[10px] font-bold">FILE</div>
-                                                <span class="truncate flex-1 text-xs">{{ file.name }}</span>
-                                                <button @click="form.medias.splice(idx, 1)" class="text-slate-400 hover:text-red-500 p-1">✕</button>
-                                            </li>
-                                            <!-- AI URLs -->
-                                            <li v-for="(url, idx) in form.ai_media_urls" :key="'ai-'+idx" class="flex items-center gap-2 p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-100 dark:border-purple-900/30">
-                                                <img :src="url" class="w-8 h-8 object-cover rounded bg-slate-200" />
-                                                <span class="truncate flex-1 text-xs text-purple-700 dark:text-purple-300 italic font-medium">AI Generated Cover</span>
-                                                <button @click="form.ai_media_urls.splice(idx, 1)" class="text-slate-400 hover:text-red-500 p-1">✕</button>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    
-                                    <InputError :message="formErrors?.['medias.0']?.[0] || formErrors?.medias?.[0]" />
-                                </div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader>
-                                <div class="flex items-center gap-2 text-blue-600 mb-2">
-                                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold">4</div>
-                                    <CardTitle>Tickets & Capacity</CardTitle>
-                                </div>
-                            </CardHeader>
-                            <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="space-y-2">
-                                    <label class="text-sm font-medium">Maximum Seats *</label>
-                                    <div class="relative">
-                                        <Users class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                                        <Input v-model.number="form.capacite_spectateur" type="number" class="pl-10" />
-                                    </div>
-                                    <InputError :message="formErrors?.capacite_spectateur?.[0]" />
-                                </div>
-
-                                <div class="space-y-2">
-                                    <label class="text-sm font-medium">Ticket Price (TND) *</label>
-                                    <div class="relative">
-                                        <CircleDollarSign class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                                        <Input v-model.number="form.prix_spectateur" type="number" step="0.01" class="pl-10" />
-                                    </div>
-                                    <InputError :message="formErrors?.prix_spectateur?.[0]" />
-                                </div> <!-- Close Ticket Price div -->
-
-                                <!-- Tournament Options -->
-                                <div class="md:col-span-2 space-y-4 mt-2 p-4 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-                                    <label class="flex items-center space-x-2 text-sm font-medium cursor-pointer">
-                                        <input type="checkbox" v-model="form.is_tournoi" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" />
-                                        <span>Is a Tournament?</span>
-                                    </label>
-                                    
-                                    <div v-if="form.is_tournoi" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
-                                        <div class="md:col-span-2 space-y-2">
-                                            <label class="text-sm font-medium">Tournament Type *</label>
-                                            <select v-model="form.type_tournoi" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                                <option value="" disabled>Select type</option>
-                                                <option value="equipe">Équipe</option>
-                                                <option value="individuel">Individuel</option>
-                                            </select>
-                                            <InputError :message="formErrors?.type_tournoi?.[0]" />
-                                        </div>
-                                        
-                                        <div class="space-y-2">
-                                            <label class="text-sm font-medium">Participant Price (TND) *</label>
-                                            <div class="relative">
-                                                <CircleDollarSign class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                                                <Input v-model.number="form.prix_participant" type="number" step="0.01" class="pl-10" />
-                                            </div>
-                                            <InputError :message="formErrors?.prix_participant?.[0]" />
-                                        </div>
-                                        
-                                        <div class="space-y-2">
-                                            <label class="text-sm font-medium">Participant Seats *</label>
-                                            <div class="relative">
-                                                <Users class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                                                <Input v-model.number="form.capacite_participant" type="number" class="pl-10" />
-                                            </div>
-                                            <InputError :message="formErrors?.capacite_participant?.[0]" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                        
-                        <div class="flex justify-end gap-3 pt-4">
-                            <Link href="/dashboard/events">
-                                <Button variant="ghost">Cancel and go back</Button>
-                            </Link>
-                            <Button @click="submit" :disabled="processing || isMissingRib" class="bg-blue-600 hover:bg-blue-700 min-w-[150px]">
-                                {{ processing ? 'Publishing...' : 'Publish Event' }}
-                            </Button>
-                        </div>
-                    </div>
-
-                    <!-- Guidance Info Section -->
-                    <div class="space-y-6">
-                        <div class="sticky top-6 space-y-6">
-                            <Card class="bg-blue-600 text-white overflow-hidden relative">
-                                <CardHeader>
-                                    <CardTitle class="text-lg">Tips for Success</CardTitle>
-                                    <CardDescription class="text-blue-100">Make your event stand out with these quick tips.</CardDescription>
-                                </CardHeader>
-                                <CardContent class="space-y-4 text-sm">
-                                    <div class="flex gap-3">
-                                        <Info class="w-5 h-5 flex-shrink-0" />
-                                        <p>Use a catchy title that clearly states what the event is about.</p>
-                                    </div>
-                                    <div class="flex gap-3">
-                                        <Info class="w-5 h-5 flex-shrink-0" />
-                                        <p>High-quality descriptions attract 40% more attendees.</p>
-                                    </div>
-                                    <div class="flex gap-3">
-                                        <Info class="w-5 h-5 flex-shrink-0" />
-                                        <p>Ensure your end date is after the start date.</p>
-                                    </div>
-                                </CardContent>
-                                <!-- Decorative background circle -->
-                                <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-                            </Card>
-
-                            <div class="p-4 rounded-xl border border-dashed text-center space-y-2">
-                                <p class="text-sm text-muted-foreground font-medium">Need help?</p>
-                                <p class="text-xs text-muted-foreground">Check out our documentation for organizers.</p>
-                                <Button variant="link" size="sm" class="text-blue-600 h-auto p-0">View Guide</Button>
+                <!-- Guidance Info Section -->
+                <div class="space-y-6">
+                    <Card class="bg-blue-600 text-white">
+                        <CardHeader>
+                            <CardTitle class="text-lg">Tips for Success</CardTitle>
+                        </CardHeader>
+                        <CardContent class="space-y-4 text-sm">
+                            <div class="flex gap-3">
+                                <Info class="w-5 h-5 flex-shrink-0" />
+                                <p>Use a catchy title that clearly states what the event is about.</p>
                             </div>
-                    </div>
+                            <div class="flex gap-3">
+                                <Info class="w-5 h-5 flex-shrink-0" />
+                                <p>High-quality descriptions attract 40% more attendees.</p>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         </div>
     </AppLayout>
-    </template>
+</template>

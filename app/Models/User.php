@@ -295,7 +295,7 @@ class User extends Authenticatable
         return Paiement::create([
             'reservation_id' => $reservation->id,
             'montant' => $reservation->evenement->prix_spectateur * $reservation->nombre_tickets,
-            'statut' => StatutPaiement::Successful,
+            'statut' => StatutPaiement::Succeeded,
         ]);
     }
 
