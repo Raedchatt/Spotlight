@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { usePage, Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Search, Calendar, MessageSquare, Bell } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Search, Calendar, MessageSquare, Bell, Users } from 'lucide-vue-next';
 import { computed } from 'vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -49,6 +49,14 @@ const mainNavItems = computed<NavItem[]>(() => [
                 href: '/dashboard/events',
                 icon: Folder,
             },
+            ...(auth.value.has_collaborations 
+                ? [{
+                    title: 'My Collaborations',
+                    href: '/dashboard/collaborations',
+                    icon: Users,
+                }] 
+                : []
+            ),
         ]),
     {
         title: 'Messages',

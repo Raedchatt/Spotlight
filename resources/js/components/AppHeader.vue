@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage, router } from '@inertiajs/vue3';
-import { Folder, LayoutGrid, Menu, Search, Calendar, User, LogOut } from 'lucide-vue-next';
+import { Folder, LayoutGrid, Menu, Search, Calendar, User, LogOut, Users } from 'lucide-vue-next';
 import { MessageSquare, Bell } from 'lucide-vue-next';
 import { computed,onMounted } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -10,6 +10,7 @@ import RegisterModal from '@/components/auth/RegisterModal.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import MessagesDropdown from '@/components/MessagesDropdown.vue';
 import NotificationsDropdown from '@/components/NotificationsDropdown.vue';
+import InvitationsDropdown from '@/components/InvitationsDropdown.vue';
 import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
 import {
@@ -89,6 +90,14 @@ const mainNavItems = computed<NavItem[]>(() => {
             href: '/dashboard/events',
             icon: Folder,
         },
+        ...(auth.value.has_collaborations 
+            ? [{
+                title: 'My Collaborations',
+                href: '/dashboard/collaborations',
+                icon: Users,
+            }] 
+            : []
+        ),
     ];
 });
 
@@ -224,6 +233,7 @@ const handleLogout = () => {
                 <div class="ml-auto flex items-center space-x-2">
                     <div class="hidden lg:flex items-center gap-2">
                         <template v-if="auth.user">
+                            <InvitationsDropdown v-if="auth.user.role === 'organisateur'" />
                             <NotificationsDropdown :user-id="auth.user.id" />
                             <MessagesDropdown />
                             <Link href="/settings/profile" class="relative">

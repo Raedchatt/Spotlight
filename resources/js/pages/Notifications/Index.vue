@@ -117,6 +117,8 @@ const markAsRead = async (notification: Notification) => {
     }
 };
 
+
+
 const markAllAsRead = async () => {
     try {
         await axios.patch('/web-api/notifications/read-all');
@@ -222,11 +224,11 @@ onMounted(() => {
 
             <!-- Notification List -->
             <div v-else class="space-y-2">
-                <button
+                <div
                     v-for="notif in filteredNotifications"
                     :key="notif.id"
                     @click="markAsRead(notif)"
-                    class="w-full flex items-start gap-4 p-5 rounded-xl border text-left transition-all duration-200 group"
+                    class="w-full relative flex flex-col sm:flex-row items-start gap-4 p-5 rounded-xl border text-left transition-all duration-200 group cursor-pointer"
                     :class="notif.lu
                         ? 'bg-card hover:bg-muted/30 border-border/60'
                         : 'bg-blue-50/50 dark:bg-blue-950/20 hover:bg-blue-50/80 dark:hover:bg-blue-950/30 border-blue-200/50 dark:border-blue-800/30 shadow-sm'"
@@ -268,12 +270,15 @@ onMounted(() => {
                         </span>
                     </div>
 
+                    <!-- Removed Action Buttons for Collaboration Invites -->
+
                     <!-- Status indicator -->
-                    <div class="flex-shrink-0 mt-3">
+                    <div class="flex-shrink-0 mt-3 absolute top-5 right-5">
                         <div v-if="!notif.lu" class="h-3 w-3 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50 animate-pulse"></div>
                         <Check v-else class="h-4 w-4 text-neutral-300 dark:text-neutral-700" />
                     </div>
-                </button>
+                </div>
+
             </div>
         </div>
     </AppLayout>

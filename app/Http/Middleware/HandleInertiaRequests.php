@@ -41,6 +41,19 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user() ? $request->user()->load('organisateur') : null,
                 'organisateur_has_rib' => $request->user()?->organisateur?->has_rib ?? false,
+                'has_collaborations' => $request->user() ? \App\Models\EventCollaborator::where('organizer_id', $request->user()->id)->where('statut', 'accepted')->exists() : false,
+                'pending_invitations' => collect($request->user() ? \App\Models\EventCollaborator::with('evenement.organisateur')->where('organizer_id', $request->user()->id)->where('statut', 'pending')->get() : [])->map(function($collab) {
+                    return [
+                        'id' => $collab->id,
+                        'evenement_id' => $collab->evenement_id,
+                        'titre' => $collab->evenement->titre ?? 'Unknown Event',
+                        'organisateur' => $collab->evenement->organisateur->username ?? 'Unknown Organizer',
+                        'date_debut' => $collab->evenement->date_debut,
+                        'statut' => $collab->statut,
+                        'created_at' => $collab->created_at,
+                    ];
+                }),
+                'pending_invitations_count' => $request->user() ? \App\Models\EventCollaborator::where('organizer_id', $request->user()->id)->where('statut', 'pending')->count() : 0,
             ],
             'sidebarOpen' => !$request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

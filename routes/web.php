@@ -79,6 +79,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/notifications/{id}', [NotificationController::class, 'show']);
         Route::patch('/notifications/{id}/read', [NotificationController::class, 'marquerCommeLue']);
         Route::patch('/notifications/read-all', [NotificationController::class, 'marquerToutesCommeLues']);
+
+        // Collaboration
+        Route::get('/my-collaborations', [\App\Http\Controllers\CollaborationController::class, 'myCollaborations']);
+        Route::get('/organizers/search', [\App\Http\Controllers\CollaborationController::class, 'searchOrganizers']);
+        Route::get('/events/{id}/collaborators', [\App\Http\Controllers\CollaborationController::class, 'index']);
+        Route::post('/events/{id}/collaborators/invite', [\App\Http\Controllers\CollaborationController::class, 'invite']);
+        Route::post('/events/{id}/collaborators/accept', [\App\Http\Controllers\CollaborationController::class, 'accept']);
+        Route::post('/events/{id}/collaborators/reject', [\App\Http\Controllers\CollaborationController::class, 'reject']);
     });
 
     Route::get('/dashboard', [\App\Http\Controllers\OrganisateurController::class, 'dashboardData'])->name('dashboard');
@@ -94,6 +102,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/events', function () {
             return Inertia::render('Events/EventsList');
         })->name('events.index');
+
+        Route::get('/collaborations', function () {
+            return Inertia::render('Events/Collaborations');
+        })->name('collaborations.index');
 
         Route::get('/events/create', function () {
             return Inertia::render('Events/CreateEvent');

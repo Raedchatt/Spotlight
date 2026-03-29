@@ -51,7 +51,8 @@ const form = ref({
     prix_participant: 0,
     capacite_participant: 0,
     medias: [] as File[],
-    ai_media_urls: [] as string[]
+    ai_media_urls: [] as string[],
+    collaborator_ids: [] as number[],
 });
 
 const formErrors = ref<Record<string, string[]>>({});
@@ -141,6 +142,45 @@ const applySuggestion = async (s: Suggestion) => {
     }
 };
 
+// Collaborator Search logic
+import { X } from 'lucide-vue-next';
+const searchQuery = ref('');
+const searchResults = ref<any[]>([]);
+const selectedCollaborators = ref<any[]>([]);
+
+let searchTimeout: any = null;
+const searchOrganizers = () => {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    if (!searchQuery.value || searchQuery.value.length < 2) {
+        searchResults.value = [];
+        return;
+    }
+    searchTimeout = setTimeout(async () => {
+        try {
+            const res = await axios.get(`/web-api/organizers/search?q=${searchQuery.value}`);
+            // Filter out already selected and the owner
+            searchResults.value = res.data.filter((u: any) => 
+                u.id !== auth.value.user?.id && 
+                !selectedCollaborators.value.some(sel => sel.id === u.id)
+            );
+        } catch (e) {
+            console.error('Search error', e);
+        }
+    }, 300);
+};
+
+const selectOrganizer = (user: any) => {
+    selectedCollaborators.value.push(user);
+    form.value.collaborator_ids.push(user.id);
+    searchQuery.value = '';
+    searchResults.value = [];
+};
+
+const removeOrganizer = (index: number) => {
+    selectedCollaborators.value.splice(index, 1);
+    form.value.collaborator_ids.splice(index, 1);
+};
+
 // File upload
 const handleFileChange = (event: Event) => {
     const input = event.target as HTMLInputElement;
@@ -164,6 +204,8 @@ const submit = async () => {
                 value.forEach((f: File) => formData.append('medias[]', f));
             } else if (key === 'ai_media_urls') {
                 value.forEach((u: string) => formData.append('ai_media_urls[]', u));
+            } else if (key === 'collaborator_ids') {
+                value.forEach((id: number) => formData.append('collaborator_ids[]', String(id)));
             } else {
                 formData.append(key, String(value));
             }
@@ -364,7 +406,7 @@ onUnmounted(() => {
                                 </div>
 
                                 <div class="flex items-center justify-center w-full">
-                                    <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 border-slate-300">
+                                    <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-700">
                                         <div class="flex flex-col items-center justify-center pt-5 pb-6">
                                             <p class="mb-2 text-sm text-muted-foreground"><span class="font-bold text-foreground">Click to upload</span> or drag and drop</p>
                                             <p class="text-xs text-muted-foreground">PNG, JPG, MP4 or MOV (MAX. 20MB)</p>
@@ -419,16 +461,16 @@ onUnmounted(() => {
                             </div>
 
                             <!-- Tournament Options -->
-                            <div class="md:col-span-2 space-y-4 mt-2 p-4 border border-slate-200 rounded-lg bg-slate-50">
+                            <div class="md:col-span-2 space-y-4 mt-2 p-4 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-900/50">
                                 <label class="flex items-center space-x-2 text-sm font-medium cursor-pointer">
-                                    <input type="checkbox" v-model="form.is_tournoi" class="w-4 h-4 text-blue-600 rounded border-gray-300" />
+                                    <input type="checkbox" v-model="form.is_tournoi" class="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600 dark:bg-slate-800 focus:ring-blue-500" />
                                     <span>Is a Tournament?</span>
                                 </label>
                                 
-                                <div v-if="form.is_tournoi" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-200">
+                                <div v-if="form.is_tournoi" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
                                     <div class="md:col-span-2 space-y-2">
                                         <label class="text-sm font-medium">Tournament Type *</label>
-                                        <select v-model="form.type_tournoi" class="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm">
+                                        <select v-model="form.type_tournoi" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                                             <option value="" disabled>Select type</option>
                                             <option value="equipe">Équipe</option>
                                             <option value="individuel">Individuel</option>
@@ -446,6 +488,53 @@ onUnmounted(() => {
                                         <label class="text-sm font-medium">Participant Seats *</label>
                                         <Input v-model.number="form.capacite_participant" type="number" />
                                         <InputError :message="formErrors?.capacite_participant?.[0]" />
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <!-- Co-Organizers Section -->
+                    <Card>
+                        <CardHeader>
+                            <div class="flex items-center gap-2 text-blue-600 mb-2">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold">5</div>
+                                <CardTitle>Co-Organizers (Optional)</CardTitle>
+                            </div>
+                            <CardDescription>Invite other organizers to help manage your event.</CardDescription>
+                        </CardHeader>
+                        <CardContent class="space-y-4">
+                            <div class="space-y-3">
+                                <label class="text-sm font-medium">Search by Name or Email</label>
+                                <div class="relative">
+                                    <Input 
+                                        v-model="searchQuery" 
+                                        placeholder="Search organizers..." 
+                                        @input="searchOrganizers"
+                                    />
+                                    <!-- Search Results Dropdown -->
+                                    <div v-if="searchResults.length > 0 && searchQuery" class="absolute z-10 w-full mt-1 bg-white dark:bg-slate-900 border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                                        <div 
+                                            v-for="user in searchResults" 
+                                            :key="user.id"
+                                            class="px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex justify-between items-center"
+                                            @click="selectOrganizer(user)"
+                                        >
+                                            <span>{{ user.username }}</span>
+                                            <span class="text-xs text-muted-foreground">{{ user.email }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div v-if="selectedCollaborators.length > 0" class="pt-2 space-y-2">
+                                    <h5 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Selected Co-Organizers:</h5>
+                                    <div class="flex flex-wrap gap-2">
+                                        <div v-for="(collab, idx) in selectedCollaborators" :key="collab.id" class="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/30 rounded-full text-sm">
+                                            <span>{{ collab.username }}</span>
+                                            <button @click="removeOrganizer(idx)" class="hover:text-red-500 transition-colors">
+                                                <X class="w-3 h-3" />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

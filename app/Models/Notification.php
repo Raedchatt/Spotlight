@@ -17,12 +17,14 @@ class Notification extends Model
         'type',
         'date_envoi',
         'lu',
+        'data',
     ];
 
     protected $casts = [
-        'type' => TypeNotification::class,
+        'type'       => TypeNotification::class,
         'date_envoi' => 'datetime',
-        'lu' => 'boolean',
+        'lu'         => 'boolean',
+        'data'       => 'array',
     ];
 
     /**
@@ -57,14 +59,15 @@ class Notification extends Model
     /**
      * Create a notification for a specific user.
      */
-    public static function creer(int $userId, TypeNotification $type, string $message): self
+    public static function creer(int $userId, TypeNotification $type, string $message, array $data = []): self
     {
         $notification = self::create([
-            'user_id' => $userId,
-            'type' => $type,
-            'message' => $message,
+            'user_id'    => $userId,
+            'type'       => $type,
+            'message'    => $message,
             'date_envoi' => now(),
-            'lu' => false,
+            'lu'         => false,
+            'data'       => !empty($data) ? $data : null,
         ]);
 
         broadcast(new \App\Events\NotificationSent($notification));

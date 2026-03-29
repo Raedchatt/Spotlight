@@ -14,7 +14,7 @@ import {
     Image as ImageIcon,
     Film
 } from 'lucide-vue-next';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
@@ -64,6 +64,7 @@ const fetchEvent = async () => {
     try {
         const response = await axios.get(`/web-api/events/${props.id}`); // Note: Need a show endpoint in controller or use search with id
         const event = response.data;
+        eventData.value = event;
         
         // Format dates for datetime-local input
         const formatDate = (dateStr: string) => {
@@ -178,8 +179,73 @@ const submit = async () => {
     }
 };
 
-onMounted(() => {
-    fetchEvent();
+// Collaboration feature logic
+import { usePage } from '@inertiajs/vue3';
+const page = usePage();
+const auth = computed(() => page.props.auth as any);
+
+const eventData = ref<any>(null);
+const collaborators = ref<any[]>([]);
+const searchQuery = ref('');
+const searchResults = ref<any[]>([]);
+const selectedOrganizer = ref<any>(null);
+const isInviting = ref(false);
+
+let searchTimeout: any = null;
+const searchOrganizers = () => {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    if (!searchQuery.value || searchQuery.value.length < 2) {
+        searchResults.value = [];
+        return;
+    }
+    searchTimeout = setTimeout(async () => {
+        try {
+            const res = await axios.get(`/web-api/organizers/search?q=${searchQuery.value}`);
+            searchResults.value = res.data;
+        } catch (e) {
+            console.error('Search error', e);
+        }
+    }, 300);
+};
+
+const selectOrganizer = (user: any) => {
+    selectedOrganizer.value = user;
+    searchQuery.value = user.username;
+    searchResults.value = [];
+};
+
+const fetchCollaborators = async () => {
+    if (auth.value?.user?.id === eventData.value?.organisateur_id) {
+        try {
+            const res = await axios.get(`/web-api/events/${props.id}/collaborators`);
+            collaborators.value = res.data;
+        } catch (e) {
+            console.error('Fetch collaborators error', e);
+        }
+    }
+};
+
+const inviteCollaborator = async () => {
+    if (!selectedOrganizer.value) return;
+    isInviting.value = true;
+    try {
+        await axios.post(`/web-api/events/${props.id}/collaborators/invite`, {
+            organizer_id: selectedOrganizer.value.id
+        });
+        alert('Invitation sent successfully!');
+        selectedOrganizer.value = null;
+        searchQuery.value = '';
+        fetchCollaborators();
+    } catch (error: any) {
+        alert(error.response?.data?.message || 'Failed to send invite.');
+    } finally {
+        isInviting.value = false;
+    }
+};
+
+onMounted(async () => {
+    await fetchEvent();
+    await fetchCollaborators();
 });
 </script>
 
@@ -432,6 +498,73 @@ onMounted(() => {
                         <CardContent class="text-xs text-blue-700 leading-relaxed">
                             Changing the event status to 'Annulé' will notify all registered participants automatically. 
                             If you change the dates, please double check the venue availability.
+                        </CardContent>
+                    </Card>
+
+                    <!-- Collaborators Management Card -->
+                    <Card v-if="auth?.user?.id === eventData?.organisateur_id">
+                        <CardHeader>
+                            <CardTitle class="flex items-center gap-2">
+                                <Users class="w-5 h-5 text-blue-600" />
+                                Manage Co-Organizers
+                            </CardTitle>
+                            <CardDescription>Invite other organizers to help manage your event.</CardDescription>
+                        </CardHeader>
+                        <CardContent class="space-y-6">
+                            <!-- Invite New Collaborator -->
+                            <div class="space-y-3">
+                                <label class="text-sm font-medium">Invite by Name or Email</label>
+                                <div class="flex gap-2">
+                                    <div class="relative flex-1">
+                                        <Input 
+                                            v-model="searchQuery" 
+                                            placeholder="Search organizers..." 
+                                            @input="searchOrganizers"
+                                        />
+                                        <!-- Search Results Dropdown -->
+                                        <div v-if="searchResults.length > 0 && searchQuery" class="absolute z-10 w-full mt-1 bg-white dark:bg-slate-900 border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                                            <div 
+                                                v-for="user in searchResults" 
+                                                :key="user.id"
+                                                class="px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex justify-between items-center"
+                                                @click="selectOrganizer(user)"
+                                            >
+                                                <span>{{ user.username }}</span>
+                                                <span class="text-xs text-muted-foreground">{{ user.email }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <Button 
+                                        @click="inviteCollaborator" 
+                                        :disabled="!selectedOrganizer || isInviting"
+                                        class="bg-blue-600 hover:bg-blue-700"
+                                    >
+                                        {{ isInviting ? 'Sending...' : 'Send Invite' }}
+                                    </Button>
+                                </div>
+                                <div v-if="selectedOrganizer" class="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-md text-sm">
+                                    <span>Selected: <strong>{{ selectedOrganizer.username }}</strong></span>
+                                    <button @click="selectedOrganizer = null; searchQuery = ''" class="hover:text-blue-900"><X class="w-4 h-4"/></button>
+                                </div>
+                            </div>
+
+                            <!-- List Current Collaborators -->
+                            <div v-if="collaborators.length > 0" class="pt-4 border-t space-y-3">
+                                <h4 class="text-sm font-medium text-muted-foreground">Current & Pending Co-Organizers</h4>
+                                <div class="space-y-2">
+                                    <div v-for="collab in collaborators" :key="collab.id" class="flex items-center justify-between p-3 border rounded-lg bg-card">
+                                        <div class="flex flex-col">
+                                            <span class="font-medium text-sm">{{ collab.organizer.username }}</span>
+                                            <span class="text-xs text-muted-foreground">{{ collab.organizer.email }}</span>
+                                        </div>
+                                        <div>
+                                            <Badge v-if="collab.statut === 'accepted'" class="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-emerald-200">Accepted</Badge>
+                                            <Badge v-else-if="collab.statut === 'pending'" class="bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 border-amber-200">Pending</Badge>
+                                            <Badge v-else class="bg-red-500/10 text-red-600 hover:bg-red-500/20 border-red-200">Declined</Badge>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </CardContent>
                     </Card>
                 </div>

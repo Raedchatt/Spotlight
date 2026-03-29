@@ -71,4 +71,41 @@ class NotificationService
             "{$participantName} cancelled their reservation for {$eventName}"
         );
     }
+
+    /**
+     * Send a collaboration invitation notification.
+     */
+    public function envoyerInvitationCollaboration(int $inviteeId, string $eventName, string $inviterName, int $eventId)
+    {
+        Notification::creer(
+            $inviteeId,
+            TypeNotification::INVITATION_COLLABORATION,
+            "{$inviterName} invited you to co-organize: {$eventName}",
+            ['evenement_id' => $eventId]
+        );
+    }
+
+    /**
+     * Notify event owner that a collaboration was accepted.
+     */
+    public function notifieCollaborationAcceptee(int $ownerId, string $collaboratorName, string $eventName)
+    {
+        Notification::creer(
+            $ownerId,
+            TypeNotification::COLLABORATION_ACCEPTEE,
+            "{$collaboratorName} accepted your collaboration invite for: {$eventName}"
+        );
+    }
+
+    /**
+     * Notify event owner that a collaboration was rejected.
+     */
+    public function notifieCollaborationRejected(int $ownerId, string $collaboratorName, string $eventName)
+    {
+        Notification::creer(
+            $ownerId,
+            TypeNotification::COLLABORATION_REJECTED,
+            "{$collaboratorName} declined your collaboration invite for: {$eventName}"
+        );
+    }
 }

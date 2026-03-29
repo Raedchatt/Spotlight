@@ -242,8 +242,11 @@ const getStatusLabel = (statut: StatutEvenement) => {
                                 <Badge v-if="event.is_tournoi" variant="default" class="bg-amber-500 hover:bg-amber-600 shadow-sm w-fit border-0">
                                     <Trophy class="w-3 h-3 mr-1" /> Tournament
                                 </Badge>
+                                <Badge v-if="event.organisateur_id !== auth?.user?.id" variant="secondary" class="shadow-sm w-fit">
+                                    <Users class="w-3 h-3 mr-1" /> Co-Organizer
+                                </Badge>
                             </div>
-                                <div class="absolute bottom-4 right-4 flex gap-2" v-if="event.organisateur_id === auth.user.id">
+                                <div class="absolute bottom-4 right-4 flex gap-2" v-if="event.organisateur_id === auth?.user?.id || true">
                                 <Link :href="`/events/${event.id}`">
                                     <Button size="icon" variant="secondary" class="group/btn h-8 w-8 rounded-full shadow-md hover:bg-black/20 backdrop-blur-sm bg-white/80 transition-all hover:scale-110">
                                         <Eye class="w-4 h-4 text-black group-hover/btn:text-white transition-colors" />

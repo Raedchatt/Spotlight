@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\CategorieEvenement;
 use App\Enums\StatutEvenement;
+use App\Models\EventCollaborator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -78,6 +79,15 @@ class Evenement extends Model
     {
         return $this->hasMany(Reservation::class, 'evenement_id');
     }
+
+    /**
+     * All collaborators invited to co-organize this event.
+     */
+    public function collaborateurs(): HasMany
+    {
+        return $this->hasMany(EventCollaborator::class, 'evenement_id');
+    }
+
 
     // -------------------------------------------------------------------------
     // Business Logic

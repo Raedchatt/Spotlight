@@ -83,6 +83,8 @@ interface Props {
         spectator_remaining?: number;
     };
     is_reserved: boolean;
+    is_pending_collaborator?: boolean;
+    is_collaborator?: boolean;
     similar_events: SimilarEvent[] | null;
 }
 
@@ -93,6 +95,9 @@ const auth = computed(() => page.props.auth as any);
 const isOwner = computed(() => {
     return auth.value?.user?.id === props.event.organisateur.id;
 });
+
+// true for both the owner and accepted co-organizers
+const canManage = computed(() => isOwner.value || !!props.is_collaborator);
 
 const selectedTicketType = ref(props.event.is_tournoi ? 'participant' : 'standard');
 
@@ -228,6 +233,22 @@ const handleReserveClick = () => {
 
     showReservationModal.value = true;
 };
+
+import { router } from '@inertiajs/vue3';
+
+const handleCollaboration = async (action: 'accept' | 'reject') => {
+    try {
+        await axios.post(`/web-api/events/${props.event.id}/collaborators/${action}`);
+        router.reload({ only: ['auth', 'is_pending_collaborator'] });
+        alert(`Invitation ${action}ed successfully.`);
+        if (action === 'accept') {
+            router.visit('/dashboard/collaborations');
+        }
+    } catch (error: any) {
+        console.error(`Error processing collaboration ${action}:`, error);
+        alert(error.response?.data?.message || `Failed to ${action} collaboration.`);
+    }
+};
 </script>
 
 <template>
@@ -235,6 +256,25 @@ const handleReserveClick = () => {
         <Head :title="props.event.titre" />
         
         <div class="min-h-screen bg-background pb-12">
+
+            <!-- Pending Collaboration Banner -->
+            <div v-if="props.is_pending_collaborator" class="w-full bg-blue-600 text-white shadow-lg relative z-20">
+                <div class="max-w-7xl mx-auto px-4 md:px-12 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                            <Users class="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white leading-tight">You've been invited to co-organize this event!</h3>
+                            <p class="text-sm text-blue-100">Accept this invitation to manage this event together with the owner.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 shrink-0">
+                        <Button variant="outline" class="bg-transparent border-white text-white hover:bg-white hover:text-blue-600 border-2" @click="handleCollaboration('reject')">Decline</Button>
+                        <Button class="bg-white text-blue-600 hover:bg-zinc-100 font-bold px-6" @click="handleCollaboration('accept')">Accept Invitation</Button>
+                    </div>
+                </div>
+            </div>
 
             <!-- 1. HERO SECTION -->
             <div class="relative h-72 md:h-[500px] w-full overflow-hidden bg-zinc-900">
@@ -338,8 +378,8 @@ const handleReserveClick = () => {
                         </div>
                     </div>
 
-                    <!-- Owner Action Controls -->
-                    <div v-if="isOwner" class="absolute top-6 right-6 md:right-12 flex gap-3">
+                    <!-- Owner / Co-Organizer Action Controls -->
+                    <div v-if="canManage" class="absolute top-6 right-6 md:right-12 flex gap-3">
                         <Link :href="`/dashboard/events/${props.event.id}/edit`">
                             <Button class="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/30 font-bold">
                                 <Edit class="w-4 h-4 mr-2" />
@@ -511,7 +551,7 @@ const handleReserveClick = () => {
                             
                             <!-- Ticket / Management Card -->
                             <div class="bg-card rounded-2xl shadow-lg border border-border overflow-hidden">
-                                <div class="p-1 h-2" :class="isOwner ? 'bg-foreground' : 'bg-blue-600'"></div>
+                                <div class="p-1 h-2" :class="isOwner ? 'bg-foreground' : (props.is_collaborator ? 'bg-violet-600' : 'bg-blue-600')"></div>
                                 
                                 <!-- Owner View: Management Card -->
                                 <div v-if="isOwner" class="p-8">
@@ -551,6 +591,23 @@ const handleReserveClick = () => {
                                             Last sync: Just now
                                         </p>
                                     </div>
+                                </div>
+
+                                <!-- Co-Organizer View: Lightweight Management Card -->
+                                <div v-else-if="props.is_collaborator" class="p-8">
+                                    <h3 class="text-lg font-bold text-foreground mb-2">Co-Organizer Panel</h3>
+                                    <p class="text-sm text-muted-foreground mb-6">You are a co-organizer of this event. You can edit event details.</p>
+                                    <Link :href="`/dashboard/events/${props.event.id}/edit`" class="block w-full">
+                                        <Button class="w-full py-5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold flex items-center justify-center gap-2">
+                                            <Edit class="w-4 h-4" />
+                                            Edit Event
+                                        </Button>
+                                    </Link>
+                                    <Link href="/dashboard/collaborations" class="block mt-3">
+                                        <Button variant="outline" class="w-full">
+                                            My Collaborations
+                                        </Button>
+                                    </Link>
                                 </div>
 
                                 <!-- Participant View: Ticket Card -->

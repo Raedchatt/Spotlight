@@ -4,7 +4,8 @@ export type CategorieEvenement = 'sportifs' | 'culturels' | 'scientifiques' | 'm
 
 export interface User {
     id: number;
-    name: string;
+    name?: string;
+    username?: string;
     email: string;
     // Add other fields as needed
 }

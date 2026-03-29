@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Evenement;
+use App\Models\EventCollaborator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\StatutEvenement;
@@ -43,7 +44,7 @@ class EvenementController extends Controller
     // Show Event Details (Public)
     public function show(Request $request, $id)
     {
-        $event = Evenement::with(['organisateur.organisateur', 'medias'])->findOrFail($id);
+        $event = Evenement::with(['organisateur.organisateur', 'medias', 'collaborateurs.organizer'])->findOrFail($id);
 
         if ($request->wantsJson()) {
             return response()->json($event);
@@ -95,10 +96,26 @@ class EvenementController extends Controller
             ->take(3)
             ->get();
 
+        // Check if user is a pending collaborator
+        $isPendingCollaborator = false;
+        $isAcceptedCollaborator = false;
+        if (Auth::check()) {
+            $collaboratorRecord = \App\Models\EventCollaborator::where('evenement_id', $id)
+                ->where('organizer_id', Auth::id())
+                ->first();
+
+            if ($collaboratorRecord) {
+                $isPendingCollaborator = $collaboratorRecord->statut === 'pending';
+                $isAcceptedCollaborator = $collaboratorRecord->statut === 'accepted';
+            }
+        }
+
         return Inertia::render('Events/Show', [
             'event' => $event,
             'stats' => $stats,
             'is_reserved' => $isReserved,
+            'is_pending_collaborator' => $isPendingCollaborator,
+            'is_collaborator' => $isAcceptedCollaborator,
             'similar_events' => $similarEvents->isEmpty() ? null : $similarEvents,
         ]);
     }
@@ -202,6 +219,33 @@ class EvenementController extends Controller
             $event->lieu
         );
 
+        // Attach collaborators if any are provided
+        if ($request->has('collaborator_ids')) {
+            $collabIds = $request->input('collaborator_ids');
+            $collabIdsArray = is_array($collabIds) ? $collabIds : [$collabIds];
+
+            foreach ($collabIdsArray as $orgId) {
+                // Ensure the user actually exists and is an organizer
+                $orgUser = \App\Models\User::where('id', $orgId)
+                                         ->where('role', \App\Enums\Role::Organisateur)
+                                         ->first();
+                if ($orgUser) {
+                    $event->collaborateurs()->create([
+                        'organizer_id' => $orgId,
+                        'statut' => 'pending'
+                    ]);
+
+                    // Send notification to the invited organizer
+                    app(\App\Services\NotificationService::class)->envoyerInvitationCollaboration(
+                        (int) $orgId,
+                        $event->titre,
+                        $user->username,
+                        $event->id
+                    );
+                }
+            }
+        }
+
         return response()->json([
             'message' => 'Event created successfully',
             'event' => $event->load('medias')
@@ -213,7 +257,13 @@ class EvenementController extends Controller
     {
         $event = Evenement::findOrFail($id);
 
-        if ($event->organisateur_id !== Auth::id()) {
+        $isOwner = $event->organisateur_id === Auth::id();
+        $isCollaborator = EventCollaborator::where('evenement_id', $id)
+            ->where('organizer_id', Auth::id())
+            ->where('statut', 'accepted')
+            ->exists();
+
+        if (!$isOwner && !$isCollaborator) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
 
