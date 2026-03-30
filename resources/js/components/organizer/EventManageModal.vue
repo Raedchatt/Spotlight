@@ -27,8 +27,7 @@ import {
     ShieldCheck,
     ShieldAlert,
     Ban,
-    UsersRound,
-    Settings2,
+    Settings,
     Check
 } from 'lucide-vue-next';
 import {
@@ -389,7 +388,7 @@ const getStatusBadge = (status: string) => {
                                         <DropdownMenu v-if="isOwner && collab.statut === 'accepted'">
                                             <DropdownMenuTrigger as-child>
                                                 <Button variant="ghost" size="icon" class="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Settings2 class="w-4 h-4" />
+                                                    <Settings class="w-4 h-4" />
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" class="w-56">
@@ -411,7 +410,7 @@ const getStatusBadge = (status: string) => {
                                                     :checked="collab.can_manage_team"
                                                     @update:checked="togglePermission(collab.id, 'can_manage_team', collab.can_manage_team)"
                                                 >
-                                                    <UsersRound class="w-4 h-4 mr-2" /> Can Manage Team
+                                                    <Users class="w-4 h-4 mr-2" /> Can Manage Team
                                                 </DropdownMenuCheckboxItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
@@ -425,7 +424,7 @@ const getStatusBadge = (status: string) => {
                                             <Ban class="w-2 h-2" /> Cancellable
                                         </div>
                                          <div v-if="collab.can_manage_team" class="flex items-center gap-1 text-[8px] font-black uppercase text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded">
-                                            <UsersRound class="w-2 h-2" /> HR Manager
+                                            <Users class="w-2 h-2" /> HR Manager
                                         </div>
                                     </div>
                                     <p class="text-[10px] text-muted-foreground">{{ collab.user.email }}</p>

@@ -39,10 +39,10 @@ class HandleInertiaRequests extends Middleware
         $counts = [];
 
         if ($user && $user->role->value === 'administrateur') {
-            $counts['event_validation'] = \App\Models\Evenement::where('statut', 'en_attente')->count();
-            $counts['financials'] = \App\Models\Evenement::where('date_fin', '<', now())
-                ->where('statut', '!=', 'annule')
-                ->where('is_paid_out', false)
+            $counts['event_validation'] = \App\Models\Evenement::where('statut', '=', 'en_attente', 'and')->count();
+            $counts['financials'] = \App\Models\Evenement::where('date_fin', '<', now(), 'and')
+                ->where('statut', '!=', 'annule', 'and')
+                ->where('is_paid_out', '=', false, 'and')
                 ->count();
         }
 
@@ -52,8 +52,8 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user() ? $request->user()->load('organisateur') : null,
                 'organisateur_has_rib' => $request->user()?->organisateur?->has_rib ?? false,
-                'has_collaborations' => $request->user() ? \App\Models\EventCollaborator::where('organizer_id', $request->user()->id)->where('statut', 'accepted')->exists() : false,
-                'pending_invitations' => collect($request->user() ? \App\Models\EventCollaborator::with('evenement.organisateur')->where('organizer_id', $request->user()->id)->where('statut', 'pending')->get() : [])->map(function($collab) {
+                'has_collaborations' => $request->user() ? \App\Models\EventCollaborator::where('organizer_id', '=', $request->user()->id, 'and')->where('statut', '=', 'accepted', 'and')->exists() : false,
+                'pending_invitations' => collect($request->user() ? \App\Models\EventCollaborator::with('evenement.organisateur')->where('organizer_id', '=', $request->user()->id, 'and')->where('statut', '=', 'pending', 'and')->get() : [])->map(function($collab) {
                     return [
                         'id' => $collab->id,
                         'evenement_id' => $collab->evenement_id,

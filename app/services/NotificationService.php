@@ -14,7 +14,7 @@ class NotificationService
      */
     public function notifieParticipantsNouvelEvenement(string $eventName, string $date, string $lieu)
     {
-        $participantIds = User::where('role', Role::Participant)->pluck('id')->toArray();
+        $participantIds = User::where('role', '=', Role::Participant, 'and')->pluck('id')->toArray();
         Notification::creerPourPlusieurs(
             $participantIds,
             TypeNotification::EVENEMENT_CREE,
@@ -27,7 +27,7 @@ class NotificationService
      */
     public function notifieParticipantsEvenementModifie(string $eventName)
     {
-        $participantIds = User::where('role', Role::Participant)->pluck('id')->toArray();
+        $participantIds = User::where('role', '=', Role::Participant, 'and')->pluck('id')->toArray();
         Notification::creerPourPlusieurs(
             $participantIds,
             TypeNotification::EVENEMENT_MODIFIE,
@@ -40,7 +40,7 @@ class NotificationService
      */
     public function notifieParticipantsEvenementAnnule(string $eventName)
     {
-        $participantIds = User::where('role', Role::Participant)->pluck('id')->toArray();
+        $participantIds = User::where('role', '=', Role::Participant, 'and')->pluck('id')->toArray();
         Notification::creerPourPlusieurs(
             $participantIds,
             TypeNotification::EVENEMENT_SUPPRIME,
@@ -151,7 +151,7 @@ class NotificationService
     private function getAdminIds(): array
     {
         // Role::Admin is stored as 'administrateur' internally but mapped to enum
-        return User::where('role', Role::Admin)->pluck('id')->toArray();
+        return User::where('role', '=', Role::Admin, 'and')->pluck('id')->toArray();
     }
 
     /**

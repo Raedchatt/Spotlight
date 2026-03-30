@@ -46,9 +46,6 @@ class EvenementController extends Controller
     {
         $event = Evenement::with(['organisateur.organisateur', 'medias', 'collaborateurs.organizer.organisateur'])->findOrFail($id);
 
-        if ($request->wantsJson()) {
-            return response()->json($event);
-        }
 
         // Stats calculation
         $stats = [];
@@ -110,7 +107,7 @@ class EvenementController extends Controller
             }
         }
 
-        if (request()->ajax()) {
+        if ($request->wantsJson() && !$request->hasHeader('X-Inertia')) {
             return response()->json(array_merge($event->toArray(), [
                 'medias' => $event->medias,
                 'stats' => $stats,
