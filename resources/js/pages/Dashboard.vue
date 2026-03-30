@@ -98,7 +98,7 @@ onMounted(() => {
 
 <template>
     <Head title="Dashboard" />
-    <AppLayout :breadcrumbs="breadcrumbs">
+    <AppLayout>
 
         
 

@@ -10,4 +10,5 @@ enum StatutEvenement: string
     case EnAttente = 'en_attente';
     case Annule = 'annule';
     case Valide = 'valide';
+    case Rejete = 'rejete';
 }

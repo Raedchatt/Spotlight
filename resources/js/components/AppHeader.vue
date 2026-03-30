@@ -256,7 +256,7 @@ const handleLogout = () => {
         </header>
 
         <!-- Spacer for fixed header -->
-        <div :class="[props.breadcrumbs.length > 1 ? 'h-16 lg:h-[104px]' : 'h-16']"></div>
+        <div class="h-16"></div>
 
         <LoginModal v-model:open="isLoginOpen" @switchToRegister="isLoginOpen = false; isRegisterOpen = true" />
         <RegisterModal v-model:open="isRegisterOpen" @switchToLogin="isRegisterOpen = false; isLoginOpen = true" />

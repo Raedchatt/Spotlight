@@ -65,6 +65,7 @@ class User extends Authenticatable
         'google_id',
         'google_token',
         'google_refresh_token',
+        'blocked_until',
     ];
 
 
@@ -93,6 +94,7 @@ class User extends Authenticatable
             'two_factor_confirmed_at' => 'datetime',
             'role' => Role::class, // Cast role to Role enum
             'interests' => 'array',
+            'blocked_until' => 'datetime',
         ];
     }
 
@@ -170,12 +172,31 @@ class User extends Authenticatable
     }
 
     /**
+     * Changes an event status from 'encours' to 'ouvert'.
+     *
+     * @throws AuthorizationException|\Exception
+     */
+    public function validEvent(Evenement $evenement): bool
+    {
+        if (!$this->isAdmin()) {
+            throw new AuthorizationException('Only admins can perform this action.');
+        }
+
+        if ($evenement->statut !== StatutEvenement::EnCours) {
+            throw new \Exception('L\'événement doit être en cours pour être ouvert.');
+        }
+
+        return $evenement->update(['statut' => StatutEvenement::Ouvert]);
+    }
+
+    /**
      * Blocks a user account.
+     * Can block permanently or for a specific number of days.
      * Cannot block themselves or another admin.
      *
      * @throws AuthorizationException
      */
-    public function bloquerCompte(User $user): bool
+    public function bloquerCompte(User $user, ?int $days = null): bool
     {
         if (!$this->isAdmin()) {
             throw new AuthorizationException('Only admins can block accounts.');
@@ -185,7 +206,47 @@ class User extends Authenticatable
             throw new AuthorizationException('You cannot block yourself or another admin.');
         }
 
-        return $user->update(['statut' => 'blocked']);
+        $data = ['statut' => 'blocked'];
+        if ($days) {
+            $data['blocked_until'] = now()->addDays($days);
+        } else {
+            $data['blocked_until'] = null; // Permanent block
+        }
+
+        return $user->update($data);
+    }
+
+    /**
+     * Unblocks a user account.
+     *
+     * @throws AuthorizationException
+     */
+    public function debloquerCompte(User $user): bool
+    {
+        if (!$this->isAdmin()) {
+            throw new AuthorizationException('Only admins can unblock accounts.');
+        }
+
+        return $user->update([
+            'statut' => 'actif',
+            'blocked_until' => null,
+        ]);
+    }
+
+    /**
+     * Returns true if the user is currently blocked.
+     */
+    public function isBlocked(): bool
+    {
+        if ($this->statut === 'blocked' && is_null($this->blocked_until)) {
+            return true;
+        }
+
+        if ($this->blocked_until && $this->blocked_until->isFuture()) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

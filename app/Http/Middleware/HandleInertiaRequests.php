@@ -35,6 +35,17 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $counts = [];
+
+        if ($user && $user->role->value === 'administrateur') {
+            $counts['event_validation'] = \App\Models\Evenement::where('statut', 'en_attente')->count();
+            $counts['financials'] = \App\Models\Evenement::where('date_fin', '<', now())
+                ->where('statut', '!=', 'annule')
+                ->where('is_paid_out', false)
+                ->count();
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -55,6 +66,7 @@ class HandleInertiaRequests extends Middleware
                 }),
                 'pending_invitations_count' => $request->user() ? \App\Models\EventCollaborator::where('organizer_id', $request->user()->id)->where('statut', 'pending')->count() : 0,
             ],
+            'sidebar_counts' => $counts,
             'sidebarOpen' => !$request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

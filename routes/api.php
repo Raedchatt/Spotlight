@@ -41,9 +41,13 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Admin Routes
     Route::middleware('admin')->prefix('admin')->group(function () {
-    Route::get('/organisateurs/pending', [OrganisateurController::class, 'pending']);
-    Route::patch('/organisateurs/{organisateur}/approve', [OrganisateurController::class, 'approve']);
-    Route::patch('/organisateurs/{organisateur}/reject', [OrganisateurController::class, 'reject']);
+        Route::get('/organisateurs/pending', [\App\Http\Controllers\Admin\AdminUserController::class, 'pendingOrganizers']);
+        Route::patch('/organisateurs/{organisateur}/approve', [\App\Http\Controllers\Admin\AdminUserController::class, 'approveOrganizer']);
+        Route::patch('/organisateurs/{organisateur}/reject', [\App\Http\Controllers\Admin\AdminUserController::class, 'rejectOrganizer']);
+        Route::patch('/events/{id}/valid-event', [\App\Http\Controllers\Admin\AdminUserController::class, 'validEvent']);
+        Route::post('/users/{user}/block', [\App\Http\Controllers\Admin\AdminUserController::class, 'bloquerUtilisateur']);
+        Route::post('/users/{user}/unblock', [\App\Http\Controllers\Admin\AdminUserController::class, 'debloquerUtilisateur']);
+        Route::post('/events/{evenement}/transfer-funds', [\App\Http\Controllers\Admin\AdminUserController::class, 'transfererFondsEvenement']);
     });
 });
 

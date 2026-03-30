@@ -12,6 +12,7 @@ import {
     X,
     Trophy,
     Eye,
+    Users,
     ChevronLeft,
     ChevronRight,
     Trash2,

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Form, Head, Link, usePage } from '@inertiajs/vue3';
-import { Calendar, DollarSign, User as UserIcon, Trophy, ChevronRight, CreditCard } from 'lucide-vue-next';
+import { Calendar, DollarSign, User as UserIcon, Trophy, ChevronRight, CreditCard, Check } from 'lucide-vue-next';
+import axios from 'axios';
+import { ref } from 'vue';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import AppearanceTabs from '@/components/AppearanceTabs.vue';
 import InputError from '@/components/InputError.vue';
@@ -46,6 +48,23 @@ const breadcrumbItems: BreadcrumbItem[] = [
 
 const page = usePage<AppPageProps>();
 const user = page.props.auth.user as any;
+
+const connectingStripe = ref(false);
+
+const connectStripe = async () => {
+    connectingStripe.value = true;
+    try {
+        const response = await axios.post('/web-api/stripe/connect');
+        if (response.data.url) {
+            window.location.href = response.data.url;
+        }
+    } catch (error: any) {
+        console.error('Stripe Connect error:', error);
+        alert(error.response?.data?.error || 'Failed to initialize Stripe connection.');
+    } finally {
+        connectingStripe.value = false;
+    }
+};
 </script>
 
 <template>
@@ -236,24 +255,48 @@ const user = page.props.auth.user as any;
                                         <div class="p-2 bg-blue-500/10 rounded-lg">
                                             <CreditCard class="h-4 w-4 text-blue-500" />
                                         </div>
-                                        <CardTitle>Bank Information</CardTitle>
+                                        <CardTitle>Payouts & Bank Information</CardTitle>
                                     </div>
                                 </CardHeader>
                                 <CardContent class="space-y-4">
-                                    <div class="grid gap-2">
-                                        <Label for="rib">RIB (Bank Account Number)</Label>
-                                        <Input
-                                            id="rib"
-                                            name="rib"
-                                            class="font-mono"
-                                            :placeholder="page.props.auth.organisateur_has_rib ? '••••••••••••••••••• (already saved — enter new value to change)' : 'Enter your 20-digit RIB'"
-                                            maxlength="30"
-                                        />
-                                        <p class="text-[10px] text-muted-foreground italic">
-                                            Required to receive payments from event registrations.
-                                            <span v-if="page.props.auth.organisateur_has_rib" class="text-emerald-600 font-semibold">✓ RIB is saved.</span>
-                                        </p>
-                                        <InputError class="mt-2" :message="errors.rib" />
+                                    <div v-if="page.props.auth.user?.organisateur?.stripe_account_id" class="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+                                        <div class="flex items-center gap-3">
+                                            <div class="p-2 bg-emerald-100 dark:bg-emerald-800/50 rounded-full">
+                                                <Check class="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                            </div>
+                                            <div>
+                                                <h4 class="font-bold text-emerald-900 dark:text-emerald-300">Stripe Account Connected</h4>
+                                                <p class="text-sm text-emerald-700 dark:text-emerald-400 font-mono mt-1">{{ page.props.auth.user?.organisateur?.stripe_account_id }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div v-else class="space-y-4">
+                                        <div class="p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl">
+                                            <h4 class="font-bold text-indigo-900 dark:text-indigo-300">Connect with Stripe</h4>
+                                            <p class="text-sm text-indigo-700 dark:text-indigo-400 mt-1 mb-3">
+                                                Spotlight uses Stripe to send your funds instantly and securely. You must connect your account to receive payouts.
+                                            </p>
+                                            <Button @click.prevent="connectStripe" :disabled="connectingStripe" class="bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto">
+                                                {{ connectingStripe ? 'Connecting...' : 'Connect Stripe Account' }}
+                                            </Button>
+                                        </div>
+
+                                        <div class="relative py-2">
+                                            <div class="absolute inset-0 flex items-center"><span class="w-full border-t"></span></div>
+                                            <div class="relative flex justify-center text-xs uppercase"><span class="bg-background px-2 text-muted-foreground">Or fallback to regular RIB</span></div>
+                                        </div>
+
+                                        <div class="grid gap-2">
+                                            <Label for="rib">RIB (Bank Account Number)</Label>
+                                            <Input
+                                                id="rib"
+                                                name="rib"
+                                                class="font-mono"
+                                                :placeholder="(page.props.auth as any).organisateur_has_rib ? '••••••••••••••••••• (already saved)' : 'Enter your 20-digit RIB'"
+                                                maxlength="30"
+                                            />
+                                            <InputError class="mt-2" :message="errors.rib" />
+                                        </div>
                                     </div>
                                 </CardContent>
                             </Card>

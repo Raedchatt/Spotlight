@@ -40,6 +40,14 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/auth/google', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
+// Blocked user page (accessible while still logged in)
+Route::middleware(['auth'])->get('/blocked', function () {
+    $user = \Illuminate\Support\Facades\Auth::user();
+    return \Inertia\Inertia::render('Blocked', [
+        'blockedUntil' => $user->blocked_until ? $user->blocked_until->toISOString() : null,
+    ]);
+})->name('blocked');
+
 Route::prefix('web-api')->group(function () {
     Route::get('/events', [EvenementController::class, 'index']);
     Route::get('/events/search', [EvenementController::class, 'search']);
@@ -68,6 +76,11 @@ Route::middleware(['auth'])->group(function () {
         // Organizers Profile Management (via Session)
         Route::put('/organisateurs/{organisateur}', [\App\Http\Controllers\OrganisateurController::class, 'update']);
 
+        // Stripe Connect Onboarding
+        Route::post('/stripe/connect', [\App\Http\Controllers\StripeConnectController::class, 'connect'])->name('stripe.connect');
+        Route::get('/stripe/connect/return', [\App\Http\Controllers\StripeConnectController::class, 'returnHandler'])->name('stripe.connect.return');
+        Route::get('/stripe/connect/refresh', [\App\Http\Controllers\StripeConnectController::class, 'refreshHandler'])->name('stripe.connect.refresh');
+
         // Messages (Session-based for Inertia)
         Route::get('/messages/recent', [MessageController::class, 'recent']);
         Route::post('/messages', [MessageController::class, 'envoyer'])->name('messages.envoyer');
@@ -90,9 +103,28 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/events/{id}/collaborators/accept', [\App\Http\Controllers\CollaborationController::class, 'accept']);
         Route::post('/events/{id}/collaborators/reject', [\App\Http\Controllers\CollaborationController::class, 'reject']);
         Route::patch('/events/{id}/collaborators/{collaboratorId}/toggle-permission', [EvenementController::class, 'toggleCollaboratorPermission']);
+
+        // Admin - Block/Unblock
+        Route::post('/admin/block/{user}', [\App\Http\Controllers\Admin\AdminUserController::class, 'bloquerUtilisateur'])->name('admin.users.block');
+        Route::post('/admin/unblock/{user}', [\App\Http\Controllers\Admin\AdminUserController::class, 'debloquerUtilisateur'])->name('admin.users.unblock');
     });
 
-    Route::get('/dashboard', [\App\Http\Controllers\OrganisateurController::class, 'dashboardData'])->name('dashboard');
+    // Admin - User Management
+        Route::get('/admin/users', [\App\Http\Controllers\Admin\AdminUserController::class, 'index'])->name('admin.users.index');
+        Route::post('/admin/users', [\App\Http\Controllers\Admin\AdminUserController::class, 'store'])->name('admin.users.store');
+        Route::put('/admin/users/{user}', [\App\Http\Controllers\Admin\AdminUserController::class, 'update'])->name('admin.users.update');
+        Route::delete('/admin/users/{user}', [\App\Http\Controllers\Admin\AdminUserController::class, 'destroy'])->name('admin.users.destroy');
+
+    // Admin - Event Management
+        Route::get('/admin/events', [\App\Http\Controllers\Admin\AdminEventController::class, 'index'])->name('admin.events.index');
+        Route::patch('/admin/events/{event}/approve', [\App\Http\Controllers\Admin\AdminEventController::class, 'approve'])->name('admin.events.approve');
+        Route::patch('/admin/events/{event}/reject', [\App\Http\Controllers\Admin\AdminEventController::class, 'reject'])->name('admin.events.reject');
+
+    // Admin - Financial Management
+        Route::get('/admin/financials', [\App\Http\Controllers\Admin\AdminFinancialController::class, 'index'])->name('admin.financials.index');
+        Route::post('/admin/financials/{event}/pay', [\App\Http\Controllers\Admin\AdminFinancialController::class, 'pay'])->name('admin.financials.pay');
+
+    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     // routes/web.php (for Inertia) or api.php
 
 Route::middleware('auth')->group(function () {

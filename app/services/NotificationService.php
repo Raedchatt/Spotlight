@@ -108,4 +108,85 @@ class NotificationService
             "{$collaboratorName} declined your collaboration invite for: {$eventName}"
         );
     }
+
+    /**
+     * Notify an organizer that their event was approved.
+     */
+    public function notifieOrganisateurEvenementApprouve(int $organisateurId, string $eventName)
+    {
+        Notification::creer(
+            $organisateurId,
+            TypeNotification::EVENEMENT_APPROUVE,
+            "Good news! Your event '{$eventName}' has been approved and is now public."
+        );
+    }
+
+    /**
+     * Notify an organizer that their event was rejected.
+     */
+    public function notifieOrganisateurEvenementRejete(int $organisateurId, string $eventName)
+    {
+        Notification::creer(
+            $organisateurId,
+            TypeNotification::EVENEMENT_REJETE,
+            "Your event '{$eventName}' has been rejected by administration."
+        );
+    }
+
+    /**
+     * Notify an organizer that their payout was processed.
+     */
+    public function notifieOrganisateurPaiementEffectue(int $organisateurId, string $eventName, float $amount)
+    {
+        Notification::creer(
+            $organisateurId,
+            TypeNotification::PAIEMENT_EFFECTUE,
+            "Your payout of {$amount} € for '{$eventName}' has been processed."
+        );
+    }
+
+    /**
+     * Get IDs of all platform administrators.
+     */
+    private function getAdminIds(): array
+    {
+        // Role::Admin is stored as 'administrateur' internally but mapped to enum
+        return User::where('role', Role::Admin)->pluck('id')->toArray();
+    }
+
+    /**
+     * Notify Admins about a new event pending validation.
+     */
+    public function notifieAdminsEvenementEnAttente(string $eventName, string $organizerName)
+    {
+        Notification::creerPourPlusieurs(
+            $this->getAdminIds(),
+            TypeNotification::EVENEMENT_CREE,
+            "Action required: '{$eventName}' was submitted by {$organizerName} and is awaiting validation."
+        );
+    }
+
+    /**
+     * Notify Admins about an event modification.
+     */
+    public function notifieAdminsEvenementModifie(string $eventName, string $organizerName)
+    {
+        Notification::creerPourPlusieurs(
+            $this->getAdminIds(),
+            TypeNotification::EVENEMENT_MODIFIE,
+            "Event '{$eventName}' was modified by {$organizerName} (may require re-validation)."
+        );
+    }
+
+    /**
+     * Notify Admins about an event cancellation/deletion.
+     */
+    public function notifieAdminsEvenementSupprime(string $eventName, string $organizerName)
+    {
+        Notification::creerPourPlusieurs(
+            $this->getAdminIds(),
+            TypeNotification::EVENEMENT_SUPPRIME,
+            "Event '{$eventName}' was cancelled/deleted by {$organizerName}."
+        );
+    }
 }

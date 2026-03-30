@@ -68,10 +68,23 @@ interface Props {
         organisateur: {
             id: number;
             name: string;
+            username: string;
             organisateur?: {
                 nom_organisation?: string;
             };
         };
+        collaborateurs?: Array<{
+            id: number;
+            statut: string;
+            organizer: {
+                id: number;
+                username: string;
+                name: string;
+                organisateur?: {
+                    nom_organisation?: string;
+                };
+            };
+        }>;
         medias: EventMedia[];
     };
     stats: {
@@ -107,6 +120,35 @@ const getInitials = (name: string) => {
 
 const organizerName = computed(() => {
     return props.event.organisateur?.organisateur?.nom_organisation || props.event.organisateur?.name || 'Unknown Organizer';
+});
+
+const eventTeam = computed(() => {
+    const team = [];
+    
+    // 1. Add Main Organizer
+    team.push({
+        id: props.event.organisateur.id,
+        name: props.event.organisateur.organisateur?.nom_organisation || props.event.organisateur.username || props.event.organisateur.name || 'Unknown Organizer',
+        role: 'Host / Owner',
+        isOwner: true,
+        isYou: auth.value?.user?.id === props.event.organisateur.id
+    });
+    
+    // 2. Add Accepted Collaborators
+    if (props.event.collaborateurs && props.event.collaborateurs.length > 0) {
+        const accepted = props.event.collaborateurs.filter(c => c.statut === 'accepted');
+        for (const collab of accepted) {
+            team.push({
+                id: collab.organizer.id,
+                name: collab.organizer.organisateur?.nom_organisation || collab.organizer.username || collab.organizer.name || 'Unknown Organizer',
+                role: 'Co-Organizer',
+                isOwner: false,
+                isYou: auth.value?.user?.id === collab.organizer.id
+            });
+        }
+    }
+    
+    return team;
 });
 
 const formatDate = (dateString: string) => {
@@ -705,34 +747,36 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                 </div>
                             </div>
 
-                            <!-- Organizer Card -->
-                            <div class="bg-card rounded-2xl shadow-sm border border-border p-6 flex flex-col items-center text-center">
-                                <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center font-bold text-xl text-muted-foreground mb-4 border border-border shadow-sm">
-                                    {{ getInitials(organizerName) }}
+                            <!-- Hosted By Area -->
+                            <div class="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+                                <div class="bg-muted/30 px-6 py-4 border-b border-border">
+                                    <h3 class="font-bold flex items-center gap-2">
+                                        <Users class="w-4 h-4 text-blue-600" />
+                                        Hosted By
+                                    </h3>
                                 </div>
-                                <h4 class="font-bold text-foreground text-lg">
-                                    <template v-if="isOwner">
-                                        You <span class="text-zinc-400 font-normal text-sm">(Owner)</span>
-                                    </template>
-                                    <Link 
-                                        v-else 
-                                        :href="`/organizer/${props.event.organisateur.id}`"
-                                        class="hover:text-blue-600 transition-colors duration-200"
-                                    >
-                                        {{ organizerName }}
-                                    </Link>
-                                </h4>
-                                <span class="text-xs font-bold text-blue-600 uppercase tracking-widest mt-1 mb-6">Organisateur</span>
-                                
-                                <Link 
-                                    v-if="!isOwner"
-                                    :href="`/organizer/${props.event.organisateur.id}`"
-                                    class="w-full py-2.5 rounded-lg border-2 border-primary text-primary font-bold hover:bg-primary hover:text-primary-foreground transition-all text-sm"
-                                >
-                                    View Profile
-                                </Link>
-                                <div v-else class="w-full text-zinc-400 text-xs font-medium">
-                                    You are managing this event
+                                <div class="p-4 space-y-2">
+                                    <div v-for="member in eventTeam" :key="member.id" class="flex items-center gap-4 p-2 rounded-xl hover:bg-muted/50 transition-colors">
+                                        <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold border shadow-sm shrink-0" :class="member.isOwner ? 'bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 border-blue-200' : 'bg-gradient-to-br from-zinc-50 to-zinc-100 text-zinc-600 border-zinc-200'">
+                                            {{ getInitials(member.name) }}
+                                        </div>
+                                        <div class="flex-1 text-left">
+                                            <h4 class="font-bold text-sm text-foreground leading-tight">
+                                                <template v-if="member.isYou">You</template>
+                                                <Link v-else :href="`/organizer/${member.id}`" class="hover:text-blue-600 transition-colors duration-200">
+                                                    {{ member.name }}
+                                                </Link>
+                                            </h4>
+                                            <div class="text-[10px] font-bold uppercase tracking-widest mt-0.5" :class="member.isOwner ? 'text-blue-600' : 'text-violet-600'">
+                                                {{ member.role }}
+                                            </div>
+                                        </div>
+                                        <Link v-if="!member.isYou" :href="`/organizer/${member.id}`">
+                                            <Button variant="outline" size="icon" class="h-8 w-8 rounded-full">
+                                                <ChevronRight class="w-4 h-4" />
+                                            </Button>
+                                        </Link>
+                                    </div>
                                 </div>
                             </div>
 

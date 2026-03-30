@@ -161,23 +161,6 @@ class OrganisateurController extends Controller
     // Admin Routes (auth:sanctum + IsAdmin)
     // -------------------------------------------------------------------------
 
-    /**
-     * List all pending organizer applications (admin only).
-     *
-     * GET /api/admin/organisateurs/pending
-     */
-    public function pending(): JsonResponse
-    {
-        $organisateurs = Organisateur::pending()
-            ->with('user:id,username,email')
-            ->latest()
-            ->get();
-
-        return response()->json([
-            'organisateurs' => $organisateurs,
-            'total' => $organisateurs->count(),
-        ]);
-    }
     // -------------------------------------------------------------------------
     // Event Management (Organizer Level)
     // -------------------------------------------------------------------------

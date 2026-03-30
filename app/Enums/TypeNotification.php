@@ -12,4 +12,7 @@ enum TypeNotification: string
     case INVITATION_COLLABORATION = 'invitation_collaboration';
     case COLLABORATION_ACCEPTEE = 'collaboration_acceptee';
     case COLLABORATION_REJECTED = 'collaboration_rejected';
+    case EVENEMENT_APPROUVE = 'evenement_approuve';
+    case EVENEMENT_REJETE = 'evenement_rejete';
+    case PAIEMENT_EFFECTUE = 'paiement_effectue';
 }

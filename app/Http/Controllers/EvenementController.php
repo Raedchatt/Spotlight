@@ -44,7 +44,7 @@ class EvenementController extends Controller
     // Show Event Details (Public)
     public function show(Request $request, $id)
     {
-        $event = Evenement::with(['organisateur.organisateur', 'medias', 'collaborateurs.organizer'])->findOrFail($id);
+        $event = Evenement::with(['organisateur.organisateur', 'medias', 'collaborateurs.organizer.organisateur'])->findOrFail($id);
 
         if ($request->wantsJson()) {
             return response()->json($event);
@@ -273,7 +273,7 @@ class EvenementController extends Controller
             'type_tournoi' => $request->type_tournoi ?? null,
             'prix_participant' => $request->prix_participant ?? null,
             'capacite_participant' => $request->capacite_participant ?? null,
-            'statut' => StatutEvenement::Ouvert
+            'statut' => StatutEvenement::EnAttente
         ]);
 
         if ($request->hasFile('medias')) {
@@ -326,6 +326,12 @@ class EvenementController extends Controller
             $event->titre,
             $event->date_debut->format('M d, Y'),
             $event->lieu
+        );
+
+        // Notify Admins
+        $this->notificationService->notifieAdminsEvenementEnAttente(
+            $event->titre,
+            $user->username
         );
 
         // Attach collaborators if any are provided
@@ -460,6 +466,12 @@ class EvenementController extends Controller
         // Notify all participants about the event update
         $this->notificationService->notifieParticipantsEvenementModifie($event->titre);
 
+        // Notify Admins
+        $this->notificationService->notifieAdminsEvenementModifie(
+            $event->titre,
+            Auth::user()->username
+        );
+
         return response()->json([
             'message' => 'Event updated successfully',
             'event' => $event->load('medias')
@@ -516,6 +528,12 @@ class EvenementController extends Controller
 
         // Notify all participants about the event cancellation
         $this->notificationService->notifieParticipantsEvenementAnnule($event->titre);
+
+        // Notify Admins
+        $this->notificationService->notifieAdminsEvenementSupprime(
+            $event->titre,
+            Auth::user()->username
+        );
 
         return response()->json([
             'message' => 'Event cancelled successfully.',
@@ -614,7 +632,6 @@ class EvenementController extends Controller
             'event' => $event
         ]);
     }
-
     // Toggle collaborator permission
     public function toggleCollaboratorPermission(Request $request, $id, $collaboratorId)
     {

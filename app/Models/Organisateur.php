@@ -34,6 +34,7 @@ class Organisateur extends Model
         'site_web',
         'logo',
         'rib',
+        'stripe_account_id',
         'rib_popup_seen',
     ];
 
