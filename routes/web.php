@@ -44,6 +44,7 @@ Route::prefix('web-api')->group(function () {
     Route::get('/events', [EvenementController::class, 'index']);
     Route::get('/events/search', [EvenementController::class, 'search']);
     Route::get('/events/{id}', [EvenementController::class, 'show']);
+    Route::get('/events/{id}/management-stats', [EvenementController::class, 'managementStats'])->middleware('auth');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -58,6 +59,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::post('/reservations', [ReservationController::class, 'store']);
         Route::get('/my-reservations', [ReservationController::class, 'chercherReservationParParticipant']);
+        Route::get('/events/{evenement}/reservations', [ReservationController::class, 'chercherReservationParEvenement']);
         Route::patch('/reservations/{reservation}/annuler', [ReservationController::class, 'annuler']);
         
         // Stripe Payments
@@ -87,6 +89,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/events/{id}/collaborators/invite', [\App\Http\Controllers\CollaborationController::class, 'invite']);
         Route::post('/events/{id}/collaborators/accept', [\App\Http\Controllers\CollaborationController::class, 'accept']);
         Route::post('/events/{id}/collaborators/reject', [\App\Http\Controllers\CollaborationController::class, 'reject']);
+        Route::patch('/events/{id}/collaborators/{collaboratorId}/toggle-permission', [EvenementController::class, 'toggleCollaboratorPermission']);
     });
 
     Route::get('/dashboard', [\App\Http\Controllers\OrganisateurController::class, 'dashboardData'])->name('dashboard');

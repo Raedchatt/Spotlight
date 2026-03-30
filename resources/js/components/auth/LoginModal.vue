@@ -89,10 +89,10 @@ const login = () => {
 
         <!-- TEST LOGINS -->
         <div class="grid grid-cols-2 gap-2 mt-2">
-          <button @click="email = 'org@org.com'; password = '12345678'; login()" class="bg-orange-600/10 text-orange-600 py-2 px-2 rounded-full hover:bg-orange-600/20 transition text-[10px] font-bold border border-orange-600/20 uppercase tracking-wider">
+          <button @click="email = 'org@org.com'; password = '12345678';" class="bg-orange-600/10 text-orange-600 py-2 px-2 rounded-full hover:bg-orange-600/20 transition text-[10px] font-bold border border-orange-600/20 uppercase tracking-wider">
             Login as Org
           </button>
-          <button @click="email = 'part@part.com'; password = '12345678'; login()" class="bg-green-600/10 text-green-600 py-2 px-2 rounded-full hover:bg-green-600/20 transition text-[10px] font-bold border border-green-600/20 uppercase tracking-wider">
+          <button @click="email = 'part@part.com'; password = '12345678';" class="bg-green-600/10 text-green-600 py-2 px-2 rounded-full hover:bg-green-600/20 transition text-[10px] font-bold border border-green-600/20 uppercase tracking-wider">
             Login as Part
           </button>
         </div>

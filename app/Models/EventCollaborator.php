@@ -13,6 +13,15 @@ class EventCollaborator extends Model
         'evenement_id',
         'organizer_id',
         'statut',
+        'can_edit',
+        'can_cancel',
+        'can_manage_team',
+    ];
+
+    protected $casts = [
+        'can_edit' => 'boolean',
+        'can_cancel' => 'boolean',
+        'can_manage_team' => 'boolean',
     ];
 
     /**

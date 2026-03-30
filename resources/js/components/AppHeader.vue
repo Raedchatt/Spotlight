@@ -253,15 +253,6 @@ const handleLogout = () => {
                 </div>
             </div>
 
-            <!-- Breadcrumbs -->
-            <div
-                v-if="props.breadcrumbs.length > 1"
-                class="hidden w-full border-t border-sidebar-border/70 bg-white dark:bg-neutral-900 lg:block"
-            >
-                <div class="mx-auto flex h-10 w-full items-center justify-start px-4 text-neutral-500 md:max-w-7xl">
-                    <Breadcrumbs :breadcrumbs="breadcrumbs" />
-                </div>
-            </div>
         </header>
 
         <!-- Spacer for fixed header -->

@@ -110,6 +110,21 @@ class EvenementController extends Controller
             }
         }
 
+        if (request()->ajax()) {
+            return response()->json(array_merge($event->toArray(), [
+                'medias' => $event->medias,
+                'stats' => $stats,
+                'is_reserved' => $isReserved,
+                'is_pending_collaborator' => $isPendingCollaborator,
+                'is_collaborator' => $isAcceptedCollaborator,
+                'is_owner' => Auth::id() === $event->organisateur_id,
+                'is_managed' => $event->isManagedBy(Auth::id()),
+                'can_edit' => $event->isManagedBy(Auth::id(), 'can_edit'),
+                'can_cancel' => $event->isManagedBy(Auth::id(), 'can_cancel'),
+                'can_manage_team' => $event->isManagedBy(Auth::id(), 'can_manage_team'),
+            ]));
+        }
+
         return Inertia::render('Events/Show', [
             'event' => $event,
             'stats' => $stats,
@@ -117,6 +132,100 @@ class EvenementController extends Controller
             'is_pending_collaborator' => $isPendingCollaborator,
             'is_collaborator' => $isAcceptedCollaborator,
             'similar_events' => $similarEvents->isEmpty() ? null : $similarEvents,
+        ]);
+    }
+    
+    /**
+     * Get management stats for an event.
+     * Accessible only by owner and accepted co-organizers.
+     */
+    public function managementStats($id)
+    {
+        $event = Evenement::with(['collaborateurs.organizer'])->findOrFail($id);
+
+        if (!$event->isManagedBy(Auth::id())) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+
+        $stats = [];
+        // ... (previous logic for stats calculation) ...
+        // [Existing stats logic here, I'll use a larger replacement to be safe]
+        if (!$event->is_tournoi) {
+            $totalReserved = Reservation::where('evenement_id', '=', $id)
+                ->where('statut', '=', 'confirmed')
+                ->sum('nombre_tickets');
+            
+            $totalRevenue = Reservation::where('evenement_id', '=', $id)
+                ->where('statut', '=', 'confirmed')
+                ->get()
+                ->sum(fn($r) => $r->nombre_tickets * $event->prix_spectateur);
+
+            $stats = [
+                'total_reserved' => (int) $totalReserved,
+                'remaining' => max(0, $event->capacite_spectateur - $totalReserved),
+                'total_revenue' => (float) $totalRevenue,
+                'capacity' => $event->capacite_spectateur
+            ];
+        } else {
+            $participantReserved = Reservation::where('evenement_id', '=', $id)
+                ->where('ticket_type', '=', 'participant')
+                ->where('statut', '=', 'confirmed')
+                ->sum('nombre_tickets');
+
+            $spectatorReserved = Reservation::where('evenement_id', '=', $id)
+                ->where('ticket_type', '=', 'spectator')
+                ->where('statut', '=', 'confirmed')
+                ->sum('nombre_tickets');
+            
+            $participantRevenue = Reservation::where('evenement_id', '=', $id)
+                ->where('ticket_type', '=', 'participant')
+                ->where('statut', '=', 'confirmed')
+                ->get()
+                ->sum(fn($r) => $r->nombre_tickets * ($event->prix_participant ?? 0));
+            
+            $spectatorRevenue = Reservation::where('evenement_id', '=', $id)
+                ->where('ticket_type', '=', 'spectator')
+                ->where('statut', '=', 'confirmed')
+                ->get()
+                ->sum(fn($r) => $r->nombre_tickets * $event->prix_spectateur);
+
+            $stats = [
+                'participant_reserved' => (int) $participantReserved,
+                'spectator_reserved' => (int) $spectatorReserved,
+                'participant_remaining' => max(0, $event->capacite_participant - $participantReserved),
+                'spectator_remaining' => max(0, $event->capacite_spectateur - $spectatorReserved),
+                'total_revenue' => (float) ($participantRevenue + $spectatorRevenue),
+                'participant_capacity' => $event->capacite_participant,
+                'spectator_capacity' => $event->capacite_spectateur
+            ];
+        }
+
+        return response()->json([
+            'event' => [
+                'id' => $event->id,
+                'titre' => $event->titre,
+                'is_tournoi' => $event->is_tournoi,
+                'organisateur_id' => $event->organisateur_id,
+            ],
+            'user_permissions' => [
+                'can_edit' => $event->isManagedBy(Auth::id(), 'can_edit'),
+                'can_cancel' => $event->isManagedBy(Auth::id(), 'can_cancel'),
+                'can_manage_team' => $event->isManagedBy(Auth::id(), 'can_manage_team'),
+                'is_owner' => Auth::id() === $event->organisateur_id,
+            ],
+            'stats' => $stats,
+            'collaborators' => $event->collaborateurs->map(fn($c) => [
+                'id' => $c->id,
+                'statut' => $c->statut,
+                'can_edit' => $c->can_edit,
+                'can_cancel' => $c->can_cancel,
+                'can_manage_team' => $c->can_manage_team,
+                'user' => [
+                    'id' => $c->organizer->id,
+                    'username' => $c->organizer->username,
+                    'email' => $c->organizer->email,
+                ]
+            ])
         ]);
     }
 
@@ -252,19 +361,12 @@ class EvenementController extends Controller
         ]);
     }
 
-    // Update Event
     public function update(Request $request, $id)
     {
         $event = Evenement::findOrFail($id);
 
-        $isOwner = $event->organisateur_id === Auth::id();
-        $isCollaborator = EventCollaborator::where('evenement_id', $id)
-            ->where('organizer_id', Auth::id())
-            ->where('statut', 'accepted')
-            ->exists();
-
-        if (!$isOwner && !$isCollaborator) {
-            return response()->json(['message' => 'Unauthorized action.'], 403);
+        if (!$event->isManagedBy(Auth::id(), 'can_edit')) {
+            return response()->json(['message' => 'Unauthorized action. You need edit permissions for this event.'], 403);
         }
 
         // Validate input (including tournament fields)
@@ -369,8 +471,9 @@ class EvenementController extends Controller
     {
         $event = Evenement::findOrFail($id);
 
-        if ($event->organisateur_id !== Auth::id()) {
-            return response()->json(['message' => 'Unauthorized action.'], 403);
+        // Permissions check: Only owner or collaborator with 'can_cancel'
+        if (!$event->isManagedBy(Auth::id(), 'can_cancel')) {
+            return response()->json(['message' => 'Unauthorized. You do not have permission to cancel this event.'], 403);
         }
 
         if ($event->statut === StatutEvenement::Annule) {
@@ -509,6 +612,37 @@ class EvenementController extends Controller
         return response()->json([
             'message' => 'Reservations closed successfully',
             'event' => $event
+        ]);
+    }
+
+    // Toggle collaborator permission
+    public function toggleCollaboratorPermission(Request $request, $id, $collaboratorId)
+    {
+        $event = Evenement::findOrFail($id);
+
+        // Only owner can manage permissions
+        if ($event->organisateur_id !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized. Only the owner can manage team permissions.'], 403);
+        }
+
+        $collaborator = EventCollaborator::where('evenement_id', $id)
+            ->where('id', $collaboratorId)
+            ->firstOrFail();
+
+        $permission = $request->input('permission');
+        $value = $request->boolean('value');
+
+        if (!in_array($permission, ['can_edit', 'can_cancel', 'can_manage_team'])) {
+            return response()->json(['message' => 'Invalid permission.'], 400);
+        }
+
+        $collaborator->update([
+            $permission => $value
+        ]);
+
+        return response()->json([
+            'message' => 'Permission updated successfully.',
+            'collaborator' => $collaborator
         ]);
     }
 }

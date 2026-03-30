@@ -18,6 +18,7 @@ import {
 } from 'lucide-vue-next';
 import { ref, onMounted, watch, computed } from 'vue';
 import CancelEventButton from '@/components/organizer/CancelEventButton.vue';
+import EventManageModal from '@/components/organizer/EventManageModal.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +37,15 @@ const loading = ref(true);
 
 const page = usePage();
 const auth = computed(() => page.props.auth as any);
+
+// Management Modal State
+const selectedEventId = ref<number | null>(null);
+const showManageModal = ref(false);
+
+const openManageModal = (id: number) => {
+    selectedEventId.value = id;
+    showManageModal.value = true;
+};
 
 // Filters
 const filters = ref({
@@ -247,12 +257,15 @@ const getStatusLabel = (statut: StatutEvenement) => {
                                 </Badge>
                             </div>
                                 <div class="absolute bottom-4 right-4 flex gap-2" v-if="event.organisateur_id === auth?.user?.id || true">
-                                <Link :href="`/events/${event.id}`">
-                                    <Button size="icon" variant="secondary" class="group/btn h-8 w-8 rounded-full shadow-md hover:bg-black/20 backdrop-blur-sm bg-white/80 transition-all hover:scale-110">
+                                    <Button 
+                                        size="icon" 
+                                        variant="secondary" 
+                                        class="group/btn h-8 w-8 rounded-full shadow-md hover:bg-black/20 backdrop-blur-sm bg-white/80 transition-all hover:scale-110"
+                                        @click="openManageModal(event.id)"
+                                    >
                                         <Eye class="w-4 h-4 text-black group-hover/btn:text-white transition-colors" />
                                     </Button>
-                                </Link>
-                                <Link :href="`/dashboard/events/${event.id}/edit`">
+                                    <Link :href="`/dashboard/events/${event.id}/edit`">
                                     <Button size="icon" variant="secondary" class="group/btn h-8 w-8 rounded-full shadow-md hover:bg-black/20 backdrop-blur-sm bg-white/80 transition-all hover:scale-110">
                                         <Pencil class="w-4 h-4 text-black group-hover/btn:text-white transition-colors" />
                                     </Button>
@@ -349,5 +362,11 @@ const getStatusLabel = (statut: StatutEvenement) => {
                 </div>
             </div>
         </div>
+        
+        <!-- Management Modal -->
+        <EventManageModal 
+            v-model:open="showManageModal" 
+            :event-id="selectedEventId" 
+        />
     </AppLayout>
 </template>

@@ -15,6 +15,7 @@ import {
 import { ref, onMounted, computed } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import EventManageModal from '@/components/organizer/EventManageModal.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { Evenement, StatutEvenement } from '@/types/event';
 
@@ -28,6 +29,15 @@ const loading = ref(true);
 
 const page = usePage();
 const auth = computed(() => page.props.auth as any);
+
+// Management Modal State
+const selectedEventId = ref<number | null>(null);
+const showManageModal = ref(false);
+
+const openManageModal = (id: number) => {
+    selectedEventId.value = id;
+    showManageModal.value = true;
+};
 
 const fetchCollaborations = async () => {
     loading.value = true;
@@ -114,11 +124,14 @@ const getStatusLabel = (statut: StatutEvenement) => {
                                 </Badge>
                             </div>
                             <div class="absolute bottom-4 right-4 flex gap-2">
-                                <Link :href="`/events/${event.id}`">
-                                    <Button size="icon" variant="secondary" class="group/btn h-8 w-8 rounded-full shadow-md hover:bg-black/20 backdrop-blur-sm bg-white/80 transition-all hover:scale-110">
-                                        <Eye class="w-4 h-4 text-black group-hover/btn:text-white transition-colors" />
-                                    </Button>
-                                </Link>
+                                <Button 
+                                    size="icon" 
+                                    variant="secondary" 
+                                    class="group/btn h-8 w-8 rounded-full shadow-md hover:bg-black/20 backdrop-blur-sm bg-white/80 transition-all hover:scale-110"
+                                    @click="openManageModal(event.id)"
+                                >
+                                    <Eye class="w-4 h-4 text-black group-hover/btn:text-white transition-colors" />
+                                </Button>
                             </div>
                         </div>
 
@@ -163,5 +176,11 @@ const getStatusLabel = (statut: StatutEvenement) => {
                 </div>
             </div>
         </div>
+
+        <!-- Management Modal -->
+        <EventManageModal 
+            v-model:open="showManageModal" 
+            :event-id="selectedEventId" 
+        />
     </AppLayout>
 </template>

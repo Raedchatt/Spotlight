@@ -91,8 +91,14 @@ const fetchEvent = async () => {
         };
 
         existingMedias.value = event.medias || [];
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error fetching event:', error);
+        if (error.response?.status === 403) {
+            alert('Your collaboration status does not allow editing this event.');
+            router.visit('/dashboard/collaborations');
+        } else {
+            alert('Failed to load event data. Please try again.');
+        }
     } finally {
         fetching.value = false;
     }
@@ -123,6 +129,11 @@ const submit = async () => {
     errors.value = {};
     
     try {
+        if (!eventData.value?.can_edit) {
+            alert('You do not have permission to save changes to this event.');
+            return;
+        }
+
         const formData = new FormData();
         // Spoof PUT request for Laravel to process FormData
         formData.append('_method', 'PUT');
@@ -215,7 +226,8 @@ const selectOrganizer = (user: any) => {
 };
 
 const fetchCollaborators = async () => {
-    if (auth.value?.user?.id === eventData.value?.organisateur_id) {
+    // Only allow fetching detailed collaborators for owner or accepted collaborator
+    if (eventData.value?.is_managed) {
         try {
             const res = await axios.get(`/web-api/events/${props.id}/collaborators`);
             collaborators.value = res.data;
@@ -263,11 +275,14 @@ onMounted(async () => {
                     <h1 class="text-3xl font-bold tracking-tight">Edit Event</h1>
                     <p class="text-muted-foreground">Modify the details of your event.</p>
                 </div>
-                <div class="flex gap-3">
+                <div class="flex items-center gap-3">
+                    <Badge v-if="eventData && !eventData.can_edit" variant="outline" class="bg-amber-50 text-amber-600 border-amber-200 uppercase font-black tracking-widest text-[10px]">
+                        View-Only Access
+                    </Badge>
                     <Button variant="outline" as-child>
                         <Link href="/dashboard/events">Cancel</Link>
                     </Button>
-                    <Button @click="submit" :disabled="processing || fetching" class="bg-blue-600 hover:bg-blue-700">
+                    <Button @click="submit" :disabled="processing || fetching || (eventData && !eventData.can_edit)" class="bg-blue-600 hover:bg-blue-700">
                         <Save class="w-4 h-4 mr-2" />
                         {{ processing ? 'Saving...' : 'Save Changes' }}
                     </Button>
@@ -502,17 +517,17 @@ onMounted(async () => {
                     </Card>
 
                     <!-- Collaborators Management Card -->
-                    <Card v-if="auth?.user?.id === eventData?.organisateur_id">
+                    <Card v-if="eventData?.can_manage_team">
                         <CardHeader>
                             <CardTitle class="flex items-center gap-2">
                                 <Users class="w-5 h-5 text-blue-600" />
                                 Manage Co-Organizers
                             </CardTitle>
-                            <CardDescription>Invite other organizers to help manage your event.</CardDescription>
+                            <CardDescription>{{ eventData?.is_owner ? 'Invite other organizers to help manage your event.' : 'List of team members managing this event.' }}</CardDescription>
                         </CardHeader>
                         <CardContent class="space-y-6">
-                            <!-- Invite New Collaborator -->
-                            <div class="space-y-3">
+                            <!-- Invite New Collaborator (Owner Only) -->
+                            <div class="space-y-3 font-semibold" v-if="eventData?.is_owner">
                                 <label class="text-sm font-medium">Invite by Name or Email</label>
                                 <div class="flex gap-2">
                                     <div class="relative flex-1">
@@ -552,15 +567,15 @@ onMounted(async () => {
                             <div v-if="collaborators.length > 0" class="pt-4 border-t space-y-3">
                                 <h4 class="text-sm font-medium text-muted-foreground">Current & Pending Co-Organizers</h4>
                                 <div class="space-y-2">
-                                    <div v-for="collab in collaborators" :key="collab.id" class="flex items-center justify-between p-3 border rounded-lg bg-card">
+                                    <div v-for="collab in collaborators" :key="collab.id" class="flex items-center justify-between p-3 border rounded-lg bg-card transition-all hover:border-slate-300 dark:hover:border-slate-700">
                                         <div class="flex flex-col">
-                                            <span class="font-medium text-sm">{{ collab.organizer.username }}</span>
+                                            <span class="font-bold text-sm">{{ collab.organizer.username }}</span>
                                             <span class="text-xs text-muted-foreground">{{ collab.organizer.email }}</span>
                                         </div>
                                         <div>
-                                            <Badge v-if="collab.statut === 'accepted'" class="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-emerald-200">Accepted</Badge>
-                                            <Badge v-else-if="collab.statut === 'pending'" class="bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 border-amber-200">Pending</Badge>
-                                            <Badge v-else class="bg-red-500/10 text-red-600 hover:bg-red-500/20 border-red-200">Declined</Badge>
+                                            <Badge v-if="collab.statut === 'accepted'" class="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-emerald-200 uppercase tracking-tighter text-[9px] font-black">Accepted</Badge>
+                                            <Badge v-else-if="collab.statut === 'pending'" class="bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 border-amber-200 uppercase tracking-tighter text-[9px] font-black">Pending</Badge>
+                                            <Badge v-else class="bg-red-500/10 text-red-600 hover:bg-red-500/20 border-red-200 uppercase tracking-tighter text-[9px] font-black">Declined</Badge>
                                         </div>
                                     </div>
                                 </div>

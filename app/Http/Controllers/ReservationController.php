@@ -207,8 +207,8 @@ class ReservationController extends Controller
      */
     public function chercherReservationParEvenement(Evenement $evenement): JsonResponse
     {
-        // Only the organizer can view reservations for their event
-        if ($evenement->organisateur_id !== Auth::id()) {
+        // Only the manager (owner or accepted co-organizer) can view reservations for their event
+        if (!$evenement->isManagedBy(Auth::id())) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
 

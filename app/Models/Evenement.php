@@ -119,6 +119,29 @@ class Evenement extends Model
     }
 
     /**
+     * Returns true if the given user is the owner or an accepted co-organizer.
+     * Optionally checks for a specific permission (can_edit, can_cancel, etc.).
+     */
+    public function isManagedBy(?int $userId, ?string $permission = null): bool
+    {
+        if (!$userId) return false;
+
+        if ($this->organisateur_id === $userId) {
+            return true;
+        }
+
+        $query = $this->collaborateurs()
+            ->where('organizer_id', $userId)
+            ->where('statut', 'accepted');
+        
+        if ($permission) {
+            $query->where($permission, true);
+        }
+
+        return $query->exists();
+    }
+
+    /**
      * Scope: chercherEvenementParOrganisateur
      */
     public function scopeParOrganisateur(Builder $query, int $organisateurId): Builder
