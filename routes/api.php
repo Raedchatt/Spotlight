@@ -38,7 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/organisateurs/events/{evenement}/annuler', [OrganisateurController::class, 'annulerEvenement']);
 
     // Notification Routes (Moved to web.php for session auth)
-    
+
     // Admin Routes
     Route::middleware('admin')->prefix('admin')->group(function () {
         Route::get('/organisateurs/pending', [\App\Http\Controllers\Admin\AdminUserController::class, 'pendingOrganizers']);

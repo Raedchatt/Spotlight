@@ -39,9 +39,9 @@ defineProps<Props>();
         </DropdownMenuItem>
     </DropdownMenuGroup>
     <DropdownMenuSeparator />
-    <DropdownMenuItem :as-child="true">
+    <DropdownMenuItem :as-child="true" class="text-rose-600 focus:bg-rose-50 focus:text-rose-700 dark:text-rose-400 dark:focus:bg-rose-950/30 dark:focus:text-rose-300">
         <Link
-            class="block w-full cursor-pointer"
+            class="flex w-full items-center cursor-pointer"
             :href="logout()"
             method="post"
             as="button"

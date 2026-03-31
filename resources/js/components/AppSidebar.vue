@@ -13,6 +13,7 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    useSidebar,
 } from '@/components/ui/sidebar';
 import { useUnreadCounts } from '@/composables/useUnreadCounts';
 import { dashboard, logout } from '@/routes';
@@ -107,6 +108,8 @@ const footerNavItems: NavItem[] = [
     },
 ];
 
+const { state } = useSidebar();
+
 const handleLogout = () => {
     router.post(logout());
 };
@@ -121,7 +124,7 @@ const handleLogout = () => {
                         size="lg" 
                         as-child 
                         :is-active="true" 
-                        :class="[auth.user?.role === 'administrateur' ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-sidebar-accent/50 group-hover:bg-sidebar-accent/80']"
+                        :class="[auth.user?.role === 'administrateur' ? 'bg-indigo-500/10 text-slate-900 shadow-sm dark:text-white hover:bg-indigo-500/20 border border-slate-200 dark:border-white/5' : 'bg-sidebar-accent/50 group-hover:bg-sidebar-accent/80']"
                     >
                         <Link :href="dashboard()">
                             <AppLogo />
@@ -138,15 +141,27 @@ const handleLogout = () => {
         <SidebarFooter>
             <template v-if="auth.user?.role === 'administrateur'">
                 <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton @click="handleLogout" class="w-full h-12 flex justify-between items-center text-white hover:bg-blue-700/50 hover:text-white transition-colors rounded-xl px-3 group">
-                            <div class="flex items-center gap-3 overflow-hidden">
-                                <div class="bg-blue-500/50 rounded-full p-1.5 flex-shrink-0">
-                                    <User class="w-5 h-5 text-blue-100" />
+                    <SidebarMenuItem class="mt-auto mb-2">
+                        <SidebarMenuButton 
+                            @click="handleLogout" 
+                            :tooltip="state === 'collapsed' ? 'Logout' : undefined"
+                            class="w-full h-12 flex items-center text-slate-600 dark:text-white/80 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-all rounded-xl px-3 group border border-transparent hover:border-slate-200 dark:hover:border-white/5 active:scale-[0.98]"
+                            :class="[state === 'collapsed' ? 'justify-center !p-0' : 'justify-between']"
+                        >
+                            <div v-if="state !== 'collapsed'" class="flex items-center gap-3 overflow-hidden">
+                                <div class="bg-indigo-500/10 dark:bg-indigo-500/20 rounded-full p-1.5 flex-shrink-0 group-hover:bg-indigo-500/20 dark:group-hover:bg-indigo-500/30 transition-colors">
+                                    <User class="w-5 h-5 text-indigo-600 dark:text-indigo-300" />
                                 </div>
-                                <span class="font-bold truncate text-base">{{ auth.user.username }}</span>
+                                <span class="font-bold truncate text-sm tracking-tight capitalize">{{ auth.user.username }}</span>
                             </div>
-                            <LogOut class="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-2" />
+                            <LogOut 
+                                :class="[
+                                    'transition-all duration-300 flex-shrink-0',
+                                    state === 'collapsed' 
+                                        ? 'w-5 h-5 text-red-500 opacity-100' 
+                                        : 'w-4 h-4 opacity-40 dark:opacity-50 group-hover:opacity-100 group-hover:text-red-500 dark:group-hover:text-red-400 ml-2'
+                                ]" 
+                            />
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>

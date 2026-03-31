@@ -28,7 +28,7 @@ const { isCurrentUrl } = useCurrentUrl();
                     :tooltip="item.title"
                     :class="[
                         $page.props.auth?.user?.role === 'administrateur' 
-                            ? 'text-white/90 hover:text-white hover:bg-white/10 data-[active=true]:bg-white/20 data-[active=true]:text-white' 
+                            ? 'text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 data-[active=true]:bg-indigo-600 data-[active=true]:text-white data-[active=true]:shadow-lg data-[active=true]:shadow-indigo-500/20 transition-all duration-300' 
                             : ''
                     ]"
                 >

@@ -4,6 +4,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { BreadcrumbItem } from '@/types';
 import { useUnreadCounts } from '@/composables/useUnreadCounts';
 import Badge from '@/components/ui/badge/Badge.vue';
+import AppearanceTabs from '@/components/AppearanceTabs.vue';
 
 const { totalUnreadCount } = useUnreadCounts();
 
@@ -19,7 +20,10 @@ withDefaults(
 
 <template>
     <header
-        class="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b border-sidebar-border/70 bg-white/80 px-6 backdrop-blur-md transition-[width,height] ease-linear dark:bg-neutral-900/80 group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4"
+        :class="[
+            'sticky top-0 z-50 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-gray-100/80 bg-white/60 px-6 backdrop-blur-xl transition-[width,height] ease-linear dark:bg-neutral-950/60 dark:border-neutral-800/50 group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4',
+            $page.props.auth?.user?.role === 'administrateur' ? 'border-gray-100/50' : ''
+        ]"
     >
         <div class="flex items-center gap-2">
             <div class="relative">
@@ -35,6 +39,11 @@ withDefaults(
             <template v-if="breadcrumbs && breadcrumbs.length > 0">
                 <Breadcrumbs :breadcrumbs="breadcrumbs" />
             </template>
+        </div>
+
+        <!-- Appearance Switcher -->
+        <div class="flex items-center gap-4">
+            <AppearanceTabs />
         </div>
     </header>
 </template>

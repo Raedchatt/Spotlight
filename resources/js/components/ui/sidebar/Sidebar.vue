@@ -86,7 +86,7 @@ const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
         variant === 'floating' || variant === 'inset'
           ? 'p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]'
           : 'group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l',
-        auth.user?.role === 'administrateur' ? 'bg-blue-600 text-white border-blue-700' : '',
+        auth.user?.role === 'administrateur' ? 'bg-white text-slate-900 border-slate-200 dark:bg-slate-950 dark:text-white dark:border-slate-800' : '',
         props.class,
       )"
       v-bind="$attrs"
@@ -95,7 +95,7 @@ const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
         data-sidebar="sidebar"
         :class="cn(
             'bg-sidebar group-data-[variant=floating]:border-sidebar-border flex h-full w-full flex-col group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow-sm',
-            auth.user?.role === 'administrateur' ? 'bg-blue-600 text-white' : ''
+            auth.user?.role === 'administrateur' ? 'bg-white dark:bg-slate-950 text-slate-900 dark:text-white' : ''
         )"
       >
         <slot />

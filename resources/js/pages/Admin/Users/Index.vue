@@ -13,8 +13,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, Edit, Trash2, UserPlus, ShieldBan } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { Eye, Edit, Trash2, UserPlus, ShieldBan, Search, CheckCircle } from 'lucide-vue-next';
+import { ref, computed } from 'vue';
 
 const props = defineProps<{
     users: any;
@@ -28,7 +28,7 @@ const selectedUser = ref<any>(null);
 
 // Form for Blocking
 const blockForm = useForm({
-    days: null as number | null,
+    days: undefined as number | undefined,
 });
 
 // Form for Adding
@@ -88,7 +88,7 @@ const openShowModal = (user: any) => {
 };
 
 const confirmDelete = (user: any) => {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer ${user.first_name || 'cet'} ${user.last_name || 'utilisateur'} ?`)) {
+    if (confirm(`Are you sure you want to delete ${user.first_name || 'this'} ${user.last_name || 'user'}?`)) {
         router.delete(`/admin/users/${user.id}`);
     }
 };
@@ -111,127 +111,138 @@ const submitBlock = () => {
 
 const getRoleBadgeColor = (role: string) => {
     switch (role) {
-        case 'administrateur': return 'bg-red-100 text-red-800 border-red-200';
-        case 'organisateur': return 'bg-purple-100 text-purple-800 border-purple-200';
-        default: return 'bg-blue-100 text-blue-800 border-blue-200';
+        case 'administrateur': return 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800/50';
+        case 'organisateur': return 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800/50';
+        default: return 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800/50';
+    }
+};
+
+const displayRole = (role: string) => {
+    switch (role) {
+        case 'administrateur': return 'Admin';
+        case 'organisateur': return 'Organizer';
+        default: return 'Participant';
     }
 };
 </script>
 
 <template>
-    <AppLayout>
-        <Head title="Gestion des Utilisateurs" />
+    <Head title="User Management" />
 
-        <div class="p-6 max-w-7xl mx-auto space-y-6">
-            <div class="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+    <AppLayout>
+        <div class="px-4 py-8 md:px-8 space-y-8 max-w-[1400px] mx-auto">
+            
+            <!-- Page Header -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Utilisateurs</h1>
-                    <p class="text-sm text-gray-500 mt-1">Gérez tous les membres de la plateforme (Administrateurs, Organisateurs, Participants).</p>
+                    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">User Management</h1>
+                    <p class="text-gray-500 dark:text-gray-400 mt-1">Manage platform members including Admins, Organizers, and Participants.</p>
                 </div>
                 
                 <Dialog v-model:open="isAddModalOpen">
                     <DialogTrigger as-child>
-                        <Button class="bg-blue-600 hover:bg-blue-700 text-white gap-2">
-                            <UserPlus class="w-4 h-4" />
-                            Ajouter un utilisateur
-                        </Button>
+                        <button class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:from-indigo-700 hover:to-violet-700 transition-all duration-300 shadow-lg shadow-indigo-500/25 active:scale-[0.98]">
+                            <UserPlus class="w-5 h-5" />
+                            Add User
+                        </button>
                     </DialogTrigger>
-                    <DialogContent class="sm:max-w-[425px]">
+                    <DialogContent class="sm:max-w-[425px] dark:bg-neutral-900 dark:border-neutral-800">
                         <DialogHeader>
-                            <DialogTitle>Ajouter un utilisateur</DialogTitle>
-                            <DialogDescription>
-                                Créez un nouveau compte avec les accès correspondants.
+                            <DialogTitle class="dark:text-white">Add New User</DialogTitle>
+                            <DialogDescription class="dark:text-gray-400">
+                                Create a new account with specific access rights.
                             </DialogDescription>
                         </DialogHeader>
                         <form @submit.prevent="submitAdd" class="space-y-4 py-4">
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="space-y-2">
-                                    <Label for="first_name">Prénom</Label>
-                                    <Input id="first_name" v-model="form.first_name" required />
+                                    <Label for="first_name" class="dark:text-gray-300">First Name</Label>
+                                    <Input id="first_name" v-model="form.first_name" required class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" />
                                 </div>
                                 <div class="space-y-2">
-                                    <Label for="last_name">Nom</Label>
-                                    <Input id="last_name" v-model="form.last_name" required />
+                                    <Label for="last_name" class="dark:text-gray-300">Last Name</Label>
+                                    <Input id="last_name" v-model="form.last_name" required class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" />
                                 </div>
                             </div>
                             <div class="space-y-2">
-                                <Label for="username">Nom d'utilisateur</Label>
-                                <Input id="username" v-model="form.username" required />
+                                <Label for="username" class="dark:text-gray-300">Username</Label>
+                                <Input id="username" v-model="form.username" required class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" />
                             </div>
                             <div class="space-y-2">
-                                <Label for="email">Email</Label>
-                                <Input id="email" type="email" v-model="form.email" required />
+                                <Label for="email" class="dark:text-gray-300">Email Address</Label>
+                                <Input id="email" type="email" v-model="form.email" required class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" />
                             </div>
                             <div class="space-y-2">
-                                <Label for="role">Rôle</Label>
-                                <select id="role" v-model="form.role" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" required>
+                                <Label for="role" class="dark:text-gray-300">Role</Label>
+                                <select id="role" v-model="form.role" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" required>
                                     <option value="participant">Participant</option>
-                                    <option value="organisateur">Organisateur</option>
-                                    <option value="administrateur">Administrateur</option>
+                                    <option value="organisateur">Organizer</option>
+                                    <option value="administrateur">Admin</option>
                                 </select>
                             </div>
                             <div class="space-y-2">
-                                <Label for="password">Mot de passe</Label>
-                                <Input id="password" type="password" v-model="form.password" required />
+                                <Label for="password" class="dark:text-gray-300">Password</Label>
+                                <Input id="password" type="password" v-model="form.password" required class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" />
                             </div>
                             <DialogFooter>
-                                <Button type="submit" :disabled="form.processing">Créer</Button>
+                                <Button type="submit" :disabled="form.processing" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold rounded-xl h-11 shadow-md shadow-indigo-500/20">Create Account</Button>
                             </DialogFooter>
                         </form>
                     </DialogContent>
                 </Dialog>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <!-- Users List Table -->
+            <div class="bg-white/70 dark:bg-neutral-900/70 backdrop-blur-sm rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md hover:border-gray-200 dark:hover:border-neutral-700">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm text-left">
-                        <thead class="text-xs text-gray-500 uppercase bg-gray-50/50 border-b border-gray-100">
+                        <thead class="text-[11px] text-gray-400 dark:text-gray-500 uppercase tracking-[0.1em] bg-gray-50/50 dark:bg-neutral-800/30 border-b border-gray-100 dark:border-neutral-800">
                             <tr>
-                                <th class="px-6 py-4 font-medium">Utilisateur</th>
-                                <th class="px-6 py-4 font-medium">Contact</th>
-                                <th class="px-6 py-4 font-medium">Rôle</th>
-                                <th class="px-6 py-4 font-medium">Création</th>
-                                <th class="px-6 py-4 font-medium text-right">Actions</th>
+                                <th class="px-6 py-4 font-bold">User</th>
+                                <th class="px-6 py-4 font-bold">Contact</th>
+                                <th class="px-6 py-4 font-bold">Role</th>
+                                <th class="px-6 py-4 font-bold">Joined</th>
+                                <th class="px-6 py-4 font-bold text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            <tr v-for="user in users?.data" :key="user.id" class="hover:bg-gray-50/50 transition-colors">
+                        <tbody class="divide-y divide-gray-50 dark:divide-neutral-800/50">
+                            <tr v-for="user in users?.data" :key="user.id" class="hover:bg-gray-50/80 dark:hover:bg-neutral-800/30 transition-colors">
                                 <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm shadow-sm">
                                             {{ (user.first_name || 'U').charAt(0) }}{{ (user.last_name || '').charAt(0) }}
                                         </div>
                                         <div>
-                                            <div class="font-medium text-gray-900">{{ user.first_name }} {{ user.last_name }}</div>
-                                            <div class="text-gray-500 text-xs">@{{ user.username }}</div>
+                                            <div class="font-bold text-gray-900 dark:text-white text-base">{{ user.first_name }} {{ user.last_name }}</div>
+                                            <div class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">@{{ user.username }}</div>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 text-gray-600">
+                                <td class="px-6 py-4 text-gray-600 dark:text-gray-300 font-medium tracking-wide">
                                     {{ user.email }}
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span :class="['px-2.5 py-1 text-xs font-semibold rounded-full border', getRoleBadgeColor(user.role)]">
-                                        {{ user.role.charAt(0).toUpperCase() + user.role.slice(1) }}
+                                    <span :class="['px-3 py-1 text-xs font-bold rounded-full border shadow-sm', getRoleBadgeColor(user.role)]">
+                                        {{ displayRole(user.role) }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-gray-500 text-xs">
-                                    {{ new Date(user.created_at).toLocaleDateString() }}
+                                <td class="px-6 py-4 text-gray-500 dark:text-gray-400 text-sm">
+                                    {{ new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) }}
                                 </td>
                                 <td class="px-6 py-4 text-right">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <Button variant="ghost" size="icon" @click="openShowModal(user)" class="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                                    <div class="flex items-center justify-end gap-1">
+                                        <button @click="openShowModal(user)" class="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="View Details">
                                             <Eye class="w-4 h-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" @click="openEditModal(user)" class="text-gray-600 hover:text-gray-900 hover:bg-gray-100">
+                                        </button>
+                                        <button @click="openEditModal(user)" class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-neutral-700/50 rounded-lg transition-colors" title="Edit User">
                                             <Edit class="w-4 h-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" @click="openBlockModal(user)" class="text-orange-500 hover:text-orange-600 hover:bg-orange-50">
+                                        </button>
+                                        <button @click="openBlockModal(user)" class="p-2 text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20 rounded-lg transition-colors" title="Block User">
                                             <ShieldBan class="w-4 h-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" @click="confirmDelete(user)" class="text-red-600 hover:text-red-700 hover:bg-red-50">
+                                        </button>
+                                        <button @click="confirmDelete(user)" class="p-2 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-900/20 rounded-lg transition-colors" title="Delete User">
                                             <Trash2 class="w-4 h-4" />
-                                        </Button>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -241,56 +252,58 @@ const getRoleBadgeColor = (role: string) => {
             </div>
             
             <!-- Pagination Controls -->
-            <div v-if="users?.links && users?.links.length > 3" class="flex justify-center mt-6 space-x-1">
-                <template v-for="(link, p) in users.links" :key="p">
-                    <div v-if="link.url === null" class="px-4 py-2 text-sm text-gray-500 bg-white border border-gray-200 rounded-md opacity-50 cursor-not-allowed" v-html="link.label"></div>
-                    <Link v-else :href="link.url" class="px-4 py-2 text-sm border border-gray-200 rounded-md transition-colors" :class="[link.active ? 'bg-blue-600 outline-blue-600 text-white border-blue-600' : 'bg-white hover:bg-gray-50 text-gray-700']" v-html="link.label"></Link>
-                </template>
+            <div v-if="users?.links && users?.links.length > 3" class="flex justify-center mt-6">
+                <div class="flex gap-2">
+                    <template v-for="(link, p) in users.links" :key="p">
+                        <div v-if="link.url === null" class="px-4 py-2 border border-gray-200 dark:border-neutral-700 rounded-xl text-sm font-medium opacity-50 cursor-not-allowed bg-gray-50 dark:bg-neutral-800 text-gray-500 dark:text-gray-400" v-html="link.label"></div>
+                        <Link v-else :href="link.url" class="px-4 py-2 border rounded-xl text-sm font-medium transition" :class="[link.active ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-700']" v-html="link.label"></Link>
+                    </template>
+                </div>
             </div>
         </div>
 
         <!-- Edit Modal -->
         <Dialog v-model:open="isEditModalOpen">
-            <DialogContent class="sm:max-w-[425px]">
+            <DialogContent class="sm:max-w-[425px] dark:bg-neutral-900 dark:border-neutral-800">
                 <DialogHeader>
-                    <DialogTitle>Modifier un utilisateur</DialogTitle>
-                    <DialogDescription>
-                        Ajustez les détails du compte de cet utilisateur.
+                    <DialogTitle class="dark:text-white">Edit User</DialogTitle>
+                    <DialogDescription class="dark:text-gray-400">
+                        Adjust account details for this user.
                     </DialogDescription>
                 </DialogHeader>
                 <form @submit.prevent="submitEdit" class="space-y-4 py-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-2">
-                            <Label for="edit_first_name">Prénom</Label>
-                            <Input id="edit_first_name" v-model="editForm.first_name" required />
+                            <Label for="edit_first_name" class="dark:text-gray-300">First Name</Label>
+                            <Input id="edit_first_name" v-model="editForm.first_name" required class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" />
                         </div>
                         <div class="space-y-2">
-                            <Label for="edit_last_name">Nom</Label>
-                            <Input id="edit_last_name" v-model="editForm.last_name" required />
+                            <Label for="edit_last_name" class="dark:text-gray-300">Last Name</Label>
+                            <Input id="edit_last_name" v-model="editForm.last_name" required class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" />
                         </div>
                     </div>
                     <div class="space-y-2">
-                        <Label for="edit_username">Nom d'utilisateur</Label>
-                        <Input id="edit_username" v-model="editForm.username" required />
+                        <Label for="edit_username" class="dark:text-gray-300">Username</Label>
+                        <Input id="edit_username" v-model="editForm.username" required class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" />
                     </div>
                     <div class="space-y-2">
-                        <Label for="edit_email">Email</Label>
-                        <Input id="edit_email" type="email" v-model="editForm.email" required />
+                        <Label for="edit_email" class="dark:text-gray-300">Email Address</Label>
+                        <Input id="edit_email" type="email" v-model="editForm.email" required class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" />
                     </div>
                     <div class="space-y-2">
-                        <Label for="edit_role">Rôle</Label>
-                        <select id="edit_role" v-model="editForm.role" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" required>
+                        <Label for="edit_role" class="dark:text-gray-300">Role</Label>
+                        <select id="edit_role" v-model="editForm.role" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" required>
                             <option value="participant">Participant</option>
-                            <option value="organisateur">Organisateur</option>
-                            <option value="administrateur">Administrateur</option>
+                            <option value="organisateur">Organizer</option>
+                            <option value="administrateur">Admin</option>
                         </select>
                     </div>
                     <div class="space-y-2">
-                        <Label for="edit_password">Nouveau mot de passe <span class="text-xs text-gray-400 font-normal">(Optionnel)</span></Label>
-                        <Input id="edit_password" type="password" v-model="editForm.password" />
+                        <Label for="edit_password" class="dark:text-gray-300">New Password <span class="text-xs text-gray-500 font-normal">(Optional)</span></Label>
+                        <Input id="edit_password" type="password" v-model="editForm.password" class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" />
                     </div>
                     <DialogFooter>
-                        <Button type="submit" :disabled="editForm.processing">Mettre à jour</Button>
+                        <Button type="submit" :disabled="editForm.processing" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl">Save Changes</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
@@ -298,35 +311,38 @@ const getRoleBadgeColor = (role: string) => {
 
         <!-- Show Modal -->
         <Dialog v-model:open="isShowModalOpen">
-            <DialogContent class="sm:max-w-[425px]" v-if="selectedUser">
+            <DialogContent class="sm:max-w-[425px] dark:bg-neutral-900 dark:border-neutral-800" v-if="selectedUser">
                 <DialogHeader>
-                    <DialogTitle>Profil Utilisateur</DialogTitle>
+                    <DialogTitle class="dark:text-white">User Profile</DialogTitle>
                 </DialogHeader>
-                <div class="py-6 space-y-6">
-                    <div class="flex items-center gap-4">
-                        <div class="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xl">
+                <div class="py-6 space-y-8">
+                    <div class="flex items-center gap-5 bg-gray-50 dark:bg-neutral-800/50 p-4 rounded-2xl border border-gray-100 dark:border-neutral-800">
+                        <div class="w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-black text-2xl shadow-sm">
                             {{ (selectedUser.first_name || 'U').charAt(0) }}{{ (selectedUser.last_name || '').charAt(0) }}
                         </div>
                         <div>
-                            <h3 class="font-bold text-lg text-gray-900">{{ selectedUser.first_name }} {{ selectedUser.last_name }}</h3>
-                            <p class="text-gray-500">@{{ selectedUser.username }}</p>
+                            <h3 class="font-black text-xl text-gray-900 dark:text-white">{{ selectedUser.first_name }} {{ selectedUser.last_name }}</h3>
+                            <p class="text-indigo-600 dark:text-indigo-400 font-medium">@{{ selectedUser.username }}</p>
                         </div>
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-y-4">
-                        <div>
-                            <p class="text-xs text-gray-500 uppercase font-semibold">Email</p>
-                            <p class="text-sm font-medium">{{ selectedUser.email }}</p>
+                    <div class="grid grid-cols-2 gap-y-6 gap-x-4">
+                        <div class="bg-gray-50 dark:bg-neutral-800/30 p-3 rounded-xl">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-bold mb-1">Email</p>
+                            <p class="text-sm font-bold text-gray-900 dark:text-gray-100 break-all">{{ selectedUser.email }}</p>
                         </div>
-                        <div>
-                            <p class="text-xs text-gray-500 uppercase font-semibold">Rôle</p>
-                            <span :class="['px-2 py-0.5 text-xs font-semibold rounded-md border', getRoleBadgeColor(selectedUser.role)]">
-                                {{ selectedUser.role }}
+                        <div class="bg-gray-50 dark:bg-neutral-800/30 p-3 rounded-xl">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-bold mb-1">Role</p>
+                            <span :class="['px-2.5 py-1 text-xs font-bold rounded-md border', getRoleBadgeColor(selectedUser.role)]">
+                                {{ displayRole(selectedUser.role) }}
                             </span>
                         </div>
-                        <div>
-                            <p class="text-xs text-gray-500 uppercase font-semibold">Membre depuis</p>
-                            <p class="text-sm font-medium">{{ new Date(selectedUser.created_at).toLocaleDateString() }}</p>
+                        <div class="bg-gray-50 dark:bg-neutral-800/30 p-3 rounded-xl col-span-2">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-bold mb-1">Member Since</p>
+                            <p class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                                <CheckCircle class="w-4 h-4 text-emerald-500" />
+                                {{ new Date(selectedUser.created_at).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -335,25 +351,25 @@ const getRoleBadgeColor = (role: string) => {
 
         <!-- Block Modal -->
         <Dialog v-model:open="isBlockModalOpen">
-            <DialogContent class="sm:max-w-[380px]" v-if="selectedUser">
+            <DialogContent class="sm:max-w-[400px] dark:bg-neutral-900 dark:border-neutral-800" v-if="selectedUser">
                 <DialogHeader>
-                    <DialogTitle class="flex items-center gap-2">
-                        <ShieldBan class="w-5 h-5 text-orange-500" />
-                        Bloquer l'utilisateur
+                    <DialogTitle class="flex items-center gap-2 text-amber-600 dark:text-amber-500 text-xl font-bold">
+                        <ShieldBan class="w-6 h-6" />
+                        Block User
                     </DialogTitle>
-                    <DialogDescription>
-                        Bloquer <strong>{{ selectedUser.username }}</strong>. Laissez vide pour un blocage permanent.
+                    <DialogDescription class="dark:text-gray-400 text-base mt-2">
+                        Suspend access for <strong class="text-gray-900 dark:text-white">{{ selectedUser.username }}</strong>. Leave empty for permanent suspension.
                     </DialogDescription>
                 </DialogHeader>
-                <form @submit.prevent="submitBlock" class="space-y-4 py-4">
+                <form @submit.prevent="submitBlock" class="space-y-6 py-4">
                     <div class="space-y-2">
-                        <Label for="block_days">Nombre de jours <span class="text-xs text-gray-400">(Optionnel)</span></Label>
-                        <Input id="block_days" type="number" min="1" v-model="blockForm.days" placeholder="Ex: 7 jours" />
+                        <Label for="block_days" class="dark:text-gray-300 font-bold">Duration (Days) <span class="text-xs text-gray-500 font-normal">(Optional)</span></Label>
+                        <Input id="block_days" type="number" min="1" v-model="blockForm.days" placeholder="e.g. 7" class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white h-12 text-lg" />
                     </div>
-                    <DialogFooter class="gap-2">
-                        <Button type="button" variant="outline" @click="isBlockModalOpen = false">Annuler</Button>
-                        <Button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white" :disabled="blockForm.processing">
-                            Confirmer le blocage
+                    <DialogFooter class="gap-3 sm:gap-2">
+                        <Button type="button" variant="outline" @click="isBlockModalOpen = false" class="w-full sm:w-auto dark:border-neutral-700 dark:text-gray-300 dark:hover:bg-neutral-800 rounded-xl">Cancel</Button>
+                        <Button type="submit" class="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 focus:ring-amber-500 text-white font-bold rounded-xl" :disabled="blockForm.processing">
+                            Confirm Suspension
                         </Button>
                     </DialogFooter>
                 </form>
