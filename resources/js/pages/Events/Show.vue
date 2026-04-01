@@ -228,6 +228,8 @@ const reserveButtonText = computed(() => {
     // Check if user is an organizer
     if (auth.value.user.role === 'organisateur') return 'Organizers Cannot Reserve';
     if (auth.value.user.role === 'admin') return 'Admins Cannot Reserve';
+
+    if (props.is_reserved) return 'Already Reserved';
     
     if (!props.event.is_tournoi) {
         if (isFullyBooked.value) return 'Fully Booked';
@@ -715,15 +717,15 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                     <!-- Action Button -->
                                     <button 
                                         @click="handleReserveClick"
-                                        :disabled="(auth.user && auth.user.role !== 'participant') || isFullyBooked"
+                                        :disabled="(auth.user && auth.user.role !== 'participant') || props.is_reserved || isFullyBooked"
                                         :class="[
                                             'w-full py-4 rounded-xl font-bold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg mb-4',
-                                            ((auth.user && auth.user.role !== 'participant') || isFullyBooked) 
+                                            ((auth.user && auth.user.role !== 'participant') || props.is_reserved || isFullyBooked) 
                                                 ? 'bg-muted text-muted-foreground cursor-not-allowed shadow-none' 
                                                 : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/10'
                                         ]"
                                     >
-                                        <Ticket class="w-5 h-5" v-if="!isFullyBooked && (!auth.user || auth.user.role === 'participant')" />
+                                        <Ticket class="w-5 h-5" v-if="!isFullyBooked && !props.is_reserved && (!auth.user || auth.user.role === 'participant')" />
                                         {{ reserveButtonText }}
                                     </button>
 

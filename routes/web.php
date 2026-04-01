@@ -142,8 +142,6 @@ Route::middleware('auth')->group(function () {
             return Inertia::render('Events/Collaborations');
         })->name('collaborations.index');
 
-        Route::get('/financials', [\App\Http\Controllers\OrganizerFinancialController::class, 'index'])->name('organizer.financials');
-
         Route::get('/events/create', function () {
             return Inertia::render('Events/CreateEvent');
         })->name('events.create');

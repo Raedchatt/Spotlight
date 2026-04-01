@@ -33,7 +33,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Organizers (Event Management & Stats)
     Route::get('/organisateurs/stats', [OrganisateurController::class, 'consulterStatistiques']);
-    Route::get('/organizer/financials', [\App\Http\Controllers\OrganizerFinancialController::class, 'index']);
     Route::post('/organisateurs/events', [OrganisateurController::class, 'creerEvenement']);
     Route::put('/organisateurs/events/{evenement}', [OrganisateurController::class, 'modifierEvenement']);
     Route::patch('/organisateurs/events/{evenement}/annuler', [OrganisateurController::class, 'annulerEvenement']);
@@ -42,7 +41,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Admin Routes
     Route::middleware('admin')->prefix('admin')->group(function () {
-        Route::get('/financials', [\App\Http\Controllers\Admin\FinancialDashboardController::class, 'index']);
         Route::get('/organisateurs/pending', [\App\Http\Controllers\Admin\AdminUserController::class, 'pendingOrganizers']);
         Route::patch('/organisateurs/{organisateur}/approve', [\App\Http\Controllers\Admin\AdminUserController::class, 'approveOrganizer']);
         Route::patch('/organisateurs/{organisateur}/reject', [\App\Http\Controllers\Admin\AdminUserController::class, 'rejectOrganizer']);

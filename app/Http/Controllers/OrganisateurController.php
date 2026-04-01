@@ -16,8 +16,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Enum;
 use Inertia\Inertia;
 use App\Services\NotificationService;
-use App\Services\RefundService;
-use Illuminate\Support\Facades\DB;
 // use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class OrganisateurController extends Controller
@@ -262,7 +260,7 @@ class OrganisateurController extends Controller
      *
      * PATCH /api/organisateurs/events/{evenement}/annuler
      */
-    public function annulerEvenement(Evenement $evenement, RefundService $refundService): JsonResponse
+    public function annulerEvenement(Evenement $evenement): JsonResponse
     {
         if ($evenement->organisateur_id !== Auth::id()) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
@@ -272,31 +270,13 @@ class OrganisateurController extends Controller
             return response()->json(['message' => 'Event is already cancelled.'], 422);
         }
 
-        if ($evenement->is_paid_out) {
-            return response()->json(['message' => 'Cannot cancel event. It has already been paid out to the organizer.'], 422);
-        }
-
-        try {
-            DB::beginTransaction();
-
-            $evenement->update(['statut' => StatutEvenement::Annule]);
-
-            // Dispatch background job to handle mass refunds and cancel reservations
-            $refundService->refundEvent($evenement);
-
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'message' => 'Failed to cancel event. Error: ' . $e->getMessage()
-            ], 500);
-        }
+        $evenement->update(['statut' => StatutEvenement::Annule]);
 
         // Notify all participants about the event cancellation
         $this->notificationService->notifieParticipantsEvenementAnnule($evenement->titre);
 
         return response()->json([
-            'message' => 'Event cancelled successfully. Refunds are being processed.',
+            'message' => 'Event cancelled successfully.',
             'event' => $evenement->fresh()
         ]);
     }
@@ -359,50 +339,17 @@ class OrganisateurController extends Controller
         // ------------------------------------
         // Revenue: confirmed vs pending
         // ------------------------------------
-        // Use the new FinancialRecord source of truth
-        $grossRevenueCents = \App\Models\FinancialRecord::whereHas('evenement', function ($q) use ($organisateurId) {
+        $allReservations = Reservation::whereHas('evenement', function ($q) use ($organisateurId) {
             $q->where('organisateur_id', $organisateurId);
-        })->where('type', 'payment')
-          ->where('status', 'completed')
-          ->sum('amount');
+        })->with('evenement:id,prix_spectateur')->get();
 
-        $refundsCents = \App\Models\FinancialRecord::whereHas('evenement', function ($q) use ($organisateurId) {
-            $q->where('organisateur_id', $organisateurId);
-        })->where('type', 'refund')
-          ->where('status', 'completed')
-          ->sum('amount');
+        $totalReceived = $allReservations
+            ->where('statut', \App\Enums\StatutReservation::Confirmed)
+            ->sum(fn($r) => $r->nombre_tickets * (float) $r->evenement->prix_spectateur);
 
-        $payoutsCents = \App\Models\FinancialRecord::whereHas('evenement', function ($q) use ($organisateurId) {
-            $q->where('organisateur_id', $organisateurId);
-        })->where('type', 'payout')
-          ->where('status', 'completed')
-          ->sum('amount');
-
-        $totalReceivedCents = $grossRevenueCents - $refundsCents;
-        
-        // Awaiting Payout: Only for events that haven't been paid out yet
-        $awaitingPayoutCents = 0;
-        $eligibleEvents = Evenement::where('organisateur_id', $organisateurId)
-            ->where('is_paid_out', false)
-            ->get();
-
-        foreach ($eligibleEvents as $event) {
-            $eventGross = \App\Models\FinancialRecord::where('evenement_id', $event->id)
-                ->where('type', 'payment')
-                ->where('status', 'completed')
-                ->sum('amount');
-            
-            $eventRefunds = \App\Models\FinancialRecord::where('evenement_id', $event->id)
-                ->where('type', 'refund')
-                ->where('status', 'completed')
-                ->sum('amount');
-            
-            $eventNet = $eventGross - $eventRefunds;
-            if ($eventNet > 0) {
-                $commission = (int) floor(($eventNet * 10) / 100);
-                $awaitingPayoutCents += ($eventNet - $commission);
-            }
-        }
+        $pendingPayout = $allReservations
+            ->where('statut', \App\Enums\StatutReservation::Pending)
+            ->sum(fn($r) => $r->nombre_tickets * (float) $r->evenement->prix_spectateur);
 
         // ------------------------------------
         // Category breakdown (% of events)
@@ -423,11 +370,6 @@ class OrganisateurController extends Controller
             usort($categoryBreakdown, fn($a, $b) => $b['count'] <=> $a['count']);
         }
 
-        // Re-add for participant stats below
-        $allReservations = Reservation::whereHas('evenement', function ($q) use ($organisateurId) {
-            $q->where('organisateur_id', $organisateurId);
-        })->get();
-
         // ------------------------------------
         // Current / active events with revenue
         // ------------------------------------
@@ -437,19 +379,11 @@ class OrganisateurController extends Controller
             ->latest()
             ->take(20)
             ->get()
-            ->map(function ($event) {
-                // Use FinancialRecord for accurate event revenue
-                $eventGross = \App\Models\FinancialRecord::where('evenement_id', $event->id)
-                    ->where('type', 'payment')
-                    ->where('status', 'completed')
-                    ->sum('amount');
-                
-                $eventRefunds = \App\Models\FinancialRecord::where('evenement_id', $event->id)
-                    ->where('type', 'refund')
-                    ->where('status', 'completed')
-                    ->sum('amount');
-
-                $eventNet = ($eventGross - $eventRefunds) / 100;
+            ->map(function ($event) use ($allReservations) {
+                $eventRevenue = $allReservations
+                    ->where('evenement_id', $event->id)
+                    ->where('statut', \App\Enums\StatutReservation::Confirmed)
+                    ->sum(fn($r) => $r->nombre_tickets * (float) $event->prix_spectateur);
 
                 return [
                     'id'       => $event->id,
@@ -457,7 +391,7 @@ class OrganisateurController extends Controller
                     'categorie'=> $event->categorie instanceof CategorieEvenement ? $event->categorie->value : $event->categorie,
                     'lieu'     => $event->lieu,
                     'statut'   => $event->statut instanceof StatutEvenement ? $event->statut->value : $event->statut,
-                    'revenue'  => round($eventNet, 2),
+                    'revenue'  => round($eventRevenue, 2),
                 ];
             });
 
@@ -481,20 +415,19 @@ class OrganisateurController extends Controller
             ->keyBy('id');
 
         $activeParticipants = $participantCounts->map(function ($pc) use ($participantUsers) {
-            $pcArr = (array)$pc;
-            $u = $participantUsers->get($pcArr['user_id']);
+            $u = $participantUsers->get($pc['user_id']);
             return [
-                'id'          => $pcArr['user_id'],
+                'id'          => $pc['user_id'],
                 'username'    => $u ? $u->username : 'Unknown',
                 'avatar'      => null,
-                'event_count' => $pcArr['event_count'],
+                'event_count' => $pc['event_count'],
             ];
         })->values();
 
         return Inertia::render('Dashboard', [
             'dashboardData' => [
-                'totalReceived'      => round($totalReceivedCents / 100, 2),
-                'pendingPayout'      => round($awaitingPayoutCents / 100, 2),
+                'totalReceived'      => round($totalReceived, 2),
+                'pendingPayout'      => round($pendingPayout, 2),
                 'categoryBreakdown'  => $categoryBreakdown,
                 'currentEvents'      => $currentEvents,
                 'activeParticipants' => $activeParticipants,

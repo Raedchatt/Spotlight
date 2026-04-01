@@ -92,14 +92,6 @@ class Evenement extends Model
         return $this->hasMany(EventCollaborator::class, 'evenement_id');
     }
 
-    /**
-     * All financial records related to this event.
-     */
-    public function financial_records(): HasMany
-    {
-        return $this->hasMany(FinancialRecord::class, 'evenement_id');
-    }
-
 
     // -------------------------------------------------------------------------
     // Business Logic

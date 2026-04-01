@@ -16,13 +16,10 @@ use Stripe\Webhook;
 class StripeController extends Controller
 {
     protected NotificationService $notificationService;
-    protected \App\Services\FinancialRecordService $financialRecordService;
-    
-    public function __construct(NotificationService $notificationService, \App\Services\FinancialRecordService $financialRecordService)
+    public function __construct(NotificationService $notificationService)
     {
         Stripe::setApiKey(config('services.stripe.secret'));
         $this->notificationService = $notificationService;
-        $this->financialRecordService = $financialRecordService;
     }
 
     // ─────────────────────────────────────────────
@@ -106,9 +103,6 @@ class StripeController extends Controller
                 'transferred_at'           => now(),
             ]);
             
-            // Log financial record
-            $this->financialRecordService->createPaymentRecord($paiement, $sessionId);
-            
             // Confirming the reservation will trigger the ticket generation via Model Event
             $reservation = $paiement->reservation;
             $reservation->confirm();
@@ -171,7 +165,6 @@ class StripeController extends Controller
                         'transferred_at' => now(),
                     ]);
                     $paiement->reservation->confirm();
-                    $this->financialRecordService->createPaymentRecord($paiement, $paymentIntent->id);
                 }
                 break;
 

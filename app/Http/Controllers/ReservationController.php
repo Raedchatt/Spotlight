@@ -16,12 +16,10 @@ use Illuminate\Validation\ValidationException;
 class ReservationController extends Controller
 {
     protected $notificationService;
-    protected \App\Services\RefundService $refundService;
 
-    public function __construct(NotificationService $notificationService, \App\Services\RefundService $refundService)
+    public function __construct(NotificationService $notificationService)
     {
         $this->notificationService = $notificationService;
-        $this->refundService = $refundService;
     }
 
     /**
@@ -53,15 +51,19 @@ class ReservationController extends Controller
             $ticketType = 'spectator'; // Default for tournaments if not specified
         }
 
-        // 0.1 Check if user already has a pending reservation for this event
-        // Reusing the pending reservation prevents abandoned checkouts from clogging event capacity.
+        // 0.1 Check if user already has a reservation for this event
         $existingReservation = Reservation::where('user_id', '=', Auth::id(), 'and')
             ->where('evenement_id', '=', $evenement->id, 'and')
-            ->where('statut', '=', StatutReservation::Pending)
             ->first();
 
         if ($existingReservation) {
-            // If it's pending, we update the quantity and type then "re-initiate" the payment flow
+            if ($existingReservation->statut === StatutReservation::Confirmed) {
+                return response()->json([
+                    'message' => 'You have already confirmed your reservation for this event.',
+                ], 422);
+            }
+            
+            // If it's pending and paid, we update the quantity and type then "re-initiate" the payment flow
             $unitPrice = (float) $evenement->prix_spectateur;
             if ($evenement->is_tournoi && $ticketType === 'participant') {
                 $unitPrice = (float) $evenement->prix_participant;
@@ -88,7 +90,7 @@ class ReservationController extends Controller
             }
 
             return response()->json([
-                'message' => 'You already have a pending free reservation for this event. Please wait for confirmation.',
+                'message' => 'You already have a pending reservation for this event.',
                 'reservation' => $existingReservation,
             ], 422);
         }
@@ -285,13 +287,7 @@ class ReservationController extends Controller
             ], 422);
         }
 
-        try {
-            $this->refundService->refundReservation($reservation, true);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Failed to process refund. ' . $e->getMessage()
-            ], 500);
-        }
+        $reservation->cancel();
 
         // Notify the event organizer about the cancellation
         $user = Auth::user();

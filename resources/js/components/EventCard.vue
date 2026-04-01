@@ -125,9 +125,20 @@ const bannerImage = computed(() => {
                     v-if="showAction" 
                     @click="handleAction(event)" 
                     size="sm" 
-                    class="font-semibold px-4 rounded-lg transition-all active:scale-95 shadow-sm bg-blue-600 hover:bg-blue-700 text-white"
+                    :disabled="event.is_reserved"
+                    :class="[
+                        'font-semibold px-4 rounded-lg transition-all active:scale-95 shadow-sm',
+                        event.is_reserved 
+                            ? 'bg-muted text-muted-foreground border cursor-not-allowed shadow-none hover:bg-muted' 
+                            : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    ]"
                 >
-                    {{ auth.user ? 'Book Now' : 'Login to Book' }}
+                    <template v-if="event.is_reserved">
+                        Already Reserved
+                    </template>
+                    <template v-else>
+                        {{ auth.user ? 'Book Now' : 'Login to Book' }}
+                    </template>
                 </Button>
             </div>
         </div>
