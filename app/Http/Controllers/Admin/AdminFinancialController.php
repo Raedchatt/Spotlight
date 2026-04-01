@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Evenement;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Stripe\Stripe;
-use Stripe\Transfer;
+use App\Models\FinancialRecord;
+use App\Services\PayoutService;
 
 class AdminFinancialController extends Controller
 {
@@ -23,13 +23,21 @@ class AdminFinancialController extends Controller
             ->latest()
             ->get()
             ->map(function ($event) {
-                // Calculate revenue
-                $eventRevenue = \App\Models\Paiement::whereHas('reservation', function($q) use ($event) {
-                    $q->where('evenement_id', '=', $event->id);
-                })->where('statut', '=', \App\Enums\StatutPaiement::Succeeded)->sum('montant');
+                // Calculate revenue using FinancialRecords
+                $grossRevenueCents = FinancialRecord::where('evenement_id', $event->id)
+                    ->where('type', 'payment')
+                    ->where('status', 'completed')
+                    ->sum('amount');
+                    
+                $refundsCents = FinancialRecord::where('evenement_id', $event->id)
+                    ->where('type', 'refund')
+                    ->where('status', 'completed')
+                    ->sum('amount');
+                    
+                $netRevenueCents = $grossRevenueCents - $refundsCents;
                 
-                $commission = $eventRevenue * 0.10;
-                $netPayout = $eventRevenue - $commission;
+                $commissionCents = (int) floor(($netRevenueCents * 10) / 100);
+                $netPayoutCents = $netRevenueCents - $commissionCents;
                 
                 return [
                     'id' => $event->id,
@@ -39,9 +47,9 @@ class AdminFinancialController extends Controller
                          'stripe_account_id' => $event->organisateur->organisateur->stripe_account_id ?? null,
                     ],
                     'date_fin' => $event->date_fin->format('Y-m-d H:i'),
-                    'revenue' => round($eventRevenue, 2),
-                    'commission' => round($commission, 2),
-                    'net_payout' => round($netPayout, 2),
+                    'revenue' => round($netRevenueCents / 100, 2),
+                    'commission' => round($commissionCents / 100, 2),
+                    'net_payout' => round($netPayoutCents / 100, 2),
                     'is_paid_out' => $event->is_paid_out,
                     'paid_out_at' => $event->paid_out_at ? $event->paid_out_at->format('Y-m-d H:i') : null,
                 ];
@@ -50,68 +58,71 @@ class AdminFinancialController extends Controller
         $pending = $events->filter(fn($e) => !$e['is_paid_out'])->values();
         $history = $events->filter(fn($e) => $e['is_paid_out'])->values();
 
+        // Calculate global totals for the dashboard
+        $totalPaymentsCents = FinancialRecord::where('type', 'payment')
+            ->where('status', 'completed')
+            ->sum('amount');
+            
+        $totalRefundsCents = FinancialRecord::where('type', 'refund')
+            ->where('status', 'completed')
+            ->sum('amount');
+            
+        $totalPayoutsCents = FinancialRecord::where('type', 'payout')
+            ->where('status', 'completed')
+            ->sum('amount');
+
+        $platformProfitCents = $totalPaymentsCents - $totalRefundsCents - $totalPayoutsCents;
+
         return Inertia::render('Admin/Financials/Index', [
             'pending_payouts' => $pending,
             'payout_history' => $history,
+            'stats' => [
+                'total_payments' => round($totalPaymentsCents / 100, 2),
+                'total_refunds' => round($totalRefundsCents / 100, 2),
+                'total_payouts' => round($totalPayoutsCents / 100, 2),
+                'platform_profit' => round($platformProfitCents / 100, 2),
+            ]
         ]);
     }
 
     /**
      * Execute a Stripe transfer to the organizer.
      */
-    public function pay(Evenement $event)
+    public function pay(Evenement $event, PayoutService $payoutService)
     {
         if ($event->is_paid_out) {
             return back()->with('error', 'This event has already been paid out.');
         }
 
-        $orgProfile = $event->organisateur->organisateur;
+        $orgProfile = $event->organisateur->organisateur ?? null;
         if (!$orgProfile || !$orgProfile->stripe_account_id) {
             return back()->with('error', 'Organizer does not have a connected Stripe account.');
         }
 
-        // Calculate payout
-        $eventRevenue = \App\Models\Paiement::whereHas('reservation', function($q) use ($event) {
-            $q->where('evenement_id', '=', $event->id);
-        })->where('statut', '=', \App\Enums\StatutPaiement::Succeeded)->sum('montant');
-
-        if ($eventRevenue <= 0) {
-            return back()->with('error', 'No revenue generated to transfer.');
-        }
-
-        $netPayout = $eventRevenue * 0.90; // 10% platform fee
-        $transferAmount = (int) round($netPayout * 100); // Stripe expects cents
-
         try {
-            Stripe::setApiKey(config('services.stripe.secret'));
-
-            // Create a Transfer to the connected account
-            $transfer = Transfer::create([
-                'amount' => $transferAmount,
-                'currency' => 'eur',
-                'destination' => $orgProfile->stripe_account_id,
-                'metadata' => [
-                    'evenement_id' => $event->id,
-                    'evenement_titre' => $event->titre,
-                ],
-            ]);
-
-            // Update database
-            $event->update([
-                'is_paid_out' => true,
-                'paid_out_at' => now(),
-            ]);
-
-            // Notify Organizer
-            app(\App\Services\NotificationService::class)->notifieOrganisateurPaiementEffectue(
-                $event->organisateur_id, 
-                $event->titre, 
-                $netPayout
-            );
-
-            return back()->with('success', 'Transfer successfully completed via Stripe.');
-
-        } catch (\Stripe\Exception\ApiErrorException $e) {
+            $payoutService->processEventPayout($event);
+            
+            // Check if it got paid
+            $event->refresh();
+            if ($event->is_paid_out) {
+                // Get the accurate payout value tracked in records
+                $netPayoutCents = FinancialRecord::where('evenement_id', $event->id)
+                    ->where('type', 'payout')
+                    ->where('status', 'completed')
+                    ->sum('amount');
+                    
+                // Notify Organizer
+                app(\App\Services\NotificationService::class)->notifieOrganisateurPaiementEffectue(
+                    $event->organisateur_id, 
+                    $event->titre, 
+                    round($netPayoutCents / 100, 2)
+                );
+                
+                return back()->with('success', 'Transfer successfully completed via Stripe.');
+            } else {
+                return back()->with('error', 'No revenue generated to transfer, or transfer skipped.');
+            }
+        } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Stripe Transfer failed: ' . $e->getMessage());
             return back()->with('error', 'Stripe Transfer failed: ' . $e->getMessage());
         }

@@ -7,6 +7,12 @@ import { Wallet, Check, AlertCircle, Building, CalendarDays, ExternalLink, Refre
 const props = defineProps<{
     pending_payouts: any[];
     payout_history: any[];
+    stats?: {
+        total_payments: number;
+        total_refunds: number;
+        total_payouts: number;
+        platform_profit: number;
+    };
 }>();
 
 const processingEventId = ref<number | null>(null);
@@ -65,6 +71,26 @@ const handleTransfer = (id: number, stripeAccountId: string | null) => {
                 <div>
                     <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">Payouts & Financials</h1>
                     <p class="text-gray-500 dark:text-gray-400 mt-1">Manage payouts to organizers for successfully completed events.</p>
+                </div>
+            </div>
+
+            <!-- Stats Overview -->
+            <div v-if="stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8 pb-4">
+                <div class="bg-white dark:bg-neutral-900 p-6 rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-sm flex flex-col justify-between">
+                    <p class="text-sm font-medium text-gray-500 mb-2">Total Payments</p>
+                    <p class="text-2xl font-black text-gray-900 dark:text-white">{{ formatCurrency(stats.total_payments) }}</p>
+                </div>
+                <div class="bg-white dark:bg-neutral-900 p-6 rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-sm flex flex-col justify-between">
+                    <p class="text-sm font-medium text-gray-500 mb-2">Total Refunds</p>
+                    <p class="text-2xl font-black text-rose-600 dark:text-rose-400">{{ formatCurrency(stats.total_refunds) }}</p>
+                </div>
+                <div class="bg-white dark:bg-neutral-900 p-6 rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-sm flex flex-col justify-between">
+                    <p class="text-sm font-medium text-gray-500 mb-2">Total Payouts Sent</p>
+                    <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400">{{ formatCurrency(stats.total_payouts) }}</p>
+                </div>
+                <div class="bg-indigo-50 dark:bg-indigo-900/10 p-6 rounded-3xl border border-indigo-100 dark:border-indigo-800/30 shadow-sm flex flex-col justify-between">
+                    <p class="text-sm font-medium text-indigo-600 dark:text-indigo-400 mb-2">Platform Comms (Profit)</p>
+                    <p class="text-2xl font-black text-indigo-700 dark:text-indigo-300">{{ formatCurrency(stats.platform_profit) }}</p>
                 </div>
             </div>
 

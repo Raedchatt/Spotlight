@@ -79,6 +79,11 @@ const mainNavItems = computed<NavItem[]>(() => [
                     }] 
                     : []
                 ),
+                {
+                    title: 'Financials',
+                    href: '/dashboard/financials',
+                    icon: Wallet,
+                },
             ]
         )),
     {

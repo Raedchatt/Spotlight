@@ -1,0 +1,26 @@
+
+   INFO  Running migrations.  
+
+  2026_04_01_130311_remove_unique_constraint_from_reservations_table  7.92ms FAIL
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[HY000]: General error: 1553 Cannot drop index 'reservations_user_id_evenement_id_unique': needed in a foreign key constraint (Connection: mysql, Host: 127.0.0.1, Port: 3306, Database: spotlight_db, SQL: alter table `reservations` drop index `reservations_user_id_evenement_id_unique`)
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+    834???             $exceptionType = $this->isUniqueConstraintError($e)
+    835???                 ? UniqueConstraintViolationException::class
+    836???                 : QueryException::class;
+    837??? 
+  ??? 838???             throw new $exceptionType(
+    839???                 $this->getNameWithReadWriteType(),
+    840???                 $query,
+    841???                 $this->prepareBindings($bindings),
+    842???                 $e,
+
+  1   vendor\laravel\framework\src\Illuminate\Database\Connection.php:584
+      PDOException::("SQLSTATE[HY000]: General error: 1553 Cannot drop index 'reservations_user_id_evenement_id_unique': needed in a foreign key constraint")
+
+  2   vendor\laravel\framework\src\Illuminate\Database\Connection.php:584
+      PDOStatement::execute()
+

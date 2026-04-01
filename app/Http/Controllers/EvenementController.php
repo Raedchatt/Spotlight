@@ -27,10 +27,12 @@ use Stripe\Refund;
 class EvenementController extends Controller
 {
     protected $notificationService;
+    protected \App\Services\RefundService $refundService;
 
-    public function __construct(NotificationService $notificationService)
+    public function __construct(NotificationService $notificationService, \App\Services\RefundService $refundService)
     {
         $this->notificationService = $notificationService;
+        $this->refundService = $refundService;
     }
 
     // List Events
@@ -489,36 +491,10 @@ class EvenementController extends Controller
             return response()->json(['message' => 'Event is already cancelled.'], 422);
         }
 
-        Stripe::setApiKey(config('services.stripe.secret'));
-
-        $reservations = Reservation::where('evenement_id', '=', $id, 'and')
-            ->where('statut', '=', StatutReservation::Confirmed->value, 'and')
-            ->get();
-
-        $refundedCount = 0;
-        $failedCount = 0;
-
-        foreach ($reservations as $reservation) {
-            $paiement = Paiement::where('reservation_id', '=', $reservation->id, 'and')
-                ->where('statut', '=', StatutPaiement::Succeeded->value, 'and')
-                ->first();
-
-            if ($paiement && $paiement->stripe_payment_intent_id) {
-                try {
-                    Refund::create([
-                        'payment_intent' => $paiement->stripe_payment_intent_id,
-                    ]);
-
-                    $paiement->update(['statut' => StatutPaiement::Refunded]);
-                    $refundedCount++;
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error("Refund failed for reservation {$reservation->id}: " . $e->getMessage());
-                    $failedCount++;
-                    // Even if refund fails in Stripe (e.g. key issue), we proceed with status updates for record keeping
-                }
-            }
-            
-            $reservation->update(['statut' => StatutReservation::Cancelled]);
+        try {
+            $this->refundService->refundEvent($event);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
         }
 
         $event->update(['statut' => StatutEvenement::Annule]);
@@ -533,9 +509,7 @@ class EvenementController extends Controller
         );
 
         return response()->json([
-            'message' => 'Event cancelled successfully.',
-            'refunded_count' => $refundedCount,
-            'failed_count' => $failedCount,
+            'message' => 'Event cancelled successfully. Refunds are processing in the background.',
             'status' => 'cancelled'
         ]);
     }
@@ -569,6 +543,11 @@ class EvenementController extends Controller
 
         if ($request->has('categorie')) {
             $query->parCategorie($request->input('categorie'));
+        }
+
+        if ($request->has('statut')) {
+            $statuts = explode(',', $request->input('statut'));
+            $query->whereIn('statut', $statuts);
         }
 
         $limit = $request->input('limit');

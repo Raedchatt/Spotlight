@@ -46,6 +46,14 @@ class Paiement extends Model
         return $this->belongsTo(Reservation::class);
     }
 
+    /**
+     * Relationship: A payment has many financial records.
+     */
+    public function financial_records()
+    {
+        return $this->hasMany(FinancialRecord::class);
+    }
+
     // ─── Helpers Stripe ───────────────────────────────────────────
 
     /**
