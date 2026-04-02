@@ -7,4 +7,5 @@ enum Role: string
     case Admin = 'administrateur';
     case Organisateur = 'organisateur';
     case Participant = 'participant';
+    case Revendeur = 'revendeur';
 }

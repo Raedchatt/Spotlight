@@ -20,6 +20,7 @@ class Reservation extends Model
         'statut',
         'nombre_tickets',
         'note',
+        'revendeur_id',
     ];
 
     /**
@@ -51,6 +52,14 @@ class Reservation extends Model
     public function evenement(): BelongsTo
     {
         return $this->belongsTo(Evenement::class);
+    }
+
+    /**
+     * The reseller associated with this reservation.
+     */
+    public function reselleur(): BelongsTo
+    {
+        return $this->belongsTo(Revendeur::class, 'revendeur_id');
     }
 
     // -------------------------------------------------------------------------
@@ -152,6 +161,24 @@ class Reservation extends Model
                 if ($reservation->billets()->count() === 0) {
                     $ticketService = app(TicketService::class);
                     $ticketService->generate($reservation);
+                }
+
+                // Credit commission to reseller if applicable
+                if ($reservation->revendeur_id) {
+                    $reselleur = $reservation->reselleur;
+                    if ($reselleur) {
+                        // Determine correct price based on ticket type
+                        $unitPrice = (float) $reservation->evenement->prix_spectateur;
+                        if ($reservation->evenement->is_tournoi && $reservation->ticket_type === 'participant') {
+                            $unitPrice = (float) $reservation->evenement->prix_participant;
+                        }
+
+                        $totalPrice = $unitPrice * $reservation->nombre_tickets;
+                        $commission = $totalPrice * 0.05; // 5% reseller commission per ticket
+                        $reselleur->increment('balance', $commission);
+                        
+                        \Log::info("Commission of {$commission} credited to reseller ID {$reselleur->id} for reservation #{$reservation->id}");
+                    }
                 }
             }
         });

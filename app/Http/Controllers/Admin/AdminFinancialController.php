@@ -28,7 +28,7 @@ class AdminFinancialController extends Controller
                     $q->where('evenement_id', '=', $event->id);
                 })->where('statut', '=', \App\Enums\StatutPaiement::Succeeded)->sum('montant');
                 
-                $commission = $eventRevenue * 0.10;
+                $commission = $eventRevenue * 0.20;
                 $netPayout = $eventRevenue - $commission;
                 
                 return [
@@ -79,7 +79,7 @@ class AdminFinancialController extends Controller
             return back()->with('error', 'No revenue generated to transfer.');
         }
 
-        $netPayout = $eventRevenue * 0.90; // 10% platform fee
+        $netPayout = $eventRevenue * 0.80; // 20% platform fee (80% payout)
         $transferAmount = (int) round($netPayout * 100); // Stripe expects cents
 
         try {

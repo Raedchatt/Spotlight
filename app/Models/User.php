@@ -9,6 +9,7 @@ use App\Enums\StatutPaiement;
 use App\Enums\StatutReservation;
 use App\Models\Evenement;
 use App\Models\Organisateur;
+use App\Models\Revendeur;
 use App\Models\Paiement;
 use App\Models\Reservation;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -32,17 +33,33 @@ class User extends Authenticatable
             if ($user->role === Role::Organisateur) {
                 $user->organisateur()->create([
                     'nom_organisation' => $user->username,
-                    'statut' => 'approved', // Defaulting to approved for simplicity, or 'pending' if review is required
+                    'statut' => 'approved',
+                ]);
+            }
+
+            if ($user->role === Role::Revendeur) {
+                $user->revendeur()->create([
+                    'referral_code' => strtoupper(str()->random(8)),
+                    'balance' => 0,
                 ]);
             }
         });
 
         static::updated(function ($user) {
-            if ($user->isDirty('role') && $user->role === Role::Organisateur && !$user->organisateur) {
-                $user->organisateur()->create([
-                    'nom_organisation' => $user->username,
-                    'statut' => 'approved',
-                ]);
+            if ($user->isDirty('role')) {
+               if ($user->role === Role::Organisateur && !$user->organisateur) {
+                    $user->organisateur()->create([
+                        'nom_organisation' => $user->username,
+                        'statut' => 'approved',
+                    ]);
+                }
+                
+                if ($user->role === Role::Revendeur && !$user->revendeur) {
+                    $user->revendeur()->create([
+                        'referral_code' => strtoupper(str()->random(8)),
+                        'balance' => 0,
+                    ]);
+                }
             }
         });
     }
@@ -125,6 +142,14 @@ class User extends Authenticatable
         return $this->hasOne(Organisateur::class);
     }
 
+    /**
+     * The reseller profile linked to this user (if any).
+     */
+    public function revendeur(): HasOne
+    {
+        return $this->hasOne(Revendeur::class);
+    }
+
     // -------------------------------------------------------------------------
     // Role Checkers
     // -------------------------------------------------------------------------
@@ -151,6 +176,14 @@ class User extends Authenticatable
     public function isOrganisateur(): bool
     {
         return $this->role === Role::Organisateur;
+    }
+
+    /**
+     * Returns true if this user is a reseller.
+     */
+    public function isRevendeur(): bool
+    {
+        return $this->role === Role::Revendeur;
     }
 
     // -------------------------------------------------------------------------

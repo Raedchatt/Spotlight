@@ -136,6 +136,9 @@ class ReservationController extends Controller
             'nombre_tickets' => $validated['nombre_tickets'],
             'note' => $validated['note'] ?? null,
             'statut' => StatutReservation::Pending,
+            'revendeur_id' => ($code = $request->cookie('referral_code')) 
+                ? \App\Models\Revendeur::where('referral_code', $code)->first()?->id 
+                : null,
         ]);
 
         // 4. Handle Payment if necessary
