@@ -176,8 +176,12 @@ class StripeController extends Controller
 
             case 'charge.refunded':
                 $charge = $event->data->object;
-                Paiement::where('stripe_payment_intent_id', $charge->payment_intent)
-                    ->update(['statut' => StatutPaiement::Refunded]);
+                
+                $paiement = Paiement::where('stripe_payment_intent_id', $charge->payment_intent)->first();
+                if ($paiement) {
+                    $paiement->update(['statut' => StatutPaiement::Refunded]);
+                    $paiement->reservation->cancel();
+                }
                 break;
         }
 

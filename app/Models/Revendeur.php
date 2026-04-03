@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Revendeur extends Model
 {
@@ -22,6 +23,14 @@ class Revendeur extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the earnings associated with this reseller.
+     */
+    public function earnings(): HasMany
+    {
+        return $this->hasMany(AffiliateEarning::class);
     }
 
     /**
