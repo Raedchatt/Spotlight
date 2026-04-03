@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Reservation;
 use App\Models\Commission;
+use App\Enums\StatutCommission;
+use App\Enums\StatutReservation;
 
 class CommissionService
 {
@@ -50,12 +52,17 @@ class CommissionService
     {
         $shares = $this->calculate($reservation);
 
+        // All commissions stay Pending and must be approved manually by admin
+        $status = StatutCommission::Pending;
+
         return Commission::create([
             'evenement_id' => $reservation->evenement_id,
             'reservation_id' => $reservation->id,
+            'revendeur_id' => $reservation->revendeur_id,
             'commission_organisateur' => $shares['organizer_share'],
             'commission_admin' => $shares['admin_share'],
             'commission_revendeur' => $shares['reseller_share'],
+            'status' => $status,
         ]);
     }
 }

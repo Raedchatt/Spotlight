@@ -125,7 +125,7 @@
       <!-- Action Button -->
       <button 
         @click="submitReservation" 
-        :disabled="!isValid || isSubmitting"
+        :disabled="!isValid || isSubmitting || isReseller"
         class="w-full relative flex items-center justify-center py-4 px-6 border border-transparent rounded-2xl shadow-blue-200 dark:shadow-none shadow-lg text-base font-bold text-white bg-blue-600 hover:bg-blue-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed disabled:shadow-none transition-all duration-200 ease-in-out"
       >
         <span v-if="isSubmitting" class="absolute left-6">
@@ -135,7 +135,7 @@
           </svg>
         </span>
         <span :class="{'opacity-90 pl-6': isSubmitting}">
-          {{ isSubmitting ? 'Processing...' : 'Confirm Reservation' }}
+          {{ isSubmitting ? 'Processing...' : (isReseller ? 'Resellers Cannot Book' : 'Confirm Reservation') }}
         </span>
       </button>
     </div>
@@ -144,6 +144,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 
 const props = defineProps({
@@ -154,6 +155,9 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['reservation-success'])
+
+const page = usePage()
+const isReseller = computed(() => page.props.auth?.user?.role === 'revendeur')
 
 const quantity = ref(1)
 const ticketType = ref(props.event.is_tournoi ? 'spectator' : 'standard')
@@ -224,7 +228,7 @@ watch(ticketType, () => {
 })
 
 const submitReservation = async () => {
-  if (!isValid.value) return
+  if (!isValid.value || isReseller.value) return
 
   try {
     isSubmitting.value = true

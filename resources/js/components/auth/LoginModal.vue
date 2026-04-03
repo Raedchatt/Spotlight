@@ -96,7 +96,14 @@ const login = () => {
             Login as Part
           </button>
         </div>
-
+        <div class="grid grid-cols-2 gap-2 mt-2">
+          <button @click="email = 'aff@aff.com'; password = '12345678';" class="bg-orange-600/10 text-orange-600 py-2 px-2 rounded-full hover:bg-orange-600/20 transition text-[10px] font-bold border border-orange-600/20 uppercase tracking-wider">
+            Login as affiliate
+          </button>
+          <button @click="email = 'admin@admin.com'; password = '12345678';" class="bg-green-600/10 text-green-600 py-2 px-2 rounded-full hover:bg-green-600/20 transition text-[10px] font-bold border border-green-600/20 uppercase tracking-wider">
+            Login as admin
+          </button>
+        </div>
 
 
 

@@ -122,7 +122,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Admin - Financial Management
         Route::get('/admin/financials', [\App\Http\Controllers\Admin\AdminFinancialController::class, 'index'])->name('admin.financials.index');
-        Route::post('/admin/financials/{event}/pay', [\App\Http\Controllers\Admin\AdminFinancialController::class, 'pay'])->name('admin.financials.pay');
+        Route::post('/admin/financials/organizer/{event}/pay', [\App\Http\Controllers\Admin\AdminFinancialController::class, 'pay'])->name('admin.financials.pay');
+        Route::post('/admin/financials/affiliate/{commission}/approve', [\App\Http\Controllers\Admin\AdminFinancialController::class, 'approveAffiliate'])->name('admin.financials.approve');
 
     Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     // routes/web.php (for Inertia) or api.php

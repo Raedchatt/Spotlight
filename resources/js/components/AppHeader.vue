@@ -79,6 +79,21 @@ const mainNavItems = computed<NavItem[]>(() => {
         ];
     }
     
+    if (auth.value.user.role === 'revendeur') {
+        return [
+            {
+                title: 'Dashboard',
+                href: dashboard(),
+                icon: LayoutGrid,
+            },
+            {
+                title: 'Discovery',
+                href: '/discovery',
+                icon: Search,
+            },
+        ];
+    }
+    
     return [
         {
             title: 'Dashboard',

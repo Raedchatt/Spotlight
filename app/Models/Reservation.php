@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\StatutReservation;
+use App\Enums\StatutCommission;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,9 +11,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Services\TicketService;
 use App\Services\CommissionService;
-use App\Models\AffiliateEarning;
-use App\Models\Commission;
-use App\Enums\StatutAffiliateEarning;
 
 class Reservation extends Model
 {
@@ -66,14 +64,6 @@ class Reservation extends Model
     public function reselleur(): BelongsTo
     {
         return $this->belongsTo(Revendeur::class, 'revendeur_id');
-    }
-
-    /**
-     * Get the earnings associated with this reservation.
-     */
-    public function earnings(): HasMany
-    {
-        return $this->hasMany(AffiliateEarning::class);
     }
 
     /**
@@ -156,39 +146,6 @@ class Reservation extends Model
     }
 
     /**
-     * Credit commission to the associated reseller.
-     * This initializes the earning record as PENDING.
-     */
-    public function creditCommission(): void
-    {
-        if (!$this->revendeur_id) {
-            return;
-        }
-
-        $reselleur = $this->reselleur;
-        if (!$reselleur) {
-            return;
-        }
-
-        // Use CommissionService to get the correct calculation
-        $commissionService = app(CommissionService::class);
-        $shares = $commissionService->calculate($this);
-        $commissionAmount = $shares['reseller_share'];
-        
-        if ($commissionAmount > 0) {
-            // Record the earning as pending if it doesn't already exist
-            $this->earnings()->firstOrCreate([
-                'revendeur_id' => $reselleur->id,
-            ], [
-                'amount' => $commissionAmount,
-                'status' => StatutAffiliateEarning::Pending,
-            ]);
-
-            \Log::info("Commission recorded as Pending for reseller ID {$reselleur->id} for reservation #{$this->id}");
-        }
-    }
-
-    /**
      * Get the total price for this reservation.
      */
     public function getTotalPrice(): float
@@ -235,42 +192,25 @@ class Reservation extends Model
                     $ticketService->generate($reservation);
                 }
 
-                // 2. Approve affiliate earnings (triggering balance update)
-                $reservation->earnings()
-                    ->where('status', StatutAffiliateEarning::Pending)
-                    ->get()
-                    ->each(fn($earning) => $earning->update(['status' => StatutAffiliateEarning::Approved]));
+                // 2. Commissions remain Pending for manual admin approval
             }
 
             // Handle status change to cancelled
             if ($reservation->isDirty('statut') && $reservation->statut === StatutReservation::Cancelled) {
-                // Reverse any associated affiliate earnings
-                $reservation->earnings()
-                    ->whereIn('status', [StatutAffiliateEarning::Pending, StatutAffiliateEarning::Approved])
-                    ->get()
-                    ->each(fn($earning) => $earning->update(['status' => StatutAffiliateEarning::Reversed]));
+                // Reverse any associated commissions
+                $commission = $reservation->commission;
+                if ($commission && in_array($commission->status, [StatutCommission::Pending, StatutCommission::Approved])) {
+                    $commission->update(['status' => StatutCommission::Reversed]);
+                }
             }
         });
         
         static::created(function (Reservation $reservation) {
-            // 1. Create the general commission breakdown (log)
+            // 1. Create the general commission breakdown (handles reseller too now)
             $commissionService = app(CommissionService::class);
             $commissionService->createForReservation($reservation);
 
-            // 2. Initialize affiliate earning if there's a reseller
-            if ($reservation->revendeur_id) {
-                $reservation->creditCommission();
-                
-                // If it was created as confirmed (e.g. free event), approve right away
-                if ($reservation->statut === StatutReservation::Confirmed) {
-                    $reservation->earnings()
-                        ->where('status', StatutAffiliateEarning::Pending)
-                        ->get()
-                        ->each(fn($earning) => $earning->update(['status' => StatutAffiliateEarning::Approved]));
-                }
-            }
-
-            // 3. Handle confirmed creation logic (tickets, etc.)
+            // 2. Handle confirmed creation logic (tickets, etc.)
             if ($reservation->statut === StatutReservation::Confirmed) {
                 if ($reservation->billets()->count() === 0) {
                     $ticketService = app(TicketService::class);

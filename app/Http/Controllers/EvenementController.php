@@ -36,7 +36,10 @@ class EvenementController extends Controller
     // List Events
     public function index()
     {
-        $events = Evenement::with('medias')->latest()->get();
+        $events = Evenement::with('medias')
+            ->where('statut', StatutEvenement::Ouvert)
+            ->latest()
+            ->get();
 
         return response()->json($events);
     }
@@ -569,6 +572,10 @@ class EvenementController extends Controller
 
         if ($request->has('categorie')) {
             $query->parCategorie($request->input('categorie'));
+        }
+
+        if ($request->has('statut')) {
+            $query->parStatut($request->input('statut'));
         }
 
         $limit = $request->input('limit');

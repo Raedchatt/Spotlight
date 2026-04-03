@@ -15,7 +15,9 @@ import {
     Gamepad2,
     Eye,
     Edit,
-    PlayCircle
+    PlayCircle,
+    Copy,
+    CheckCircle
 } from 'lucide-vue-next';
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 import AppHeader from '@/components/AppHeader.vue';
@@ -111,6 +113,13 @@ const isOwner = computed(() => {
 
 // true for both the owner and accepted co-organizers
 const canManage = computed(() => isOwner.value || !!props.is_collaborator);
+
+const isReseller = computed(() => auth.value?.user?.role === 'revendeur');
+
+const breadcrumbs = [
+    { title: 'Discovery', href: '/discovery' },
+    { title: props.event.titre, href: `/events/${props.event.id}` },
+];
 
 const selectedTicketType = ref(props.event.is_tournoi ? 'participant' : 'standard');
 
@@ -228,6 +237,7 @@ const reserveButtonText = computed(() => {
     // Check if user is an organizer
     if (auth.value.user.role === 'organisateur') return 'Organizers Cannot Reserve';
     if (auth.value.user.role === 'admin') return 'Admins Cannot Reserve';
+    if (isReseller.value) return copied.value ? 'Link Copied!' : 'Copy Referral Link';
 
     if (props.is_reserved) return 'Already Reserved';
     
@@ -262,9 +272,68 @@ const onReservationSuccess = (data: any) => {
     }
 };
 
+const copied = ref(false);
+
+const copyReferralLink = () => {
+    const user = auth.value.user;
+    if (!user) return;
+    
+    const referralCode = user.revendeur?.referral_code;
+    
+    if (!referralCode) {
+        console.error('Referral code missing for reseller:', user);
+        return;
+    }
+
+    const link = `${window.location.origin}/events/${props.event.id}?ref=${referralCode}`;
+    
+    // Attempt to copy using the clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(link).then(() => {
+            copied.value = true;
+            setTimeout(() => {
+                copied.value = false;
+            }, 2000);
+        }).catch(err => {
+            console.error('Clipboard API copy failed:', err);
+            fallbackCopy(link);
+        });
+    } else {
+        fallbackCopy(link);
+    }
+};
+
+const fallbackCopy = (text: string) => {
+    try {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        if (successful) {
+            copied.value = true;
+            setTimeout(() => {
+                copied.value = false;
+            }, 2000);
+        }
+    } catch (err) {
+        console.error('Fallback copy failed:', err);
+    }
+};
+
 const handleReserveClick = () => {
     if (!auth.value.user) {
         openLogin();
+        return;
+    }
+
+    if (isReseller.value) {
+        copyReferralLink();
         return;
     }
 
@@ -294,7 +363,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
 </script>
 
 <template>
-    <component :is="auth?.user ? AppLayout : 'div'">
+    <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="props.event.titre" />
         
         <div class="min-h-screen bg-background pb-12">
@@ -726,6 +795,9 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                         ]"
                                     >
                                         <Ticket class="w-5 h-5" v-if="!isFullyBooked && !props.is_reserved && (!auth.user || auth.user.role === 'participant')" />
+                                        <template v-if="isReseller">
+                                            <component :is="copied ? CheckCircle : Copy" class="w-5 h-5" />
+                                        </template>
                                         {{ reserveButtonText }}
                                     </button>
 
@@ -850,7 +922,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
             </div>
 
         </div>
-    </component>
+    </AppLayout>
 </template>
 
 <style scoped>

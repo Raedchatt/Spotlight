@@ -57,8 +57,8 @@ const fetchEvents = async () => {
         params.append('page', filters.value.page.toString());
         params.append('per_page', '9');
         
-        // Request 'ouvert', 'valide', 'encours', and 'en_attente' statuses from the backend
-        params.append('statut', 'ouvert,valide,encours,en_attente');
+        // Request only 'ouvert' events for the discovery page
+        params.append('statut', 'ouvert');
         
         const response = await axios.get(`/web-api/events/search?${params.toString()}`);
         

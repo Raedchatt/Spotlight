@@ -187,6 +187,20 @@ class Evenement extends Model
     }
 
     /**
+     * Scope: chercherEvenementParStatut
+     */
+    public function scopeParStatut(Builder $query, $statut): Builder
+    {
+        if (is_string($statut)) {
+            $statuses = explode(',', $statut);
+        } else {
+            $statuses = (array) $statut;
+        }
+
+        return $query->whereIn('statut', $statuses);
+    }
+
+    /**
      * Méthode: ouvrirReservation
      */
     public function ouvrirReservation(): bool

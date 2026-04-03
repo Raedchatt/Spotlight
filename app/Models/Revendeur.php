@@ -26,11 +26,11 @@ class Revendeur extends Model
     }
 
     /**
-     * Get the earnings associated with this reseller.
+     * Get the earnings (commissions) associated with this reseller.
      */
     public function earnings(): HasMany
     {
-        return $this->hasMany(AffiliateEarning::class);
+        return $this->hasMany(Commission::class);
     }
 
     /**

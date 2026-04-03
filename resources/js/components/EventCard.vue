@@ -4,11 +4,13 @@ import {
     Calendar, 
     MapPin, 
     Trophy, 
-    Eye 
+    Eye,
+    Copy,
+    Check
 } from 'lucide-vue-next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useAuthModal } from '@/composables/useAuthModal';
 import type { Evenement, StatutEvenement } from '@/types/event';
 
@@ -44,12 +46,80 @@ const page = usePage();
 const auth = computed(() => page.props.auth as any);
 const { openLogin } = useAuthModal();
 
+const isReseller = computed(() => auth.value.user?.role === 'revendeur');
+const copied = ref(false);
+
 const handleAction = (event: Evenement) => {
     if (!auth.value.user) {
         openLogin();
         return;
     }
+    
+    if (isReseller.value) {
+        copyReferralLink();
+        return;
+    }
+
     emit('book', event);
+};
+
+const copyReferralLink = () => {
+    const user = auth.value.user;
+    if (!user) return;
+    
+    const referralCode = user.revendeur?.referral_code;
+    
+    if (!referralCode) {
+        console.error('Referral code missing for reseller:', user);
+        return;
+    }
+
+    const link = `${window.location.origin}/events/${props.event.id}?ref=${referralCode}`;
+    
+    // Attempt to copy using the clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(link).then(() => {
+            copied.value = true;
+            setTimeout(() => {
+                copied.value = false;
+            }, 2000);
+        }).catch(err => {
+            console.error('Clipboard API copy failed:', err);
+            fallbackCopy(link);
+        });
+    } else {
+        fallbackCopy(link);
+    }
+};
+
+const fallbackCopy = (text: string) => {
+    try {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        
+        // Ensure textarea is not visible but part of the DOM
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+        
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        if (successful) {
+            copied.value = true;
+            setTimeout(() => {
+                copied.value = false;
+            }, 2000);
+        } else {
+            throw new Error('execCommand copy returned false');
+        }
+    } catch (err) {
+        console.error('Fallback copy failed:', err);
+    }
 };
 
 const bannerImage = computed(() => {
@@ -125,15 +195,21 @@ const bannerImage = computed(() => {
                     v-if="showAction" 
                     @click="handleAction(event)" 
                     size="sm" 
-                    :disabled="event.is_reserved"
+                    :disabled="event.is_reserved && !isReseller"
                     :class="[
                         'font-semibold px-4 rounded-lg transition-all active:scale-95 shadow-sm',
-                        event.is_reserved 
+                        (event.is_reserved && !isReseller)
                             ? 'bg-muted text-muted-foreground border cursor-not-allowed shadow-none hover:bg-muted' 
-                            : 'bg-blue-600 hover:bg-blue-700 text-white'
+                            : (isReseller ? (copied ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-amber-600 hover:bg-amber-700 text-white') : 'bg-blue-600 hover:bg-blue-700 text-white')
                     ]"
                 >
-                    <template v-if="event.is_reserved">
+                    <template v-if="isReseller">
+                        <div class="flex items-center gap-2">
+                            <component :is="copied ? Check : Copy" class="w-4 h-4" />
+                            {{ copied ? 'Copied!' : 'Copy Link' }}
+                        </div>
+                    </template>
+                    <template v-else-if="event.is_reserved">
                         Already Reserved
                     </template>
                     <template v-else>
