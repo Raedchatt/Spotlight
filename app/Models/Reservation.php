@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Services\TicketService;
 use App\Services\CommissionService;
 use App\Models\AffiliateEarning;
+use App\Models\Commission;
 use App\Enums\StatutAffiliateEarning;
 
 class Reservation extends Model
