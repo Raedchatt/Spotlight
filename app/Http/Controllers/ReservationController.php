@@ -62,7 +62,7 @@ class ReservationController extends Controller
                     'message' => 'You have already confirmed your reservation for this event.',
                 ], 422);
             }
-            
+
             // If it's pending and paid, we update the quantity and type then "re-initiate" the payment flow
             $unitPrice = (float) $evenement->prix_spectateur;
             if ($evenement->is_tournoi && $ticketType === 'participant') {
@@ -73,7 +73,7 @@ class ReservationController extends Controller
                 // Update with new choice before payment
                 $existingReservation->update([
                     'nombre_tickets' => $validated['nombre_tickets'],
-                    'ticket_type'    => $ticketType,
+                    'ticket_type' => $ticketType,
                 ]);
 
                 $stripeController = app(\App\Http\Controllers\StripeController::class);
@@ -128,7 +128,15 @@ class ReservationController extends Controller
             ], 422);
         }
 
-        // 3. Create the reservation
+        // 3. Handle Affiliate (Revendeur)
+        $refCode = $request->cookie('referral_code');
+        $revendeur = null;
+
+        if ($refCode) {
+            $revendeur = \App\Models\Revendeur::where('referral_code', $refCode)->first();
+        }
+
+        // 4. Create the reservation
         $reservation = Reservation::create([
             'user_id' => Auth::id(),
             'evenement_id' => $evenement->id,
@@ -136,9 +144,7 @@ class ReservationController extends Controller
             'nombre_tickets' => $validated['nombre_tickets'],
             'note' => $validated['note'] ?? null,
             'statut' => StatutReservation::Pending,
-            'revendeur_id' => ($code = $request->cookie('referral_code')) 
-                ? \App\Models\Revendeur::where('referral_code', $code)->first()?->id 
-                : null,
+            'revendeur_id' => $revendeur?->id,
         ]);
 
         // 4. Handle Payment if necessary
@@ -161,7 +167,7 @@ class ReservationController extends Controller
             // Initiate Stripe Checkout
             $stripeController = app(\App\Http\Controllers\StripeController::class);
             $response = $stripeController->createCheckoutSession($request, $reservation);
-            
+
             $data = json_decode($response->getContent(), true);
 
             if (isset($data['checkout_url'])) {

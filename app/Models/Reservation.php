@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Services\TicketService;
+use App\Services\CommissionService;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Reservation extends Model
 {
@@ -142,6 +144,33 @@ class Reservation extends Model
     }
 
     /**
+     * The commission record associated with this reservation.
+     */
+    public function commission(): HasOne
+    {
+        return $this->hasOne(Commission::class);
+    }
+
+    /**
+     * Get the total price for this reservation.
+     * 
+     * @return float
+     */
+    public function getTotalPrice(): float
+    {
+        $evenement = $this->evenement;
+        if (!$evenement) return 0.0;
+
+        $unitPrice = (float) ($evenement->prix_spectateur ?? 0);
+
+        if ($evenement->is_tournoi && $this->ticket_type === 'participant') {
+            $unitPrice = (float) ($evenement->prix_participant ?? 0);
+        }
+
+        return $unitPrice * $this->nombre_tickets;
+    }
+
+    /**
      * The payments associated with this reservation.
      */
     public function paiements()
@@ -154,41 +183,44 @@ class Reservation extends Model
      */
     protected static function booted()
     {
-        static::updated(function (Reservation $reservation) {
-            // Check if status changed to confirmed 
-            if ($reservation->isDirty('statut') && $reservation->statut === StatutReservation::Confirmed) {
-                // Generate ticket if it doesn't already have one
-                if ($reservation->billets()->count() === 0) {
-                    $ticketService = app(TicketService::class);
-                    $ticketService->generate($reservation);
-                }
+        $handleConfirmation = function (Reservation $reservation) {
+            // Generate ticket if it doesn't already have one
+            if ($reservation->billets()->count() === 0) {
+                $ticketService = app(TicketService::class);
+                $ticketService->generate($reservation);
+            }
 
-                // Credit commission to reseller if applicable
-                if ($reservation->revendeur_id) {
-                    $reselleur = $reservation->reselleur;
-                    if ($reselleur) {
-                        // Determine correct price based on ticket type
-                        $unitPrice = (float) $reservation->evenement->prix_spectateur;
-                        if ($reservation->evenement->is_tournoi && $reservation->ticket_type === 'participant') {
-                            $unitPrice = (float) $reservation->evenement->prix_participant;
-                        }
+            // Credit commission to reseller if applicable
+            if ($reservation->revendeur_id) {
+                $reselleur = $reservation->reselleur;
+                if ($reselleur) {
+                    $commissionService = app(CommissionService::class);
+                    $shares = $commissionService->calculate($reservation);
+                    $commissionAmount = $shares['reseller_share'];
 
-                        $totalPrice = $unitPrice * $reservation->nombre_tickets;
-                        $commission = $totalPrice * 0.05; // 5% reseller commission per ticket
-                        $reselleur->increment('balance', $commission);
-                        
-                        \Log::info("Commission of {$commission} credited to reseller ID {$reselleur->id} for reservation #{$reservation->id}");
+                    if ($commissionAmount > 0) {
+                        $reselleur->increment('balance', $commissionAmount);
+                        \Log::info("Commission of {$commissionAmount} credited to reseller ID {$reselleur->id} for reservation #{$reservation->id}");
                     }
                 }
             }
-        });
-        
-        static::created(function (Reservation $reservation) {
-            // Check if created with confirmed status right away (e.g. for free events)
+        };
+
+        static::created(function (Reservation $reservation) use ($handleConfirmation) {
+            // 1. Record the commission breakdown for every new reservation
+            $commissionService = app(CommissionService::class);
+            $commissionService->createForReservation($reservation);
+
+            // 2. Handle immediate confirmation (e.g. for free events)
             if ($reservation->statut === StatutReservation::Confirmed) {
-                // Generate ticket
-                $ticketService = app(TicketService::class);
-                $ticketService->generate($reservation);
+                $handleConfirmation($reservation);
+            }
+        });
+
+        static::updated(function (Reservation $reservation) use ($handleConfirmation) {
+            // Handle status change to confirmed
+            if ($reservation->isDirty('statut') && $reservation->statut === StatutReservation::Confirmed) {
+                $handleConfirmation($reservation);
             }
         });
     }

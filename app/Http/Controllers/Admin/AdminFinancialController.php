@@ -23,13 +23,18 @@ class AdminFinancialController extends Controller
             ->latest()
             ->get()
             ->map(function ($event) {
-                // Calculate revenue
+                // Calculate revenue and admin commission
                 $eventRevenue = \App\Models\Paiement::whereHas('reservation', function($q) use ($event) {
                     $q->where('evenement_id', '=', $event->id);
                 })->where('statut', '=', \App\Enums\StatutPaiement::Succeeded)->sum('montant');
                 
-                $commission = $eventRevenue * 0.20;
-                $netPayout = $eventRevenue - $commission;
+                $adminCommissionTotal = \App\Models\Commission::where('evenement_id', $event->id)
+                    ->whereHas('reservation', function($q) {
+                        $q->where('statut', \App\Enums\StatutReservation::Confirmed);
+                    })
+                    ->sum('commission_admin');
+
+                $netPayout = $eventRevenue * 0.80;
                 
                 return [
                     'id' => $event->id,
@@ -40,7 +45,7 @@ class AdminFinancialController extends Controller
                     ],
                     'date_fin' => $event->date_fin->format('Y-m-d H:i'),
                     'revenue' => round($eventRevenue, 2),
-                    'commission' => round($commission, 2),
+                    'commission' => round($adminCommissionTotal, 2),
                     'net_payout' => round($netPayout, 2),
                     'is_paid_out' => $event->is_paid_out,
                     'paid_out_at' => $event->paid_out_at ? $event->paid_out_at->format('Y-m-d H:i') : null,
@@ -79,7 +84,7 @@ class AdminFinancialController extends Controller
             return back()->with('error', 'No revenue generated to transfer.');
         }
 
-        $netPayout = $eventRevenue * 0.80; // 20% platform fee (80% payout)
+        $netPayout = $eventRevenue * 0.80; // Organizer always gets 80%
         $transferAmount = (int) round($netPayout * 100); // Stripe expects cents
 
         try {
