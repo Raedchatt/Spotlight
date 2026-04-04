@@ -51,50 +51,6 @@ class ReservationController extends Controller
             $ticketType = 'spectator'; // Default for tournaments if not specified
         }
 
-        // 0.1 Check if user already has a reservation for this event
-        $existingReservation = Reservation::where('user_id', '=', Auth::id(), 'and')
-            ->where('evenement_id', '=', $evenement->id, 'and')
-            ->first();
-
-        if ($existingReservation) {
-            if ($existingReservation->statut === StatutReservation::Confirmed) {
-                return response()->json([
-                    'message' => 'You have already confirmed your reservation for this event.',
-                ], 422);
-            }
-
-            // If it's pending and paid, we update the quantity and type then "re-initiate" the payment flow
-            $unitPrice = (float) $evenement->prix_spectateur;
-            if ($evenement->is_tournoi && $ticketType === 'participant') {
-                $unitPrice = (float) $evenement->prix_participant;
-            }
-
-            if ($unitPrice > 0) {
-                // Update with new choice before payment
-                $existingReservation->update([
-                    'nombre_tickets' => $validated['nombre_tickets'],
-                    'ticket_type' => $ticketType,
-                ]);
-
-                $stripeController = app(\App\Http\Controllers\StripeController::class);
-                $response = $stripeController->createCheckoutSession($request, $existingReservation);
-                $data = json_decode($response->getContent(), true);
-
-                if (isset($data['checkout_url'])) {
-                    return response()->json([
-                        'message' => 'Updating reservation and redirecting to payment...',
-                        'checkout_url' => $data['checkout_url'],
-                        'reservation' => $existingReservation->load('evenement'),
-                    ], 201);
-                }
-            }
-
-            return response()->json([
-                'message' => 'You already have a pending reservation for this event.',
-                'reservation' => $existingReservation,
-            ], 422);
-        }
-
         // 1. Check if the event is open for reservations
         if ($evenement->statut->value !== 'ouvert') {
             return response()->json([

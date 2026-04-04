@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { usePage, Link, router } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Search, Calendar, MessageSquare, Bell, Users, Wallet, LogOut, User } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Search, Calendar, MessageSquare, Bell, Users, Wallet, LogOut, User, TrendingUp } from 'lucide-vue-next';
 import { computed } from 'vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -65,22 +65,32 @@ const mainNavItems = computed<NavItem[]>(() => [
                     count: counts.value.financials,
                 },
             ]
-            : [
-                {
-                    title: 'My Hosted Events',
-                    href: '/dashboard/events',
-                    icon: Folder,
-                },
-                ...(auth.value.has_collaborations 
-                    ? [{
-                        title: 'My Collaborations',
-                        href: '/dashboard/collaborations',
-                        icon: Users,
-                    }] 
-                    : []
-                ),
-            ]
-        )),
+            : (auth.value.user?.role === 'revendeur'
+                ? [
+                    {
+                        title: 'Affiliate Dashboard',
+                        href: '/affiliate/dashboard',
+                        icon: TrendingUp,
+                    },
+                ]
+                : [
+                    {
+                        title: 'My Hosted Events',
+                        href: '/dashboard/events',
+                        icon: Folder,
+                    },
+                    ...(auth.value.has_collaborations 
+                        ? [{
+                            title: 'My Collaborations',
+                            href: '/dashboard/collaborations',
+                            icon: Users,
+                        }] 
+                        : []
+                    ),
+                ]
+            )
+        )
+    ),
     {
         title: 'Messages',
         href: '/messages',

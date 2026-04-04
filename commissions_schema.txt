@@ -1,0 +1,13 @@
+Array
+(
+    [0] => id
+    [1] => evenement_id
+    [2] => reservation_id
+    [3] => revendeur_id
+    [4] => commission_organisateur
+    [5] => commission_admin
+    [6] => commission_revendeur
+    [7] => status
+    [8] => created_at
+    [9] => updated_at
+)

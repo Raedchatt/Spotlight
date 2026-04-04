@@ -126,7 +126,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/admin/financials/affiliate/{commission}/approve', [\App\Http\Controllers\Admin\AdminFinancialController::class, 'approveAffiliate'])->name('admin.financials.approve');
 
     Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
-    // routes/web.php (for Inertia) or api.php
+    Route::get('/affiliate/dashboard', [\App\Http\Controllers\Affiliate\AffiliateDashboardController::class, 'index'])->name('affiliate.dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::post('/upload/image', [MediaUploadController::class, 'uploadImage']);

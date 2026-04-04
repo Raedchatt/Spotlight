@@ -195,12 +195,11 @@ const bannerImage = computed(() => {
                     v-if="showAction" 
                     @click="handleAction(event)" 
                     size="sm" 
-                    :disabled="event.is_reserved && !isReseller"
                     :class="[
                         'font-semibold px-4 rounded-lg transition-all active:scale-95 shadow-sm',
-                        (event.is_reserved && !isReseller)
-                            ? 'bg-muted text-muted-foreground border cursor-not-allowed shadow-none hover:bg-muted' 
-                            : (isReseller ? (copied ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-amber-600 hover:bg-amber-700 text-white') : 'bg-blue-600 hover:bg-blue-700 text-white')
+                        isReseller 
+                            ? (copied ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-amber-600 hover:bg-amber-700 text-white') 
+                            : 'bg-blue-600 hover:bg-blue-700 text-white'
                     ]"
                 >
                     <template v-if="isReseller">
@@ -208,9 +207,6 @@ const bannerImage = computed(() => {
                             <component :is="copied ? Check : Copy" class="w-4 h-4" />
                             {{ copied ? 'Copied!' : 'Copy Link' }}
                         </div>
-                    </template>
-                    <template v-else-if="event.is_reserved">
-                        Already Reserved
                     </template>
                     <template v-else>
                         {{ auth.user ? 'Book Now' : 'Login to Book' }}

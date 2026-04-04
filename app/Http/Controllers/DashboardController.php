@@ -24,9 +24,8 @@ class DashboardController extends Controller
             return $this->adminDashboard();
         }
 
-        if ($user->role === Role::Organisateur) {
-            // Logic moved from OrganisateurController
-            return app(OrganisateurController::class)->dashboardData();
+        if ($user->role === Role::Revendeur) {
+            return app(\App\Http\Controllers\Affiliate\AffiliateDashboardController::class)->index(request());
         }
 
         // Default for participants/others
