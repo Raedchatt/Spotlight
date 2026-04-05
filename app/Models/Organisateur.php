@@ -18,8 +18,6 @@ class Organisateur extends Model
      * @var array
      */
     protected $casts = [
-        'rib' => 'encrypted',
-        'rib_popup_seen' => 'boolean',
     ];
 
     /**
@@ -33,25 +31,21 @@ class Organisateur extends Model
         'adresse',
         'site_web',
         'logo',
-        'rib',
         'stripe_account_id',
-        'rib_popup_seen',
     ];
 
     /**
      * Appended attributes for JSON serialization.
      */
-    protected $appends = ['has_rib'];
+    protected $appends = ['has_stripe_account'];
 
     /**
-     * Accessor for has_rib.
-     * Checks if a RIB is stored without triggering decryption.
+     * Accessor for has_stripe_account.
+     * Checks if a Stripe account is linked.
      */
-    public function getHasRibAttribute(): bool
+    public function getHasStripeAccountAttribute(): bool
     {
-        $hasRib = !empty($this->getRawOriginal('rib'));
-        // \Illuminate\Support\Facades\Log::info("Accessor has_rib called for Org ID {$this->id}: " . ($hasRib ? 'TRUE' : 'FALSE'));
-        return $hasRib;
+        return !empty($this->stripe_account_id);
     }
 
     /**
@@ -60,7 +54,6 @@ class Organisateur extends Model
      * @var array
      */
     protected $hidden = [
-        'rib',
     ];
 
     // -------------------------------------------------------------------------

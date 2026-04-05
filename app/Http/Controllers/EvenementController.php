@@ -245,15 +245,14 @@ class EvenementController extends Controller
 
         $user = Auth::user();
         if ($user->role === \App\Enums\Role::Organisateur) {
-            // Query the DB directly to avoid encrypted-cast decryption issues
-            $hasRib = \App\Models\Organisateur::where('user_id', $user->id)
-                ->whereNotNull('rib')
+            $hasStripe = \App\Models\Organisateur::where('user_id', $user->id)
+                ->whereNotNull('stripe_account_id')
                 ->exists();
 
-            if (!$hasRib) {
+            if (!$hasStripe) {
                 return response()->json([
-                    'message' => 'Bank information (RIB) is required to create events. Please complete your bank details first.',
-                    'require_rib' => true
+                    'message' => 'Stripe account connection is required to create events. Please link your Stripe account in settings first.',
+                    'require_stripe' => true
                 ], 422);
             }
         }

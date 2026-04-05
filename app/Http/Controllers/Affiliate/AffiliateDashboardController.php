@@ -20,7 +20,13 @@ class AffiliateDashboardController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $revendeur = Revendeur::where('user_id', $user->id)->firstOrFail();
+        $revendeur = Revendeur::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'referral_code' => strtoupper(\Illuminate\Support\Str::random(8)),
+                'balance'       => 0,
+            ]
+        );
 
         // 1. Statistics
         $stats = [
@@ -78,7 +84,7 @@ class AffiliateDashboardController extends Controller
             ];
         });
 
-        return Inertia::render('Affiliate/Dashboard', [
+        return Inertia::render('affiliate/Dashboard', [
             'stats'       => $stats,
             'commissions' => $commissions,
             'referrals'   => $referrals,

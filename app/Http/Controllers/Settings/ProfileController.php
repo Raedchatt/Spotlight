@@ -86,16 +86,11 @@ class ProfileController extends Controller
         $request->user()->fill($request->validated());
         $request->user()->save();
 
-        if ($request->user()->isOrganisateur() && $request->has('rib') && !empty($request->rib)) {
-            // Using DB facade to avoid any Eloquent 'dirty' attribute issues with non-existent columns like has_rib
-            DB::table('organisateurs')
-                ->where('user_id', Auth::id())
-                ->update([
-                    'rib'            => encrypt($request->rib),
-                    'rib_popup_seen' => 1,
-                    'updated_at'     => now(),
-                ]);
+        if ($request->user()->isDirty('email')) {
+            $request->user()->email_verified_at = null;
         }
+
+        $request->user()->save();
 
         return to_route('profile.edit');
     }

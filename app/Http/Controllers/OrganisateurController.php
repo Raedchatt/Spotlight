@@ -133,8 +133,6 @@ class OrganisateurController extends Controller
             'telephone',
             'adresse',
             'site_web',
-            'rib',
-            'rib_popup_seen'
         ]);
 
         // Handle logo replacement
@@ -174,14 +172,14 @@ class OrganisateurController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->role !== 'organisateur' || !$user->isApprovedOrganisateur()) {
+        if ($user->role->value !== 'organisateur' || !$user->isApprovedOrganisateur()) {
             return response()->json(['message' => 'Unauthorized. Only approved organizers can create events.'], 403);
         }
 
-        if (!$user->organisateur || !$user->organisateur->rib) {
+        if (!$user->organisateur || !$user->organisateur->stripe_account_id) {
             return response()->json([
-                'message' => 'Bank information (RIB) is required to create events. Please complete your bank details first.',
-                'require_rib' => true
+                'message' => 'Stripe account connection is required to create events. Please link your Stripe account in settings first.',
+                'require_stripe' => true
             ], 422);
         }
 

@@ -17,22 +17,21 @@ class FinancialController extends Controller
     public function index()
     {
         $now = now();
-        $waitPeriod = $now->subDay();
 
-        // 1. Organizer Payouts (Pending, Event ended > 1 day)
+        // 1. Organizer Payouts (Pending, Event ended)
         $organizerPayouts = Commission::with(['reservation.user', 'evenement.organisateur.user'])
             ->where('status', StatutCommission::Pending)
-            ->whereHas('evenement', function($q) use ($waitPeriod) {
-                $q->where('datefin', '<=', $waitPeriod);
+            ->whereHas('evenement', function($q) use ($now) {
+                $q->where('date_fin', '<=', $now);
             })
             ->get();
 
-        // 2. Affiliate Payouts (Pending, Event ended > 1 day, has reseller)
+        // 2. Affiliate Payouts (Pending, Event ended, has reseller)
         $affiliatePayouts = Commission::with(['reservation.user', 'evenement', 'revendeur.user'])
             ->whereNotNull('revendeur_id')
             ->where('status', StatutCommission::Pending)
-            ->whereHas('evenement', function($q) use ($waitPeriod) {
-                $q->where('datefin', '<=', $waitPeriod);
+            ->whereHas('evenement', function($q) use ($now) {
+                $q->where('date_fin', '<=', $now);
             })
             ->get();
 

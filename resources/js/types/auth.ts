@@ -12,8 +12,8 @@ export type User = {
     updated_at: string;
     organisateur?: {
         id: number;
-        rib?: string;
-        rib_popup_seen: boolean;
+        has_stripe_account: boolean;
+        stripe_account_id?: string;
         [key: string]: any;
     };
     [key: string]: unknown;

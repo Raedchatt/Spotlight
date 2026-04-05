@@ -60,12 +60,12 @@ class Commission extends Model
 
     /**
      * Scope to filter commissions that are ready to be paid out by admin.
-     * Ready means the event has finished at least 1 day ago.
+     * Ready means the event has finished.
      */
     public function scopeReadyForApproval($query)
     {
         return $query->whereHas('evenement', function ($q) {
-            $q->where('datefin', '<', now()->subDay());
+            $q->where('date_fin', '<=', now());
         });
     }
 

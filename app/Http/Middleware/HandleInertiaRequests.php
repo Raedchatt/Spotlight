@@ -51,7 +51,7 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user() ? $request->user()->load(['organisateur', 'revendeur']) : null,
-                'organisateur_has_rib' => $request->user()?->organisateur?->has_rib ?? false,
+                'organisateur_has_stripe' => $request->user()?->organisateur?->has_stripe_account ?? false,
                 'has_collaborations' => $request->user() ? \App\Models\EventCollaborator::where('organizer_id', '=', $request->user()->id, 'and')->where('statut', '=', 'accepted', 'and')->exists() : false,
                 'pending_invitations' => collect($request->user() ? \App\Models\EventCollaborator::with('evenement.organisateur')->where('organizer_id', '=', $request->user()->id, 'and')->where('statut', '=', 'pending', 'and')->get() : [])->map(function($collab) {
                     return [

@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import RibPopup from '@/components/organizer/RibPopup.vue';
-import { ref, onMounted, computed } from 'vue';
+import { ref, computed } from 'vue';
 import { Eye, RefreshCw, TrendingUp, Clock, Wallet } from 'lucide-vue-next';
 
 const breadcrumbs = [{ title: 'Dashboard', href: '/dashboard' }];
@@ -10,7 +9,6 @@ const breadcrumbs = [{ title: 'Dashboard', href: '/dashboard' }];
 const page = usePage();
 const auth = computed(() => page.props.auth as any);
 const dashboardData = computed(() => (page.props as any).dashboardData as DashboardData | null);
-const showRibPopup = ref(false);
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface CategoryBreakdown {
@@ -84,23 +82,11 @@ const donutSegments = computed(() => {
 const initials = (name: string) =>
     name.trim().split(/\s+/).slice(0, 2).map(p => p[0]?.toUpperCase() ?? '').join('');
 
-onMounted(() => {
-
-    const user = auth.value.user;
-    if (user && user.role === 'organisateur') {
-        const org = user.organisateur;
-        if (!org || (!org.rib && !org.rib_popup_seen)) {
-            showRibPopup.value = true;
-        }
-    }
-});
 </script>
 
 <template>
     <Head title="Dashboard" />
     <AppLayout>
-
-        
 
         <!-- ── Organizer Dashboard ─────────────────────────────────────────── -->
         <div v-if="dashboardData" class="w-full px-4 py-8 md:px-8 space-y-8 max-w-[1600px] mx-auto">
@@ -339,7 +325,8 @@ onMounted(() => {
                         <p class="text-sm font-medium">No registrations yet.</p>
                     </div>
 
-                    <div v-else class="flex flex-col gap-4 overflow-y-auto max-h-[400px] pr-2 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-neutral-700">
+                    <div v-else class="flex flex-col gap-4 overflow-y-auto max-h-[400px] pr-2 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-neutral-700"
+                    >
                         <div
                             v-for="(participant, index) in dashboardData.activeParticipants"
                             :key="participant.id"
@@ -371,7 +358,5 @@ onMounted(() => {
 
             </div>
         </div>
-
-        <RibPopup v-model:open="showRibPopup" />
     </AppLayout>
 </template>

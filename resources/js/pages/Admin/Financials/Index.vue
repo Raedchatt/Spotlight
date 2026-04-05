@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
-import AppLayout from '@/layouts/AppLayout.vue';
 import { 
-    Wallet, Check, AlertCircle, Building, CalendarDays, ExternalLink, 
-    RefreshCw, ChevronLeft, ChevronRight, User as UserIcon, History 
+     Check, AlertCircle, Building, CalendarDays, ExternalLink, 
+    RefreshCw, User as UserIcon,  
 } from 'lucide-vue-next';
+import { ref } from 'vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 
 const props = defineProps<{
     organizerPayouts: any[];
@@ -28,7 +28,7 @@ const handleOrganizerPayout = (id: number, stripeAccountId: string | null) => {
 
     if (confirm("Transfer funds to the organizer's Stripe account?")) {
         processingId.value = id;
-        router.post(route('admin.financials.pay', id), {}, {
+        router.post(`/admin/financials/organizer/${id}/pay`, {}, {
             preserveScroll: true,
             onFinish: () => processingId.value = null
         });
@@ -38,7 +38,7 @@ const handleOrganizerPayout = (id: number, stripeAccountId: string | null) => {
 const handleAffiliatePayout = (id: number) => {
     if (confirm("Confirm payout for this affiliate? This will update their balance.")) {
         processingId.value = id;
-        router.post(route('admin.financials.approve', id), {}, {
+        router.post(`/admin/financials/affiliate/${id}/approve`, {}, {
             preserveScroll: true,
             onFinish: () => processingId.value = null
         });

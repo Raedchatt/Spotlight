@@ -46,7 +46,7 @@ const categories = [
 ];
 
 const applyFilters = () => {
-    router.get(route('affiliate.dashboard'), {
+    router.get('/affiliate/dashboard', {
         name: nameFilter.value,
         category: categoryFilter.value === 'all' ? null : categoryFilter.value
     }, {

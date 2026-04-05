@@ -5,11 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Revendeur;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -19,44 +18,35 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'username' => 'required|string|max:255',
-            'role' => 'required|string|in:participant,organisateur,revendeur',
-            'email' => 'required|email|unique:users',
+        // Using $request->validate() instead of Validator::make() so that
+        // on failure Laravel automatically redirects back with session errors —
+        // which is what Inertia's router.post() expects.
+        $request->validate([
+            'username'  => 'required|string|max:255',
+            'role'      => 'required|string|in:participant,organisateur,revendeur',
+            'email'     => 'required|email|unique:users',
             'telephone' => 'required|string|max:20',
-            'password' => 'required|confirmed|min:8'
+            'password'  => 'required|confirmed|min:8',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         $user = User::create([
-            'username' => $request->username,
-            'role' => $request->role,
-            'email' => $request->email,
+            'username'  => $request->username,
+            'role'      => $request->role,
+            'email'     => $request->email,
             'telephone' => $request->telephone,
-            'password' => Hash::make($request->password),
+            'password'  => Hash::make($request->password),
         ]);
 
         // Auto login after registration
         Auth::login($user);
         $request->session()->regenerate();
 
-        if ($request->wantsJson()) {
-            return response()->json([
-                'status' => true,
-                'message' => 'User registered successfully',
-                'user' => $user
-            ]);
-        }
-
         if ($user->role === \App\Enums\Role::Participant) {
             return redirect()->to('/discovery');
+        }
+
+        if ($user->role === \App\Enums\Role::Revendeur) {
+            return redirect()->to('/affiliate/dashboard');
         }
 
         return redirect()->to('/dashboard');
@@ -76,16 +66,12 @@ class AuthController extends Controller
             $request->session()->regenerate();
             $user = Auth::user();
 
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'status' => true,
-                    'user' => $user,
-                    'message' => 'Login successful'
-                ]);
-            }
-
             if ($user->role === \App\Enums\Role::Participant) {
                 return redirect()->to('/discovery');
+            }
+
+            if ($user->role === \App\Enums\Role::Revendeur) {
+                return redirect()->intended('/affiliate/dashboard');
             }
 
             return redirect()->intended('/dashboard');

@@ -249,7 +249,7 @@ const connectStripe = async () => {
                             </Card>
 
                             <!-- Bank Information Section (Organizers Only) -->
-                            <Card v-if="user.role === 'organisateur'" class="mt-6">
+                            <Card v-if="(user.role?.value || user.role) === 'organisateur'" class="mt-6">
                                 <CardHeader>
                                     <div class="flex items-center gap-2">
                                         <div class="p-2 bg-blue-500/10 rounded-lg">
@@ -274,28 +274,11 @@ const connectStripe = async () => {
                                         <div class="p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl">
                                             <h4 class="font-bold text-indigo-900 dark:text-indigo-300">Connect with Stripe</h4>
                                             <p class="text-sm text-indigo-700 dark:text-indigo-400 mt-1 mb-3">
-                                                Spotlight uses Stripe to send your funds instantly and securely. You must connect your account to receive payouts.
+                                                Spotlight uses Stripe to send your funds instantly and securely. You must connect your account to receive payouts and create events.
                                             </p>
                                             <Button @click.prevent="connectStripe" :disabled="connectingStripe" class="bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto">
                                                 {{ connectingStripe ? 'Connecting...' : 'Connect Stripe Account' }}
                                             </Button>
-                                        </div>
-
-                                        <div class="relative py-2">
-                                            <div class="absolute inset-0 flex items-center"><span class="w-full border-t"></span></div>
-                                            <div class="relative flex justify-center text-xs uppercase"><span class="bg-background px-2 text-muted-foreground">Or fallback to regular RIB</span></div>
-                                        </div>
-
-                                        <div class="grid gap-2">
-                                            <Label for="rib">RIB (Bank Account Number)</Label>
-                                            <Input
-                                                id="rib"
-                                                name="rib"
-                                                class="font-mono"
-                                                :placeholder="(page.props.auth as any).organisateur_has_rib ? '••••••••••••••••••• (already saved)' : 'Enter your 20-digit RIB'"
-                                                maxlength="30"
-                                            />
-                                            <InputError class="mt-2" :message="errors.rib" />
                                         </div>
                                     </div>
                                 </CardContent>
