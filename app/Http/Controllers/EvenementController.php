@@ -110,7 +110,8 @@ class EvenementController extends Controller
             }
         }
 
-        if ($request->wantsJson() && !$request->hasHeader('X-Inertia')) {
+        if ($request->is('api/*') || ($request->wantsJson() && !$request->hasHeader('X-Inertia'))) {
+            $event->loadCount('reservations');
             return response()->json(array_merge($event->toArray(), [
                 'medias' => $event->medias,
                 'stats' => $stats,

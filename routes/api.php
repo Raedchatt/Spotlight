@@ -8,6 +8,8 @@ use App\Http\Controllers\OrganisateurController;
 use App\Http\Controllers\NotificationController;
 
 Route::get('/events/search', [EvenementController::class, 'search']);
+Route::get('/events', [EvenementController::class, 'index']);
+Route::get('/events/{event}', [EvenementController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -17,7 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/messages/recent', [MessageController::class, 'recent']);
 
     // Events
-    Route::apiResource('/events', EvenementController::class);
+    Route::apiResource('/events', EvenementController::class)->except(['index', 'show']);
     Route::patch('/events/{id}/ouvrir', [EvenementController::class, 'ouvrirReservation']);
     Route::patch('/events/{id}/fermer', [EvenementController::class, 'fermerReservation']);
 
