@@ -7,6 +7,7 @@ import {
 import { ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const props = defineProps<{
     organizerPayouts: any[];
     affiliatePayouts: any[];

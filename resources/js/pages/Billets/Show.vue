@@ -1,6 +1,7 @@
 <script setup>
 import AppHeader from '@/components/AppHeader.vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { ArrowLeft } from 'lucide-vue-next';
 
 const props = defineProps({
     billet: Object,
@@ -34,6 +35,16 @@ const printTicket = () => {
         <AppLayout>
             <div class="py-12 bg-gray-50 dark:bg-gray-900 min-h-screen">
                 <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+                    <div class="mb-6 print:hidden">
+                        <Link 
+                            href="/discovery" 
+                            class="inline-flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors text-sm font-bold gap-2 bg-white dark:bg-gray-800 px-4 py-2 rounded-xl shadow-sm hover:shadow-md border border-gray-100 dark:border-gray-700 w-fit"
+                        >
+                            <ArrowLeft class="w-4 h-4" />
+                            Retour aux évènements
+                        </Link>
+                    </div>
+
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-2xl rounded-3xl border border-gray-100 dark:border-gray-700 ticket-wrapper">
                         <div class="p-8 sm:p-12 relative">
                             <!-- Decorative Top Border -->
@@ -137,9 +148,10 @@ const printTicket = () => {
                     <div class="mt-8 text-center print:hidden">
                         <Link 
                             href="/discovery" 
-                            class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors text-sm font-medium"
+                            class="inline-flex items-center text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors text-sm font-medium gap-2"
                         >
-                            ← Retour aux évènements
+                            <ArrowLeft class="w-4 h-4" />
+                            Retour aux évènements
                         </Link>
                     </div>
                 </div>

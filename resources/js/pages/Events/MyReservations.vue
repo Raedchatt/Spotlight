@@ -84,6 +84,10 @@ const formatPrice = (price: number) => {
         currency: 'TND'
     }).format(price);
 };
+
+const isEventEnded = (dateString: string) => {
+    return new Date(dateString) < new Date();
+};
 </script>
 
 <template>
@@ -183,10 +187,11 @@ const formatPrice = (price: number) => {
                                 </Button>
                                 <Button 
                                     v-if="res.statut !== 'cancelled'"
-                                    @click="cancelReservation(res.id)" 
+                                    @click="cancelReservation(res.id)"
+                                    :disabled="isEventEnded(res.evenement.date_fin)"
                                     size="sm" 
                                     variant="outline" 
-                                    class="text-destructive hover:bg-destructive/5 border-destructive"
+                                    class="text-destructive hover:bg-destructive/5 border-destructive disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <XCircle class="w-4 h-4 mr-1" /> Annuler
                                 </Button>

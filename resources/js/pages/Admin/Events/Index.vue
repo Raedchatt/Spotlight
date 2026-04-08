@@ -1,10 +1,14 @@
+<!-- eslint-disable vue/no-v-text-v-html-on-component -->
+<!-- eslint-disable vue/no-v-text-v-html-on-component -->
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { defineProps, ref } from 'vue';
-import AppLayout from '@/layouts/AppLayout.vue';
 import { Calendar, Check, X, Building, MapPin, Tag } from 'lucide-vue-next';
+import { ref } from 'vue';
+import AppLayout from '@/layouts/AppLayout.vue';
+
 
 // Define expected props
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const props = defineProps({
     events: Object,
 });
@@ -123,7 +127,7 @@ const handleReject = (id: number) => {
                                     link.active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-700',
                                     !link.url ? 'opacity-50 cursor-not-allowed hidden md:inline-block' : ''
                                 ]"
-                                v-html="link.label"
+                                
                             />
                         </template>
                     </div>

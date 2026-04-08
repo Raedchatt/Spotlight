@@ -2,6 +2,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import { ChevronLeft, CircleDollarSign, Info, MapPin, Save, Sparkles, Users, AlertCircle } from 'lucide-vue-next';
+import { X } from 'lucide-vue-next';
 import { ref, computed, onUnmounted } from 'vue';
 
 import InputError from '@/components/InputError.vue';
@@ -144,7 +145,7 @@ const applySuggestion = async (s: Suggestion) => {
 };
 
 // Collaborator Search logic
-import { X } from 'lucide-vue-next';
+
 const searchQuery = ref('');
 const searchResults = ref<any[]>([]);
 const selectedCollaborators = ref<any[]>([]);
