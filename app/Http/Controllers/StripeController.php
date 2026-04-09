@@ -97,6 +97,13 @@ class StripeController extends Controller
         $session = \Stripe\Checkout\Session::retrieve($sessionId);
 
         if ($session->payment_status === 'paid') {
+            // Safety check: is the event already over?
+            $evenement = $paiement->reservation->evenement;
+            if ($evenement->date_fin && $evenement->date_fin->isPast()) {
+                Log::warning("Blocked payment confirmation for ended event: {$evenement->id}");
+                return redirect()->route('discovery')->with('error', 'Le paiement a réussi mais l\'événement est déjà terminé. Veuillez contacter le support.');
+            }
+
             $paiement->update([
                 'statut'                   => StatutPaiement::Succeeded,
                 'stripe_payment_intent_id' => $session->payment_intent,
@@ -160,6 +167,13 @@ class StripeController extends Controller
                 
                 $paiement = Paiement::where('stripe_payment_intent_id', $paymentIntent->id)->first();
                 if ($paiement) {
+                    // Safety check: is the event already over?
+                    $evenement = $paiement->reservation->evenement;
+                    if ($evenement->date_fin && $evenement->date_fin->isPast()) {
+                        Log::warning("Blocked webhook payment confirmation for ended event: {$evenement->id}");
+                        return response()->json(['status' => 'blocked_event_ended']);
+                    }
+
                     $paiement->update([
                         'statut'         => StatutPaiement::Succeeded,
                         'transferred_at' => now(),

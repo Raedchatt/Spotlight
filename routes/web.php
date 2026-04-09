@@ -109,52 +109,67 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/admin/unblock/{user}', [\App\Http\Controllers\Admin\AdminUserController::class, 'debloquerUtilisateur'])->name('admin.users.unblock');
     });
 
-    // Admin - User Management
-        Route::get('/admin/users', [\App\Http\Controllers\Admin\AdminUserController::class, 'index'])->name('admin.users.index');
-        Route::post('/admin/users', [\App\Http\Controllers\Admin\AdminUserController::class, 'store'])->name('admin.users.store');
-        Route::put('/admin/users/{user}', [\App\Http\Controllers\Admin\AdminUserController::class, 'update'])->name('admin.users.update');
-        Route::delete('/admin/users/{user}', [\App\Http\Controllers\Admin\AdminUserController::class, 'destroy'])->name('admin.users.destroy');
+    // ─────────────────────────────────────────────────────────────────────────
+    // 5. ADMIN SECTION (administrateur)
+    // ─────────────────────────────────────────────────────────────────────────
+    Route::middleware(['role:administrateur'])->prefix('admin')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('admin.dashboard');
+        
+        // Admin - User Management
+        Route::get('/users', [\App\Http\Controllers\Admin\AdminUserController::class, 'index'])->name('admin.users.index');
+        Route::post('/users', [\App\Http\Controllers\Admin\AdminUserController::class, 'store'])->name('admin.users.store');
+        Route::put('/users/{user}', [\App\Http\Controllers\Admin\AdminUserController::class, 'update'])->name('admin.users.update');
+        Route::delete('/users/{user}', [\App\Http\Controllers\Admin\AdminUserController::class, 'destroy'])->name('admin.users.destroy');
 
-    // Admin - Event Management
-        Route::get('/admin/events', [\App\Http\Controllers\Admin\AdminEventController::class, 'index'])->name('admin.events.index');
-        Route::patch('/admin/events/{event}/approve', [\App\Http\Controllers\Admin\AdminEventController::class, 'approve'])->name('admin.events.approve');
-        Route::patch('/admin/events/{event}/reject', [\App\Http\Controllers\Admin\AdminEventController::class, 'reject'])->name('admin.events.reject');
+        // Admin - Event Management
+        Route::get('/events', [\App\Http\Controllers\Admin\AdminEventController::class, 'index'])->name('admin.events.index');
+        Route::patch('/events/{event}/approve', [\App\Http\Controllers\Admin\AdminEventController::class, 'approve'])->name('admin.events.approve');
+        Route::patch('/events/{event}/reject', [\App\Http\Controllers\Admin\AdminEventController::class, 'reject'])->name('admin.events.reject');
 
-    // Admin - Financial Management
-        Route::get('/admin/financials', [\App\Http\Controllers\Admin\AdminFinancialController::class, 'index'])->name('admin.financials.index');
-        Route::post('/admin/financials/organizer/{event}/pay', [\App\Http\Controllers\Admin\AdminFinancialController::class, 'pay'])->name('admin.financials.pay');
-        Route::post('/admin/financials/affiliate/{commission}/approve', [\App\Http\Controllers\Admin\AdminFinancialController::class, 'approveAffiliate'])->name('admin.financials.approve');
-
-    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/affiliate/dashboard', [\App\Http\Controllers\Affiliate\AffiliateDashboardController::class, 'index'])->name('affiliate.dashboard');
-
-Route::middleware('auth')->group(function () {
-    Route::post('/upload/image', [MediaUploadController::class, 'uploadImage']);
-    Route::post('/upload/video', [MediaUploadController::class, 'uploadVideo']);
-    Route::delete('/upload/media', [MediaUploadController::class, 'deleteMedia']);
-});
-
-    Route::prefix('dashboard')->group(function () {
-        Route::get('/events', function () {
-            return Inertia::render('Events/EventsList');
-        })->name('events.index');
-
-        Route::get('/collaborations', function () {
-            return Inertia::render('Events/Collaborations');
-        })->name('collaborations.index');
-
-        Route::get('/events/create', function () {
-            return Inertia::render('Events/CreateEvent');
-        })->name('events.create');
-
-        Route::get('/events/{id}/edit', function ($id) {
-            return Inertia::render('Events/EditEvent', ['id' => $id]);
-        })->name('events.edit');
-
-        Route::get('/reservations', function () {
-            return Inertia::render('Events/MyReservations');
-        })->name('reservations.index');
+        // Admin - Financial Management
+        Route::get('/financials', [\App\Http\Controllers\Admin\AdminFinancialController::class, 'index'])->name('admin.financials.index');
+        Route::post('/financials/organizer/{event}/pay', [\App\Http\Controllers\Admin\AdminFinancialController::class, 'pay'])->name('admin.financials.pay');
+        Route::post('/financials/affiliate/{commission}/approve', [\App\Http\Controllers\Admin\AdminFinancialController::class, 'approveAffiliate'])->name('admin.financials.approve');
     });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 6. ORGANIZER SECTION (organisateur)
+    // ─────────────────────────────────────────────────────────────────────────
+    Route::middleware(['role:organisateur'])->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+        
+        Route::prefix('dashboard')->group(function () {
+            Route::get('/events', function () {
+                return Inertia::render('Events/EventsList');
+            })->name('events.index');
+
+            Route::get('/collaborations', function () {
+                return Inertia::render('Events/Collaborations');
+            })->name('collaborations.index');
+
+            Route::get('/events/create', function () {
+                return Inertia::render('Events/CreateEvent');
+            })->name('events.create');
+
+            Route::get('/events/{id}/edit', function ($id) {
+                return Inertia::render('Events/EditEvent', ['id' => $id]);
+            })->name('events.edit');
+        });
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 7. AFFILIATE SECTION (revendeur)
+    // ─────────────────────────────────────────────────────────────────────────
+    Route::middleware(['role:revendeur'])->group(function () {
+        Route::get('/affiliate/dashboard', [\App\Http\Controllers\Affiliate\AffiliateDashboardController::class, 'index'])->name('affiliate.dashboard');
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 8. SHARED & PARTICIPANT ROUTES
+    // ─────────────────────────────────────────────────────────────────────────
+    Route::get('/dashboard/reservations', function () {
+        return Inertia::render('Events/MyReservations');
+    })->name('reservations.index');
 
     Route::get('/notifications', function () {
         return Inertia::render('Notifications/Index');
@@ -163,7 +178,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
     Route::get('/messages/{user}', [MessageController::class, 'show'])->name('messages.show');
 
-    // Stripe Payment Routes
+    // Media Uploads
+    Route::post('/upload/image', [MediaUploadController::class, 'uploadImage']);
+    Route::post('/upload/video', [MediaUploadController::class, 'uploadVideo']);
+    Route::delete('/upload/media', [MediaUploadController::class, 'deleteMedia']);
+
+    // Stripe Payment Success/Cancel
     Route::get('/paiement/success', [\App\Http\Controllers\StripeController::class, 'success'])->name('paiement.success');
     Route::get('/paiement/cancel', [\App\Http\Controllers\StripeController::class, 'cancel'])->name('paiement.cancel');
 

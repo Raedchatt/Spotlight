@@ -9,7 +9,7 @@ export default defineComponent({
         position: "top-right",
         richColors: true,
         expand: true,
-        duration: 4000,
+        duration: 3000,
         closeButton: true,
         toastOptions: {
           style: { fontFamily: 'Instrument Sans, ui-sans-serif, system-ui, sans-serif' }

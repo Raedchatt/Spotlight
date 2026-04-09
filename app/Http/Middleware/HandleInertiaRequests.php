@@ -40,9 +40,12 @@ class HandleInertiaRequests extends Middleware
 
         if ($user && $user->role->value === 'administrateur') {
             $counts['event_validation'] = \App\Models\Evenement::where('statut', '=', 'en_attente', 'and')->count();
-            $counts['financials'] = \App\Models\Evenement::where('date_fin', '<', now(), 'and')
-                ->where('statut', '!=', 'annule', 'and')
-                ->where('is_paid_out', '=', false, 'and')
+            $counts['financials'] = \App\Models\Evenement::where('date_fin', '<', now())
+                ->where('statut', '!=', 'annule')
+                ->where('is_paid_out', false)
+                ->whereHas('reservations.paiements', function($q) {
+                    $q->where('statut', '=', \App\Enums\StatutPaiement::Succeeded);
+                })
                 ->count();
         }
 

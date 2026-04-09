@@ -123,13 +123,14 @@ const initials = (name: string) =>
                             </span>
                         </div>
                         <div class="relative z-10">
-                            <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1 tracking-wide uppercase">Total Revenue</p>
+                            <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1 tracking-wide uppercase">Received Revenue (In Pocket)</p>
                             <div class="flex items-baseline gap-2">
                                 <p class="text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight text-gray-900 dark:text-white truncate">
                                     {{ dashboardData.totalReceived.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }}
                                 </p>
                                 <span class="text-xl font-bold text-gray-400 dark:text-gray-500">Dt</span>
                             </div>
+                            <p class="text-[10px] text-gray-400 mt-1 italic">Reflects your 80% share for paid-out events</p>
                         </div>
                     </div>
 
@@ -145,13 +146,14 @@ const initials = (name: string) =>
                             </span>
                         </div>
                         <div class="relative z-10">
-                            <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1 tracking-wide uppercase">Awaiting Payout</p>
+                            <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1 tracking-wide uppercase">Pending Payout</p>
                             <div class="flex items-baseline gap-2">
                                 <p class="text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight text-gray-900 dark:text-white truncate">
                                     {{ dashboardData.pendingPayout.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }}
                                 </p>
                                 <span class="text-xl font-bold text-gray-400 dark:text-gray-500">Dt</span>
                             </div>
+                            <p class="text-[10px] text-gray-400 mt-1 italic">Total expected revenue (80%) for upcoming/unpaid events</p>
                         </div>
                     </div>
                 </div>

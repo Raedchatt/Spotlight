@@ -51,10 +51,13 @@ class ReservationController extends Controller
             $ticketType = 'spectator'; // Default for tournaments if not specified
         }
 
-        // 1. Check if the event is open for reservations
-        if ($evenement->statut->value !== 'ouvert') {
+        // 1. Check if the event is open for reservations and not ended
+        if ($evenement->statut->value !== 'ouvert' || ($evenement->date_fin && $evenement->date_fin->isPast())) {
+            $message = ($evenement->date_fin && $evenement->date_fin->isPast()) 
+                ? 'This event has already ended and is no longer accepting reservations.'
+                : 'This event is not open for reservations.';
             return response()->json([
-                'message' => 'This event is not open for reservations.',
+                'message' => $message,
             ], 422);
         }
 
@@ -204,6 +207,20 @@ class ReservationController extends Controller
         if ($targetId !== Auth::id()) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
+
+        // --- Cleanup expired unpaid reservations ---
+        // Find reservations that are still Pending but their event has ended
+        $expiredUnpaid = Reservation::where('user_id', $targetId)
+            ->where('statut', StatutReservation::Pending)
+            ->whereHas('evenement', function ($query) {
+                $query->where('date_fin', '<', now());
+            })
+            ->get();
+
+        foreach ($expiredUnpaid as $res) {
+            $res->delete();
+        }
+        // -------------------------------------------
 
         $reservations = Reservation::where('user_id', $targetId)
             ->with(['evenement:id,titre,date_debut,date_fin,lieu,prix_spectateur', 'billets'])

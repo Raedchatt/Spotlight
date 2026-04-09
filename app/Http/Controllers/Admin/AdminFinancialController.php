@@ -47,7 +47,9 @@ class AdminFinancialController extends Controller
                     'commission' => round($commission, 2),
                     'net_payout' => round($net, 2),
                 ];
-            });
+            })
+            ->filter(fn($payout) => $payout['revenue'] > 0)
+            ->values();
 
         // 2. Affiliate Payouts (Pending, Event ended)
         $affiliatePayouts = Commission::with(['reservation.user', 'evenement', 'revendeur.user'])

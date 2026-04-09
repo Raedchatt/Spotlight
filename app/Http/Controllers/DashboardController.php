@@ -45,20 +45,21 @@ class DashboardController extends Controller
         // 1. Basic counts
         $totalEventsCount = Evenement::where('organisateur_id', $user->id)->count();
 
-        // 2. Revenue calculation (total received)
+        // 2. Received Revenue (80% of sales for events already paid out)
         $totalReceived = Paiement::whereHas('reservation', function($q) use ($user) {
             $q->whereHas('evenement', function($eq) use ($user) {
-                $eq->where('organisateur_id', '=', $user->id);
+                $eq->where('organisateur_id', '=', $user->id)
+                   ->where('is_paid_out', '=', true);
             });
-        })->where('statut', '=', StatutPaiement::Succeeded)->sum('montant');
+        })->where('statut', '=', StatutPaiement::Succeeded)->sum('montant') * 0.80;
 
-        // 3. Pending Payout (events where is_paid_out = false)
+        // 3. Pending Payout (80% of sales for events NOT YET paid out)
         $pendingPayout = Paiement::whereHas('reservation', function($q) use ($user) {
             $q->whereHas('evenement', function($eq) use ($user) {
                 $eq->where('organisateur_id', '=', $user->id)
                    ->where('is_paid_out', '=', false);
             });
-        })->where('statut', '=', StatutPaiement::Succeeded)->sum('montant');
+        })->where('statut', '=', StatutPaiement::Succeeded)->sum('montant') * 0.80;
 
         // 4. Category breakdown
         $categoryCounts = Evenement::where('organisateur_id', $user->id)
