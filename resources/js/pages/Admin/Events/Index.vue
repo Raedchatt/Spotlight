@@ -4,6 +4,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import { Calendar, Check, X, Building, MapPin, Tag } from 'lucide-vue-next';
 import { ref } from 'vue';
+import { toast } from 'vue-sonner';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 
@@ -25,6 +26,8 @@ const handleApprove = (id: number) => {
         processingEventId.value = id;
         router.patch(`/admin/events/${id}/approve`, {}, {
             preserveScroll: true,
+            onSuccess: () => toast.success('Event approved successfully.'),
+            onError: () => toast.error('Failed to approve event.'),
             onFinish: () => {
                 processingEventId.value = null;
             }
@@ -38,6 +41,8 @@ const handleReject = (id: number) => {
         processingEventId.value = id;
         router.patch(`/admin/events/${id}/reject`, {}, {
             preserveScroll: true,
+            onSuccess: () => toast.success('Event rejected successfully.'),
+            onError: () => toast.error('Failed to reject event.'),
             onFinish: () => {
                 processingEventId.value = null;
             }

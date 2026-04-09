@@ -1,8 +1,11 @@
 import { createInertiaApp } from '@inertiajs/vue3';
+import axios from 'axios';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
-import axios from 'axios';
+
+import AppWrapper from './AppWrapper';
+import 'vue-sonner/style.css';
 import '../css/app.css';
 import { initializeTheme } from './composables/useAppearance';
 import './echo';
@@ -21,7 +24,7 @@ createInertiaApp({
             import.meta.glob<DefineComponent>('./pages/**/*.vue'),
         ),
     setup({ el, App, props, plugin }) {
-        createApp({ render: () => h(App, props) })
+        createApp({ render: () => h(AppWrapper, () => h(App, props)) })
             .use(plugin)
             .mount(el);
     },

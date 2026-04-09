@@ -7,10 +7,10 @@ import AppLogo from '@/components/AppLogo.vue';
 
 import LoginModal from '@/components/auth/LoginModal.vue';
 import RegisterModal from '@/components/auth/RegisterModal.vue';
-import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import InvitationsDropdown from '@/components/InvitationsDropdown.vue';
 import MessagesDropdown from '@/components/MessagesDropdown.vue';
 import NotificationsDropdown from '@/components/NotificationsDropdown.vue';
-import InvitationsDropdown from '@/components/InvitationsDropdown.vue';
+
 import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
 import {
@@ -43,6 +43,7 @@ type Props = {
     breadcrumbs?: BreadcrumbItem[];
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const props = withDefaults(defineProps<Props>(), {
     breadcrumbs: () => [],
 });

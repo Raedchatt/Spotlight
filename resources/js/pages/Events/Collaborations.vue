@@ -2,6 +2,7 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 
 import axios from 'axios';
+import { toast } from 'vue-sonner';
 
 import {
     Search,
@@ -46,6 +47,7 @@ const fetchCollaborations = async () => {
         events.value = response.data.data;
     } catch (error) {
         console.error('Error fetching collaborations:', error);
+        toast.error('Failed to load collaborations. Please try again.');
     } finally {
         loading.value = false;
     }

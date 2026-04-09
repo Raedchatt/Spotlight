@@ -2,6 +2,7 @@
 import { Head } from '@inertiajs/vue3';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
+import { toast } from 'vue-sonner';
 import {
     Bell,
     CalendarPlus,
@@ -102,6 +103,7 @@ const fetchNotifications = async () => {
         notifications.value = response.data;
     } catch (error) {
         console.error('Error fetching notifications:', error);
+        toast.error('Failed to load notifications.');
     } finally {
         loading.value = false;
     }
@@ -114,6 +116,7 @@ const markAsRead = async (notification: Notification) => {
         notification.lu = true;
     } catch (error) {
         console.error('Error marking notification as read:', error);
+        toast.error('Failed to mark notification as read.');
     }
 };
 
@@ -123,8 +126,10 @@ const markAllAsRead = async () => {
     try {
         await axios.patch('/web-api/notifications/read-all');
         notifications.value.forEach(n => n.lu = true);
+        toast.success('All notifications marked as read.');
     } catch (error) {
         console.error('Error marking all as read:', error);
+        toast.error('Failed to mark all notifications as read.');
     }
 };
 

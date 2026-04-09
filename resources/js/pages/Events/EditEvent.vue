@@ -12,9 +12,11 @@ import {
     Star,
     X,
     Image as ImageIcon,
-    Film
+    Film,
+    AlertCircle
 } from 'lucide-vue-next';
 import { ref, onMounted, computed } from 'vue';
+import { toast } from 'vue-sonner';
 
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
@@ -60,6 +62,11 @@ const errors = ref<Record<string, string[]>>({});
 const processing = ref(false);
 const fetching = ref(true);
 
+const dateError = computed(() => {
+    if (!form.value.date_debut || !form.value.date_fin) return false;
+    return new Date(form.value.date_fin) <= new Date(form.value.date_debut);
+});
+
 const fetchEvent = async () => {
     try {
         const response = await axios.get(`/web-api/events/${props.id}`); // Note: Need a show endpoint in controller or use search with id
@@ -94,10 +101,10 @@ const fetchEvent = async () => {
     } catch (error: any) {
         console.error('Error fetching event:', error);
         if (error.response?.status === 403) {
-            alert('Your collaboration status does not allow editing this event.');
+            toast.error('Your collaboration status does not allow editing this event.');
             router.visit('/dashboard/collaborations');
         } else {
-            alert('Failed to load event data. Please try again.');
+            toast.error('Failed to load event data. Please try again.');
         }
     } finally {
         fetching.value = false;
@@ -130,7 +137,7 @@ const submit = async () => {
     
     try {
         if (!eventData.value?.can_edit) {
-            alert('You do not have permission to save changes to this event.');
+            toast.error('You do not have permission to save changes to this event.');
             return;
         }
 
@@ -163,6 +170,8 @@ const submit = async () => {
              }
         });
         
+        toast.success('Event updated successfully!');
+        
         // Successful update, redirect to list using Inertia router
         router.visit('/dashboard/events', {
             method: 'get',
@@ -183,7 +192,7 @@ const submit = async () => {
             errors.value = error.response.data.errors;
         } else {
             // Fallback for non-validation errors
-            alert(error.response?.data?.message || 'An unexpected error occurred. Please try again.');
+            toast.error(error.response?.data?.message || 'An unexpected error occurred. Please try again.');
         }
     } finally {
         processing.value = false;
@@ -244,12 +253,12 @@ const inviteCollaborator = async () => {
         await axios.post(`/web-api/events/${props.id}/collaborators/invite`, {
             organizer_id: selectedOrganizer.value.id
         });
-        alert('Invitation sent successfully!');
+        toast.success('Invitation sent successfully!');
         selectedOrganizer.value = null;
         searchQuery.value = '';
         fetchCollaborators();
     } catch (error: any) {
-        alert(error.response?.data?.message || 'Failed to send invite.');
+        toast.error(error.response?.data?.message || 'Failed to send invite.');
     } finally {
         isInviting.value = false;
     }
@@ -282,7 +291,7 @@ onMounted(async () => {
                     <Button variant="outline" as-child>
                         <Link href="/dashboard/events">Cancel</Link>
                     </Button>
-                    <Button @click="submit" :disabled="processing || fetching || (eventData && !eventData.can_edit)" class="bg-blue-600 hover:bg-blue-700">
+                    <Button @click="submit" :disabled="processing || fetching || (eventData && !eventData.can_edit) || dateError" class="bg-blue-600 hover:bg-blue-700">
                         <Save class="w-4 h-4 mr-2" />
                         {{ processing ? 'Saving...' : 'Save Changes' }}
                     </Button>
@@ -435,8 +444,12 @@ onMounted(async () => {
 
                             <div class="space-y-2">
                                 <label class="text-sm font-medium">End Date & Time *</label>
-                                <Input v-model="form.date_fin" type="datetime-local" />
+                                <Input v-model="form.date_fin" type="datetime-local" :class="{ 'border-red-500': dateError }" />
                                 <InputError :message="errors.date_fin?.[0]" />
+                                <p v-if="dateError" class="text-xs text-red-500 font-medium flex items-center gap-1">
+                                    <AlertCircle class="w-3 h-3" />
+                                    End date must be after start date
+                                </p>
                             </div>
                         </CardContent>
                     </Card>

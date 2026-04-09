@@ -4,6 +4,7 @@ import { ref, onMounted, nextTick, computed } from 'vue';
 import { Head, usePage, Link } from '@inertiajs/vue3';
 import { show } from '@/routes/messages';
 import axios from 'axios';
+import { toast } from 'vue-sonner';
 
 const props = defineProps({
     otherUser: Object,
@@ -59,7 +60,7 @@ const sendMessage = async () => {
         }
     } catch (error) {
         console.error('Error sending message:', error);
-        alert('Failed to send message: ' + (error.response?.data?.message || error.message));
+        toast.error('Failed to send message: ' + (error.response?.data?.message || error.message));
     } finally {
         isSending.value = false;
     }

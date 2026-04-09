@@ -5,6 +5,7 @@ import {
     RefreshCw, User as UserIcon,  
 } from 'lucide-vue-next';
 import { ref } from 'vue';
+import { toast } from 'vue-sonner';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -23,7 +24,7 @@ const formatCurrency = (amount: number) => {
 
 const handleOrganizerPayout = (id: number, stripeAccountId: string | null) => {
     if (!stripeAccountId) {
-        alert("This organizer has not connected their Stripe account yet.");
+        toast.error('This organizer has not connected their Stripe account yet.');
         return;
     }
 
@@ -31,6 +32,8 @@ const handleOrganizerPayout = (id: number, stripeAccountId: string | null) => {
         processingId.value = id;
         router.post(`/admin/financials/organizer/${id}/pay`, {}, {
             preserveScroll: true,
+            onSuccess: () => toast.success('Stripe transfer completed successfully.'),
+            onError: () => toast.error('Stripe transfer failed. Please try again.'),
             onFinish: () => processingId.value = null
         });
     }
@@ -41,6 +44,8 @@ const handleAffiliatePayout = (id: number) => {
         processingId.value = id;
         router.post(`/admin/financials/affiliate/${id}/approve`, {}, {
             preserveScroll: true,
+            onSuccess: () => toast.success('Affiliate payout approved successfully.'),
+            onError: () => toast.error('Failed to approve affiliate payout.'),
             onFinish: () => processingId.value = null
         });
     }

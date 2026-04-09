@@ -146,6 +146,7 @@
 import { ref, computed, watch } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import axios from 'axios'
+import { toast } from 'vue-sonner'
 
 const props = defineProps({
   event: {
@@ -247,11 +248,13 @@ const submitReservation = async () => {
     }
 
     successMessage.value = 'Reservation confirmed successfully!'
+    toast.success('Reservation confirmed successfully!')
     quantity.value = 1 
     
     emit('reservation-success', response.data)
   } catch (error) {
     errorMessage.value = error.response?.data?.message || 'An error occurred during reservation. Please try again.'
+    toast.error(errorMessage.value)
   } finally {
     isSubmitting.value = false
   }

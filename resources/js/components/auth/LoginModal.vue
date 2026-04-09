@@ -2,6 +2,7 @@
 import { ref } from "vue"
 import axios from "axios"
 import { router } from "@inertiajs/vue3"
+import { toast } from 'vue-sonner'
 import { UserIcon, LockClosedIcon } from "@heroicons/vue/24/outline"
 import {
   Dialog,
@@ -32,11 +33,13 @@ const login = () => {
         password: password.value
     }, {
         onSuccess: () => {
+            toast.success('Welcome back!')
             closeAll()
         },
         onError: (errors) => {
             isError.value = true
             message.value = Object.values(errors)[0] as string
+            toast.error('Login failed. Please check your credentials.')
         }
     })
 }

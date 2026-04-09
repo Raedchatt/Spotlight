@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import axios from 'axios';
+import { toast } from 'vue-sonner';
 import { Bell, CalendarPlus, CalendarX, Pencil, Trash2, Users, UserCheck, UserX, Check, CheckCheck, Ticket } from 'lucide-vue-next';
 import { ref, onMounted, computed } from 'vue';
 import Badge from '@/components/ui/badge/Badge.vue';
@@ -74,6 +75,7 @@ const fetchNotifications = async () => {
         unreadNotificationsCount.value = notifications.value.filter(n => !n.lu).length;
     } catch (error) {
         console.error('Error fetching notifications:', error);
+        toast.error('Failed to load notifications.');
     } finally {
         loading.value = false;
     }
@@ -89,6 +91,7 @@ const markAsRead = async (notification: Notification) => {
         }
     } catch (error) {
         console.error('Error marking notification as read:', error);
+        toast.error('Failed to mark notification as read.');
     }
 };
 
@@ -99,6 +102,7 @@ const markAllAsRead = async () => {
         unreadNotificationsCount.value = 0;
     } catch (error) {
         console.error('Error marking all as read:', error);
+        toast.error('Failed to mark all as read.');
     }
 };
 

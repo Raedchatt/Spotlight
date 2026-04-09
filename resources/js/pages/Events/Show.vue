@@ -256,6 +256,7 @@ const reserveButtonText = computed(() => {
 const { openLogin } = useAuthModal();
 
 import axios from 'axios';
+import { toast } from 'vue-sonner';
 
 const isReserving = ref(false);
 const showReservationModal = ref(false);
@@ -336,7 +337,7 @@ const handleReserveClick = () => {
     }
 
     if (auth.value.user.role !== 'participant') {
-        alert('Only participants can reserve events.');
+        toast.error('Only participants can reserve events.');
         return;
     }
 
@@ -349,13 +350,13 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
     try {
         await axios.post(`/web-api/events/${props.event.id}/collaborators/${action}`);
         router.reload({ only: ['auth', 'is_pending_collaborator'] });
-        alert(`Invitation ${action}ed successfully.`);
+        toast.success(`Invitation ${action}ed successfully.`);
         if (action === 'accept') {
             router.visit('/dashboard/collaborations');
         }
     } catch (error: any) {
         console.error(`Error processing collaboration ${action}:`, error);
-        alert(error.response?.data?.message || `Failed to ${action} collaboration.`);
+        toast.error(error.response?.data?.message || `Failed to ${action} collaboration.`);
     }
 };
 </script>

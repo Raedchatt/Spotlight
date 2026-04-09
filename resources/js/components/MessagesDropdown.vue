@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
+import { toast } from 'vue-sonner';
 import { MessageCircle } from 'lucide-vue-next';
 import { ref, onMounted, computed } from 'vue';
 import Badge from '@/components/ui/badge/Badge.vue';
@@ -42,6 +43,7 @@ const fetchRecentMessages = async () => {
         }
     } catch (error) {
         console.error('Error fetching recent messages:', error);
+        toast.error('Failed to load messages.');
     } finally {
         loading.value = false;
     }

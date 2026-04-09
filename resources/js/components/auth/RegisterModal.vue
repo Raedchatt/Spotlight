@@ -8,6 +8,7 @@ import {
 import axios from "axios"
 import { router } from "@inertiajs/vue3"
 import { ref } from "vue"
+import { toast } from 'vue-sonner'
 import {
   Dialog,
   DialogContent,
@@ -45,10 +46,12 @@ const register = () => {
         password_confirmation: confirmPassword.value
     }, {
         onSuccess: () => {
+            toast.success('Account created successfully! Welcome to Spotlight.')
             closeAll()
         },
         onError: (errs) => {
             errors.value = errs
+            toast.error('Registration failed. Please fix the errors below.')
         }
     })
 }

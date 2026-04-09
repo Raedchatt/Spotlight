@@ -2,6 +2,7 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 
 import axios from 'axios';
+import { toast } from 'vue-sonner';
 
 import {
     Search,
@@ -99,6 +100,7 @@ const fetchEvents = async () => {
         }
     } catch (error) {
         console.error('Error fetching events:', error);
+        toast.error('Failed to load events. Please try again.');
     } finally {
         loading.value = false;
     }
@@ -116,8 +118,10 @@ const deleteEvent = async (id: number) => {
     try {
         await axios.delete(`/web-api/events/${id}`);
         events.value = events.value.filter(e => e.id !== id);
-    } catch (error) {
+        toast.success('Event deleted successfully.');
+    } catch (error: any) {
         console.error('Error deleting event:', error);
+        toast.error(error.response?.data?.message || 'Failed to delete event.');
     }
 };
 

@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, Edit, Trash2, UserPlus, ShieldBan, Search, CheckCircle } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
+import { toast } from 'vue-sonner';
 
 const props = defineProps<{
     users: any;
@@ -57,6 +58,10 @@ const submitAdd = () => {
         onSuccess: () => {
             isAddModalOpen.value = false;
             form.reset();
+            toast.success('User created successfully.');
+        },
+        onError: () => {
+            toast.error('Failed to create user. Please check the form.');
         },
     });
 };
@@ -78,6 +83,10 @@ const submitEdit = () => {
         onSuccess: () => {
             isEditModalOpen.value = false;
             editForm.reset();
+            toast.success('User updated successfully.');
+        },
+        onError: () => {
+            toast.error('Failed to update user. Please check the form.');
         },
     });
 };
@@ -89,7 +98,10 @@ const openShowModal = (user: any) => {
 
 const confirmDelete = (user: any) => {
     if (confirm(`Are you sure you want to delete ${user.first_name || 'this'} ${user.last_name || 'user'}?`)) {
-        router.delete(`/admin/users/${user.id}`);
+        router.delete(`/admin/users/${user.id}`, {
+            onSuccess: () => toast.success('User deleted successfully.'),
+            onError: () => toast.error('Failed to delete user.'),
+        });
     }
 };
 
@@ -105,6 +117,10 @@ const submitBlock = () => {
         onSuccess: () => {
             isBlockModalOpen.value = false;
             blockForm.reset();
+            toast.success('User blocked successfully.');
+        },
+        onError: () => {
+            toast.error('Failed to block user.');
         },
     });
 };

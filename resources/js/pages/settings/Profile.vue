@@ -3,6 +3,7 @@ import { Form, Head, Link, usePage } from '@inertiajs/vue3';
 import { Calendar, DollarSign, User as UserIcon, Trophy, ChevronRight, CreditCard, Check } from 'lucide-vue-next';
 import axios from 'axios';
 import { ref } from 'vue';
+import { toast } from 'vue-sonner';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import AppearanceTabs from '@/components/AppearanceTabs.vue';
 import InputError from '@/components/InputError.vue';
@@ -60,7 +61,7 @@ const connectStripe = async () => {
         }
     } catch (error: any) {
         console.error('Stripe Connect error:', error);
-        alert(error.response?.data?.error || 'Failed to initialize Stripe connection.');
+        toast.error(error.response?.data?.error || 'Failed to initialize Stripe connection.');
     } finally {
         connectingStripe.value = false;
     }

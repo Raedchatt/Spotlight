@@ -3,6 +3,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 
 import axios from 'axios';
+import { toast } from 'vue-sonner';
 import { 
     Calendar, 
     MapPin, 
@@ -39,9 +40,10 @@ const cancelReservation = async (id: number) => {
 
     try {
         await axios.patch(`/web-api/reservations/${id}/annuler`);
+        toast.success('Reservation cancelled successfully.');
         await fetchReservations();
     } catch (error: any) {
-        alert(error.response?.data?.message || 'Une erreur est survenue lors de l\'annulation.');
+        toast.error(error.response?.data?.message || 'An error occurred while cancelling the reservation.');
     }
 };
 
@@ -52,7 +54,7 @@ const checkoutReservation = async (id: number) => {
             window.location.href = response.data.checkout_url;
         }
     } catch (error: any) {
-        alert(error.response?.data?.message || 'Une erreur est survenue lors du paiement.');
+        toast.error(error.response?.data?.message || 'An error occurred during checkout.');
     }
 };
 

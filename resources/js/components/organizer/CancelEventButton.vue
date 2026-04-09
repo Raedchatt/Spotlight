@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Trash2, Loader2 } from 'lucide-vue-next';
 import axios from 'axios';
+import { toast } from 'vue-sonner';
 
 const props = defineProps<{
   eventId: number | string;
@@ -21,11 +22,11 @@ const handleCancel = async () => {
     isSubmitting.value = true;
     const response = await axios.post(`/web-api/events/${props.eventId}/cancel`);
     
-    window.alert(`Succès: ${response.data.refunded_count} remboursements effectués.`);
+    toast.success(`Success: ${response.data.refunded_count} refunds processed.`);
     emit('cancelled', props.eventId);
   } catch (error: any) {
     console.error('Erreur:', error);
-    window.alert(error.response?.data?.message || 'Erreur lors de l\'annulation');
+    toast.error(error.response?.data?.message || 'Error cancelling the event.');
   } finally {
     isSubmitting.value = false;
   }

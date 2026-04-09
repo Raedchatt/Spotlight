@@ -4,6 +4,7 @@ import axios from 'axios';
 import { ChevronLeft, CircleDollarSign, Info, MapPin, Save, Sparkles, Users, AlertCircle } from 'lucide-vue-next';
 import { X } from 'lucide-vue-next';
 import { ref, computed, onUnmounted } from 'vue';
+import { toast } from 'vue-sonner';
 
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -59,6 +60,11 @@ const form = ref({
 
 const formErrors = ref<Record<string, string[]>>({});
 const processing = ref(false);
+
+const dateError = computed(() => {
+    if (!form.value.date_debut || !form.value.date_fin) return false;
+    return new Date(form.value.date_fin) <= new Date(form.value.date_debut);
+});
 
 // AI
 const suggestions = ref<Suggestion[]>([]);
@@ -138,7 +144,7 @@ const applySuggestion = async (s: Suggestion) => {
             form.value.ai_media_urls.push(response.data.secure_url);
         }
     } catch {
-        alert('Upload failed');
+        toast.error('AI image upload failed. Please try again.');
     } finally {
         s.isUploading = false;
     }
@@ -214,13 +220,17 @@ const submit = async () => {
         });
 
         await axios.post('/web-api/events', formData);
-        router.visit('/dashboard/events');
+        toast.success('Event published successfully!');
+        
+        setTimeout(() => {
+            router.visit('/dashboard/events');
+        }, 100);
 
     } catch (error: any) {
         if (error.response?.data?.errors) {
             formErrors.value = error.response.data.errors;
         } else {
-            alert('Error occurred');
+            toast.error('An unexpected error occurred. Please try again.');
         }
     } finally {
         processing.value = false;
@@ -246,7 +256,7 @@ onUnmounted(() => {
                     <h1 class="text-3xl font-bold tracking-tight">Host an Event</h1>
                     <p class="text-muted-foreground">Fill in the details below to publish your event to the platform.</p>
                 </div>
-                <Button @click="submit" :disabled="processing || isMissingStripe" class="bg-blue-600 hover:bg-blue-700">
+                <Button @click="submit" :disabled="processing || isMissingStripe || dateError" class="bg-blue-600 hover:bg-blue-700">
                     <Save class="w-4 h-4 mr-2" />
                     {{ processing ? 'Publishing...' : 'Publish Event' }}
                 </Button>
@@ -331,8 +341,12 @@ onUnmounted(() => {
 
                             <div class="space-y-2">
                                 <label class="text-sm font-medium">End Date & Time *</label>
-                                <Input v-model="form.date_fin" type="datetime-local" />
+                                <Input v-model="form.date_fin" type="datetime-local" :class="{ 'border-red-500': dateError }" />
                                 <InputError :message="formErrors?.date_fin?.[0]" />
+                                <p v-if="dateError" class="text-xs text-red-500 font-medium flex items-center gap-1">
+                                    <AlertCircle class="w-3 h-3" />
+                                    End date must be after start date
+                                </p>
                             </div>
                         </CardContent>
                     </Card>
