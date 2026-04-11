@@ -51,6 +51,8 @@ const form = ref({
     type_tournoi: '',
     prix_participant: 0,
     capacite_participant: 0,
+    nombre_equipes: 0,
+    joueurs_par_equipe: 0,
     medias: [] as File[],
     poster_url: ''
 });
@@ -93,6 +95,8 @@ const fetchEvent = async () => {
             type_tournoi: event.type_tournoi ?? '',
             prix_participant: event.prix_participant ?? 0,
             capacite_participant: event.capacite_participant ?? 0,
+            nombre_equipes: event.tournoi?.nombre_equipes ?? 0,
+            joueurs_par_equipe: event.tournoi?.joueurs_par_equipe ?? 0,
             medias: [] as File[],
             poster_url: event.poster_url ?? ''
         };
@@ -505,12 +509,23 @@ onMounted(async () => {
                                     </div>
                                     
                                     <div class="space-y-2">
-                                        <label class="text-sm font-medium">Participant Seats *</label>
+                                        <label class="text-sm font-medium">
+                                            {{ form.type_tournoi === 'equipe' ? 'Number participant in equipe *' : 'Participant Seats *' }}
+                                        </label>
                                         <div class="relative">
                                             <Users class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                                             <Input v-model.number="form.capacite_participant" type="number" class="pl-10" />
                                         </div>
                                         <InputError :message="errors.capacite_participant?.[0]" />
+                                    </div>
+
+                                    <div v-if="form.type_tournoi === 'equipe'" class="space-y-2">
+                                        <label class="text-sm font-medium">Equipe Number *</label>
+                                        <div class="relative">
+                                            <Users class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                                            <Input v-model.number="form.nombre_equipes" type="number" class="pl-10" />
+                                        </div>
+                                        <InputError :message="errors.nombre_equipes?.[0]" />
                                     </div>
                                 </div>
                             </div>

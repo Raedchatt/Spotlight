@@ -24,7 +24,7 @@ class BilletController extends Controller
     public function show(Billet $billet)
     {
         $reservation = $billet->reservation->load(['user', 'evenement']);
-        $paiement = $reservation->paiements()->where('statut', \App\Enums\StatutPaiement::Succeeded)->first();
+        $paiement = $reservation->paiement;
         
         $qrCode = $this->ticketService->getQrCodeBase64($billet->codeQR);
 
@@ -44,7 +44,7 @@ class BilletController extends Controller
     public function downloadPdf(Billet $billet)
     {
         $reservation = $billet->reservation->load(['user', 'evenement']);
-        $paiement = $reservation->paiements()->where('statut', \App\Enums\StatutPaiement::Succeeded)->first();
+        $paiement = $reservation->paiement;
         
         $qrCode = $this->ticketService->getQrCodeBase64($billet->codeQR);
 

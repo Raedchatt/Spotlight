@@ -61,13 +61,39 @@ class ReservationController extends Controller
             ], 422);
         }
 
-        // 2. Check capacity based on ticket type
+        // 2. Delete any existing pending (unpaid) reservations for the same user & event
+        //    This MUST happen BEFORE the capacity check so freed spots are counted.
+        $existingPending = Reservation::where('user_id', Auth::id())
+            ->where('evenement_id', $evenement->id)
+            ->where('statut', StatutReservation::Pending)
+            ->get();
+
+        foreach ($existingPending as $oldReservation) {
+            // Delete associated payment record
+            if ($oldReservation->paiement) {
+                $oldReservation->paiement->delete();
+            }
+            // Delete associated commission record
+            if ($oldReservation->commission) {
+                $oldReservation->commission->delete();
+            }
+            $oldReservation->delete();
+        }
+
+        // 3. Check capacity based on ticket type
         if ($evenement->is_tournoi && $ticketType === 'participant') {
+            $evenement->load('tournoi');
             $currentReservations = $evenement->reservations()
                 ->active()
                 ->where('ticket_type', 'participant')
                 ->sum('nombre_tickets');
-            $availableSpaces = $evenement->capacite_participant - $currentReservations;
+            
+            $participantCapacity = ($evenement->type_tournoi === 'equipe' && $evenement->tournoi 
+                    && $evenement->tournoi->nombre_equipes > 0 && $evenement->tournoi->joueurs_par_equipe > 0) 
+                ? ($evenement->tournoi->nombre_equipes * $evenement->tournoi->joueurs_par_equipe) 
+                : $evenement->capacite_participant;
+
+            $availableSpaces = $participantCapacity - $currentReservations;
         } else {
             $currentReservations = $evenement->reservations()
                 ->active()
@@ -87,7 +113,7 @@ class ReservationController extends Controller
             ], 422);
         }
 
-        // 3. Handle Affiliate (Revendeur)
+        // 4. Handle Affiliate (Revendeur)
         $refCode = $request->cookie('referral_code');
         $revendeur = null;
 
@@ -95,7 +121,7 @@ class ReservationController extends Controller
             $revendeur = \App\Models\Revendeur::where('referral_code', $refCode)->first();
         }
 
-        // 4. Create the reservation
+        // 5. Create the reservation
         $reservation = Reservation::create([
             'user_id' => Auth::id(),
             'evenement_id' => $evenement->id,
@@ -223,7 +249,7 @@ class ReservationController extends Controller
         // -------------------------------------------
 
         $reservations = Reservation::where('user_id', $targetId)
-            ->with(['evenement:id,titre,date_debut,date_fin,lieu,prix_spectateur', 'billets'])
+            ->with(['evenement:id,titre,date_debut,date_fin,lieu,prix_spectateur,prix_participant,is_tournoi', 'billets'])
             ->latest()
             ->get();
 

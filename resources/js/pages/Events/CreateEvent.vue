@@ -53,6 +53,8 @@ const form = ref({
     type_tournoi: '',
     prix_participant: 0,
     capacite_participant: 0,
+    nombre_equipes: 0,
+    joueurs_par_equipe: 0,
     medias: [] as File[],
     ai_media_urls: [] as string[],
     collaborator_ids: [] as number[],
@@ -501,9 +503,17 @@ onUnmounted(() => {
                                     </div>
                                     
                                     <div class="space-y-2">
-                                        <label class="text-sm font-medium">Participant Seats *</label>
+                                        <label class="text-sm font-medium">
+                                            {{ form.type_tournoi === 'equipe' ? 'Number participant in equipe *' : 'Participant Seats *' }}
+                                        </label>
                                         <Input v-model.number="form.capacite_participant" type="number" />
                                         <InputError :message="formErrors?.capacite_participant?.[0]" />
+                                    </div>
+
+                                    <div v-if="form.type_tournoi === 'equipe'" class="space-y-2">
+                                        <label class="text-sm font-medium">Equipe Number *</label>
+                                        <Input v-model.number="form.nombre_equipes" type="number" />
+                                        <InputError :message="formErrors?.nombre_equipes?.[0]" />
                                     </div>
                                 </div>
                             </div>

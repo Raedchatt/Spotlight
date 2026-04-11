@@ -39,6 +39,11 @@ class StripeController extends Controller
             $unitPrice = (float) $evenement->prix_participant;
         }
 
+        // Check if a successful payment already exists for this reservation
+        if ($reservation->paiement && $reservation->paiement->isSucceeded()) {
+            return response()->json(['error' => 'Cette réservation est déjà payée.'], 422);
+        }
+
         try {
             $session = \Stripe\Checkout\Session::create([
                 'payment_method_types' => ['card'],
@@ -62,14 +67,16 @@ class StripeController extends Controller
                 ],
             ]);
 
-            Paiement::create([
-                'reservation_id'    => $reservation->id,
-                'montant'           => $unitPrice * $reservation->nombre_tickets,
-                'currency'          => 'eur',
-                'stripe_session_id' => $session->id,
-                'payment_method'    => 'card',
-                'statut'            => StatutPaiement::Pending,
-            ]);
+            Paiement::updateOrCreate(
+                ['reservation_id'    => $reservation->id],
+                [
+                    'montant'           => $unitPrice * $reservation->nombre_tickets,
+                    'currency'          => 'eur',
+                    'stripe_session_id' => $session->id,
+                    'payment_method'    => 'card',
+                    'statut'            => StatutPaiement::Pending,
+                ]
+            );
 
             return response()->json([
                 'checkout_url' => $session->url,

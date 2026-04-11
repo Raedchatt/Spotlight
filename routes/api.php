@@ -11,6 +11,10 @@ Route::get('/events/search', [EvenementController::class, 'search']);
 Route::get('/events', [EvenementController::class, 'index']);
 Route::get('/events/{event}', [EvenementController::class, 'show']);
 
+// Device Tokens (Public for mobile app)
+Route::post('/device-tokens', [\App\Http\Controllers\DeviceTokenController::class, 'store']);
+Route::delete('/device-tokens', [\App\Http\Controllers\DeviceTokenController::class, 'destroy']);
+
 Route::middleware('auth:sanctum')->group(function () {
 
     // Messages
