@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
+
+const page = usePage();
+const user = computed(() => page.props.auth?.user);
+const adminId = 40; // Hardcoded admin ID as per analysis
 </script>
 
 <template>
@@ -46,16 +51,22 @@ import { Link } from '@inertiajs/vue3';
           <h3 class="mb-6 text-xl font-bold text-white">Support</h3>
           <ul class="space-y-4">
             <li>
-              <Link href="#" class="hover:text-white transition-colors">About Us</Link>
+              <Link href="/about-us" class="hover:text-white transition-colors">About Us</Link>
             </li>
             <li>
-              <Link href="#" class="hover:text-white transition-colors">Contact Us</Link>
+              <Link 
+                :href="user ? `/messages/${adminId}` : '/login'" 
+                class="hover:text-white transition-colors"
+                :title="user ? 'Open conversation with admin' : 'Login to contact admin'"
+              >
+                Contact Us
+              </Link>
             </li>
             <li>
-              <Link href="#" class="hover:text-white transition-colors">Privacy Policy</Link>
+              <Link href="/privacy-policy" class="hover:text-white transition-colors">Privacy Policy</Link>
             </li>
             <li>
-              <Link href="#" class="hover:text-white transition-colors">Terms of Service</Link>
+              <Link href="/terms-of-service" class="hover:text-white transition-colors">Terms of Service</Link>
             </li>
           </ul>
         </div>

@@ -8,6 +8,7 @@ use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\MediaUploadController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\LegalController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -22,6 +23,11 @@ Route::get('/events/{id}', [EvenementController::class, 'show'])->name('events.s
 Route::get('/discovery', function () {
     return Inertia::render('Events/Discovery');
 })->name('discovery');
+
+// Legal Pages
+Route::get('/about-us', [LegalController::class, 'aboutUs'])->name('about-us');
+Route::get('/privacy-policy', [LegalController::class, 'privacyPolicy'])->name('privacy-policy');
+Route::get('/terms-of-service', [LegalController::class, 'termsOfService'])->name('terms-of-service');
 
 Route::get('/login', function () {
     return Inertia::render('auth/Login');
