@@ -66,6 +66,10 @@ interface Props {
         type_tournoi?: string;
         prix_participant?: number;
         capacite_participant?: number;
+        tournoi?: {
+            nombre_equipes?: number;
+            joueurs_par_equipe?: number;
+        };
         categorie: string;
         organisateur: {
             id: number;
@@ -625,13 +629,14 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                             Participants
                                         </div>
                                         <div class="text-sm text-muted-foreground">
-                                            <span class="font-bold text-foreground">{{ props.stats.participant_reserved }}</span> / {{ props.event.capacite_participant }} slots
+                                            <span class="font-bold text-foreground">{{ props.stats.participant_reserved }}</span> / 
+                                            {{ (props.event.type_tournoi === 'equipe' && props.event.tournoi) ? props.event.tournoi.nombre_equipes : props.event.capacite_participant }} slots
                                         </div>
                                     </div>
                                     <div class="w-full bg-muted rounded-full h-3 overflow-hidden">
                                         <div 
                                             class="bg-blue-600 h-full transition-all duration-1000" 
-                                            :style="{ width: progressPercentage(props.stats.participant_reserved ?? 0, props.event.capacite_participant ?? 1) + '%' }"
+                                            :style="{ width: progressPercentage(props.stats.participant_reserved ?? 0, (props.event.type_tournoi === 'equipe' && props.event.tournoi) ? props.event.tournoi.nombre_equipes : (props.event.capacite_participant ?? 1)) + '%' }"
                                         ></div>
                                     </div>
                                     <div class="flex justify-between text-xs font-bold uppercase tracking-wider text-zinc-400">

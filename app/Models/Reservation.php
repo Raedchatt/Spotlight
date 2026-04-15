@@ -171,11 +171,11 @@ class Reservation extends Model
     }
 
     /**
-     * The payments associated with this reservation.
+     * The payment associated with this reservation.
      */
-    public function paiements()
+    public function paiement()
     {
-        return $this->hasMany(Paiement::class);
+        return $this->hasOne(Paiement::class);
     }
 
     /**

@@ -386,11 +386,13 @@ class User extends Authenticatable
             throw new \Exception('The reservation must be confirmed before paying.');
         }
 
-        return Paiement::create([
-            'reservation_id' => $reservation->id,
-            'montant' => $reservation->evenement->prix_spectateur * $reservation->nombre_tickets,
-            'statut' => StatutPaiement::Succeeded,
-        ]);
+        return Paiement::updateOrCreate(
+            ['reservation_id' => $reservation->id],
+            [
+                'montant' => $reservation->evenement->prix_spectateur * $reservation->nombre_tickets,
+                'statut' => StatutPaiement::Succeeded,
+            ]
+        );
     }
 
     // -------------------------------------------------------------------------

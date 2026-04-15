@@ -162,7 +162,7 @@ const isEventEnded = (dateString: string) => {
                             <div class="flex flex-col">
                                 <span class="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Total Amount</span>
                                 <span class="font-bold text-blue-600">
-                                    {{ formatPrice(res.nombre_tickets * res.evenement.prix_spectateur) }}
+                                    {{ formatPrice(res.nombre_tickets * (res.ticket_type === 'participant' ? (res.evenement.prix_participant ?? res.evenement.prix_spectateur) : res.evenement.prix_spectateur)) }}
                                 </span>
                             </div>
                             <div class="flex items-center gap-2">

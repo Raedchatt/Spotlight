@@ -25,6 +25,8 @@ class Tournoi extends Model
         'prix_participant',
         'capacite_participant',
         'type_tournoi',
+        'nombre_equipes',
+        'joueurs_par_equipe',
     ];
 
     /**
@@ -38,6 +40,8 @@ class Tournoi extends Model
             'prix_participant' => 'double',
             'capacite_participant' => 'integer',
             'type_tournoi' => TypeTournoi::class,
+            'nombre_equipes' => 'integer',
+            'joueurs_par_equipe' => 'integer',
         ];
     }
 

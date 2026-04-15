@@ -47,7 +47,7 @@ class EvenementController extends Controller
     // Show Event Details (Public)
     public function show(Request $request, $id)
     {
-        $event = Evenement::with(['organisateur.organisateur', 'medias', 'collaborateurs.organizer.organisateur'])->findOrFail($id);
+        $event = Evenement::with(['organisateur.organisateur', 'medias', 'collaborateurs.organizer.organisateur', 'tournoi'])->findOrFail($id);
 
 
         // Stats calculation
@@ -60,7 +60,6 @@ class EvenementController extends Controller
                 'total_reserved' => $totalReserved,
                 'remaining' => max(0, $event->capacite_spectateur - $totalReserved),
             ];
-        } else {
             $participantReserved = Reservation::where('evenement_id', '=', $id)
                 ->where('ticket_type', '=', 'participant')
                 ->where('statut', '=', 'confirmed')
@@ -71,10 +70,15 @@ class EvenementController extends Controller
                 ->where('statut', '=', 'confirmed')
                 ->count();
 
+            $participantCapacity = ($event->type_tournoi === 'equipe' && $event->tournoi 
+                    && $event->tournoi->nombre_equipes > 0 && $event->tournoi->joueurs_par_equipe > 0) 
+                ? ($event->tournoi->nombre_equipes * $event->tournoi->joueurs_par_equipe) 
+                : $event->capacite_participant;
+
             $stats = [
                 'participant_reserved' => $participantReserved,
                 'spectator_reserved' => $spectatorReserved,
-                'participant_remaining' => max(0, $event->capacite_participant - $participantReserved),
+                'participant_remaining' => max(0, $participantCapacity - $participantReserved),
                 'spectator_remaining' => max(0, $event->capacite_spectateur - $spectatorReserved),
             ];
         }
@@ -142,7 +146,7 @@ class EvenementController extends Controller
      */
     public function managementStats($id)
     {
-        $event = Evenement::with(['collaborateurs.organizer'])->findOrFail($id);
+        $event = Evenement::with(['collaborateurs.organizer', 'tournoi'])->findOrFail($id);
 
         if (!$event->isManagedBy(Auth::id())) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
@@ -167,7 +171,6 @@ class EvenementController extends Controller
                 'total_revenue' => (float) $totalRevenue,
                 'capacity' => $event->capacite_spectateur
             ];
-        } else {
             $participantReserved = Reservation::where('evenement_id', '=', $id)
                 ->where('ticket_type', '=', 'participant')
                 ->where('statut', '=', 'confirmed')
@@ -190,13 +193,18 @@ class EvenementController extends Controller
                 ->get()
                 ->sum(fn($r) => $r->nombre_tickets * $event->prix_spectateur);
 
+            $participantCapacity = ($event->type_tournoi === 'equipe' && $event->tournoi 
+                    && $event->tournoi->nombre_equipes > 0 && $event->tournoi->joueurs_par_equipe > 0) 
+                ? ($event->tournoi->nombre_equipes * $event->tournoi->joueurs_par_equipe) 
+                : $event->capacite_participant;
+
             $stats = [
                 'participant_reserved' => (int) $participantReserved,
                 'spectator_reserved' => (int) $spectatorReserved,
-                'participant_remaining' => max(0, $event->capacite_participant - $participantReserved),
+                'participant_remaining' => max(0, $participantCapacity - $participantReserved),
                 'spectator_remaining' => max(0, $event->capacite_spectateur - $spectatorReserved),
                 'total_revenue' => (float) ($participantRevenue + $spectatorRevenue),
-                'participant_capacity' => $event->capacite_participant,
+                'participant_capacity' => $participantCapacity,
                 'spectator_capacity' => $event->capacite_spectateur
             ];
         }
@@ -276,6 +284,16 @@ class EvenementController extends Controller
             'statut' => StatutEvenement::EnAttente
         ]);
 
+        if ($event->is_tournoi) {
+            $event->tournoi()->create([
+                'prix_participant' => $request->prix_participant ?? 0,
+                'capacite_participant' => $request->capacite_participant ?? 0,
+                'type_tournoi' => $request->type_tournoi,
+                'nombre_equipes' => $request->nombre_equipes ?? null,
+                'joueurs_par_equipe' => $request->joueurs_par_equipe ?? null,
+            ]);
+        }
+
         if ($request->hasFile('medias')) {
             foreach ($request->file('medias') as $file) {
                 // Determine type based on mime type
@@ -325,7 +343,8 @@ class EvenementController extends Controller
         $this->notificationService->notifieParticipantsNouvelEvenement(
             $event->titre,
             $event->date_debut->format('M d, Y'),
-            $event->lieu
+            $event->lieu,
+            $event->id
         );
 
         // Notify Admins
@@ -419,6 +438,21 @@ class EvenementController extends Controller
             'poster_url' => $request->poster_url ?? $event->poster_url,
         ]);
 
+        if ($event->is_tournoi) {
+            $event->tournoi()->updateOrCreate(
+                ['evenement_id' => $event->id],
+                [
+                    'prix_participant' => $request->prix_participant ?? 0,
+                    'capacite_participant' => $request->capacite_participant ?? 0,
+                    'type_tournoi' => $request->type_tournoi,
+                    'nombre_equipes' => $request->nombre_equipes ?? null,
+                    'joueurs_par_equipe' => $request->joueurs_par_equipe ?? null,
+                ]
+            );
+        } else {
+            $event->tournoi()->delete();
+        }
+
         // Handle media deletion
         if ($request->has('media_to_delete')) {
             $mediaIds = $request->input('media_to_delete');
@@ -464,7 +498,7 @@ class EvenementController extends Controller
         }
 
         // Notify all participants about the event update
-        $this->notificationService->notifieParticipantsEvenementModifie($event->titre);
+        $this->notificationService->notifieParticipantsEvenementModifie($event->titre, $event->id);
 
         // Notify Admins
         $this->notificationService->notifieAdminsEvenementModifie(
@@ -527,7 +561,7 @@ class EvenementController extends Controller
         $event->update(['statut' => StatutEvenement::Annule]);
 
         // Notify all participants about the event cancellation
-        $this->notificationService->notifieParticipantsEvenementAnnule($event->titre);
+        $this->notificationService->notifieParticipantsEvenementAnnule($event->titre, $event->id);
 
         // Notify Admins
         $this->notificationService->notifieAdminsEvenementSupprime(

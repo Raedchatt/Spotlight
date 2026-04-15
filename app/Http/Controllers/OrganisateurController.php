@@ -211,7 +211,8 @@ class OrganisateurController extends Controller
         $this->notificationService->notifieParticipantsNouvelEvenement(
             $event->titre,
             $event->date_debut->format('M d, Y'),
-            $event->lieu
+            $event->lieu,
+            $event->id
         );
 
         return response()->json([
@@ -245,7 +246,7 @@ class OrganisateurController extends Controller
         $evenement->update($request->all());
 
         // Notify all participants about the event update
-        $this->notificationService->notifieParticipantsEvenementModifie($evenement->titre);
+        $this->notificationService->notifieParticipantsEvenementModifie($evenement->titre, $evenement->id);
 
         return response()->json([
             'message' => 'Event updated successfully.',
@@ -271,7 +272,7 @@ class OrganisateurController extends Controller
         $evenement->update(['statut' => StatutEvenement::Annule]);
 
         // Notify all participants about the event cancellation
-        $this->notificationService->notifieParticipantsEvenementAnnule($evenement->titre);
+        $this->notificationService->notifieParticipantsEvenementAnnule($evenement->titre, $evenement->id);
 
         return response()->json([
             'message' => 'Event cancelled successfully.',

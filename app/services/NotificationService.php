@@ -9,10 +9,17 @@ use App\Enums\Role;
 
 class NotificationService
 {
+    protected $expoPush;
+
+    public function __construct(ExpoPushService $expoPush)
+    {
+        $this->expoPush = $expoPush;
+    }
+
     /**
      * Notify all participants about a new event.
      */
-    public function notifieParticipantsNouvelEvenement(string $eventName, string $date, string $lieu)
+    public function notifieParticipantsNouvelEvenement(string $eventName, string $date, string $lieu, ?int $eventId = null)
     {
         $participantIds = User::where('role', '=', Role::Participant, 'and')->pluck('id')->toArray();
         Notification::creerPourPlusieurs(
@@ -20,12 +27,18 @@ class NotificationService
             TypeNotification::EVENEMENT_CREE,
             "New event: {$eventName} on {$date} at {$lieu}"
         );
+
+        $this->expoPush->sendToAll(
+            "🎉 New Event Available!",
+            "{$eventName} on {$date} at {$lieu}",
+            ['type' => 'new_event', 'evenement_id' => $eventId]
+        );
     }
 
     /**
      * Notify all participants about an event update.
      */
-    public function notifieParticipantsEvenementModifie(string $eventName)
+    public function notifieParticipantsEvenementModifie(string $eventName, ?int $eventId = null)
     {
         $participantIds = User::where('role', '=', Role::Participant, 'and')->pluck('id')->toArray();
         Notification::creerPourPlusieurs(
@@ -33,18 +46,30 @@ class NotificationService
             TypeNotification::EVENEMENT_MODIFIE,
             "Event updated: {$eventName} — check the latest details"
         );
+
+        $this->expoPush->sendToAll(
+            "📝 Event Updated",
+            "{$eventName} has been updated. Tap to see the latest details.",
+            ['type' => 'event_updated', 'evenement_id' => $eventId]
+        );
     }
 
     /**
      * Notify all participants about an event cancellation.
      */
-    public function notifieParticipantsEvenementAnnule(string $eventName)
+    public function notifieParticipantsEvenementAnnule(string $eventName, ?int $eventId = null)
     {
         $participantIds = User::where('role', '=', Role::Participant, 'and')->pluck('id')->toArray();
         Notification::creerPourPlusieurs(
             $participantIds,
             TypeNotification::EVENEMENT_SUPPRIME,
             "Event cancelled: {$eventName}"
+        );
+
+        $this->expoPush->sendToAll(
+            "❌ Event Cancelled",
+            "{$eventName} has been cancelled.",
+            ['type' => 'event_cancelled', 'evenement_id' => $eventId]
         );
     }
 

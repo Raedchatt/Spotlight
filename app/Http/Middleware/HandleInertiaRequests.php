@@ -43,7 +43,7 @@ class HandleInertiaRequests extends Middleware
             $counts['financials'] = \App\Models\Evenement::where('date_fin', '<', now())
                 ->where('statut', '!=', 'annule')
                 ->where('is_paid_out', false)
-                ->whereHas('reservations.paiements', function($q) {
+                ->whereHas('reservations.paiement', function($q) {
                     $q->where('statut', '=', \App\Enums\StatutPaiement::Succeeded);
                 })
                 ->count();

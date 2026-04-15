@@ -8,6 +8,7 @@ use App\Models\EventCollaborator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Evenement extends Model
 {
@@ -90,6 +91,14 @@ class Evenement extends Model
     public function collaborateurs(): HasMany
     {
         return $this->hasMany(EventCollaborator::class, 'evenement_id');
+    }
+
+    /**
+     * Detailed tournament information.
+     */
+    public function tournoi(): HasOne
+    {
+        return $this->hasOne(Tournoi::class, 'evenement_id');
     }
 
 

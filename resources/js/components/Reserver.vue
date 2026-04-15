@@ -50,14 +50,14 @@
       <!-- Quantity Selector -->
       <div class="mb-6">
         <label for="quantity" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-          Ticket Quantity
+          {{ isQuantityLocked ? 'Players per Team (fixed)' : 'Ticket Quantity' }}
         </label>
         
         <div class="flex items-center space-x-4">
           <button 
             type="button" 
             @click="decrement" 
-            :disabled="quantity <= 1 || isSubmitting"
+            :disabled="quantity <= 1 || isSubmitting || isQuantityLocked"
             class="w-12 h-12 rounded-full flex items-center justify-center bg-gray-50 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 shadow-sm border border-gray-200 dark:border-gray-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
           >
             <svg class="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
@@ -69,14 +69,15 @@
             v-model.number="quantity" 
             min="1" 
             :max="maxCapacity"
-            :disabled="isSubmitting"
+            :disabled="isSubmitting || isQuantityLocked"
             class="block w-full text-center text-xl font-bold border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors shadow-sm py-2 px-3"
+            :class="{ 'opacity-60 cursor-not-allowed': isQuantityLocked }"
           >
           
           <button 
             type="button" 
             @click="increment" 
-            :disabled="quantity >= maxCapacity || isSubmitting"
+            :disabled="quantity >= maxCapacity || isSubmitting || isQuantityLocked"
             class="w-12 h-12 rounded-full flex items-center justify-center bg-gray-50 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 shadow-sm border border-gray-200 dark:border-gray-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
           >
             <svg class="w-5 h-5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
@@ -173,8 +174,19 @@ const unitPrice = computed(() => {
   return props.event?.prix_spectateur || 0
 })
 
+const isQuantityLocked = computed(() => {
+  return props.event.is_tournoi && props.event.type_tournoi === 'equipe' && ticketType.value === 'participant'
+})
+
+const joueursParEquipe = computed(() => {
+  return props.event?.tournoi?.joueurs_par_equipe || props.event?.capacite_participant || 1
+})
+
 const maxCapacity = computed(() => {
   if (props.event.is_tournoi && ticketType.value === 'participant') {
+    if (props.event.type_tournoi === 'equipe') {
+      return props.event?.tournoi?.nombre_equipes || props.event?.capacite_participant || 0
+    }
     return props.event?.capacite_participant || 0
   }
   return props.event?.capacite_spectateur || 0
@@ -223,7 +235,9 @@ watch(quantity, (newVal) => {
 })
 
 watch(ticketType, () => {
-  if (quantity.value > maxCapacity.value) {
+  if (isQuantityLocked.value) {
+    quantity.value = joueursParEquipe.value
+  } else if (quantity.value > maxCapacity.value) {
     quantity.value = maxCapacity.value
   }
 })
