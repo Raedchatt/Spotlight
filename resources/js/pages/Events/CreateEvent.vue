@@ -462,7 +462,7 @@ onUnmounted(() => {
                                 <label class="text-sm font-medium">Maximum Seats *</label>
                                 <div class="relative">
                                     <Users class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                                    <Input v-model.number="form.capacite_spectateur" type="number" class="pl-10" />
+                                    <Input v-model.number="form.capacite_spectateur" type="number" min="0" class="pl-10" />
                                 </div>
                                 <InputError :message="formErrors?.capacite_spectateur?.[0]" />
                             </div>
@@ -471,7 +471,7 @@ onUnmounted(() => {
                                 <label class="text-sm font-medium">Ticket Price (TND) *</label>
                                 <div class="relative">
                                     <CircleDollarSign class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                                    <Input v-model.number="form.prix_spectateur" type="number" step="0.01" class="pl-10" />
+                                    <Input v-model.number="form.prix_spectateur" type="number" min="0" step="0.01" class="pl-10" />
                                 </div>
                                 <InputError :message="formErrors?.prix_spectateur?.[0]" />
                             </div>
@@ -496,13 +496,13 @@ onUnmounted(() => {
                                     
                                     <div class="space-y-2">
                                         <label class="text-sm font-medium">Participant Price (TND) *</label>
-                                        <Input v-model.number="form.prix_participant" type="number" step="0.01" />
+                                        <Input v-model.number="form.prix_participant" type="number" min="0" step="0.01" />
                                         <InputError :message="formErrors?.prix_participant?.[0]" />
                                     </div>
                                     
                                     <div class="space-y-2">
                                         <label class="text-sm font-medium">Participant Seats *</label>
-                                        <Input v-model.number="form.capacite_participant" type="number" />
+                                        <Input v-model.number="form.capacite_participant" type="number" min="0" />
                                         <InputError :message="formErrors?.capacite_participant?.[0]" />
                                     </div>
                                 </div>

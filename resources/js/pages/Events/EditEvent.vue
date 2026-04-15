@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router,usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import { 
     ChevronLeft, 
@@ -200,7 +200,7 @@ const submit = async () => {
 };
 
 // Collaboration feature logic
-import { usePage } from '@inertiajs/vue3';
+
 const page = usePage();
 const auth = computed(() => page.props.auth as any);
 
@@ -463,7 +463,7 @@ onMounted(async () => {
                                 <label class="text-sm font-medium">Maximum Capacity *</label>
                                 <div class="relative">
                                     <Users class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                                    <Input v-model.number="form.capacite_spectateur" type="number" class="pl-10" />
+                                    <Input v-model.number="form.capacite_spectateur" type="number" min="0" class="pl-10" />
                                 </div>
                                 <InputError :message="errors.capacite_spectateur?.[0]" />
                             </div>
@@ -472,7 +472,7 @@ onMounted(async () => {
                                 <label class="text-sm font-medium">Ticket Price (TND) *</label>
                                 <div class="relative">
                                     <CircleDollarSign class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                                    <Input v-model.number="form.prix_spectateur" type="number" step="0.01" class="pl-10" />
+                                    <Input v-model.number="form.prix_spectateur" type="number" min="0" step="0.01" class="pl-10" />
                                 </div>
                                 <InputError :message="errors.prix_spectateur?.[0]" />
                             </div> <!-- Close Ticket Price div -->
@@ -499,7 +499,7 @@ onMounted(async () => {
                                         <label class="text-sm font-medium">Participant Price (TND) *</label>
                                         <div class="relative">
                                             <CircleDollarSign class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                                            <Input v-model.number="form.prix_participant" type="number" step="0.01" class="pl-10" />
+                                            <Input v-model.number="form.prix_participant" type="number" min="0" step="0.01" class="pl-10" />
                                         </div>
                                         <InputError :message="errors.prix_participant?.[0]" />
                                     </div>
@@ -508,7 +508,7 @@ onMounted(async () => {
                                         <label class="text-sm font-medium">Participant Seats *</label>
                                         <div class="relative">
                                             <Users class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                                            <Input v-model.number="form.capacite_participant" type="number" class="pl-10" />
+                                            <Input v-model.number="form.capacite_participant" type="number" min="0" class="pl-10" />
                                         </div>
                                         <InputError :message="errors.capacite_participant?.[0]" />
                                     </div>

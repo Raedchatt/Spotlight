@@ -39,6 +39,18 @@ const handleOrganizerPayout = (id: number, stripeAccountId: string | null) => {
     }
 };
 
+const handleOrganizerRefund = (id: number) => {
+    if (confirm("Are you sure you want to refund ALL participants for this event? This action will mark the event as cancelled and cannot be undone.")) {
+        processingId.value = id;
+        router.post(`/admin/financials/organizer/${id}/refund`, {}, {
+            preserveScroll: true,
+            onSuccess: () => toast.success('Event refunded and cancelled successfully.'),
+            onError: () => toast.error('Refund failed. Please check logs.'),
+            onFinish: () => processingId.value = null
+        });
+    }
+};
+
 const handleAffiliatePayout = (id: number) => {
     if (confirm("Confirm payout for this affiliate? This will update their balance.")) {
         processingId.value = id;
@@ -116,15 +128,27 @@ const handleAffiliatePayout = (id: number) => {
                             <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400">
                                 {{ formatCurrency(item.net_payout) }}
                             </div>
-                            <button
-                                @click="handleOrganizerPayout(item.id, item.organisateur.stripe_account_id)"
-                                :disabled="processingId === item.id || !item.organisateur.stripe_account_id"
-                                class="w-full mt-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition text-sm"
-                            >
-                                <RefreshCw v-if="processingId === item.id" class="w-4 h-4 animate-spin" />
-                                <ExternalLink v-else class="w-4 h-4" />
-                                Pay via Stripe
-                            </button>
+                            <div class="w-full flex gap-2">
+                                <button
+                                    @click="handleOrganizerRefund(item.id)"
+                                    :disabled="processingId === item.id"
+                                    class="flex-1 mt-1 px-4 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition text-sm"
+                                    title="Refund Participants"
+                                >
+                                    <RefreshCw v-if="processingId === item.id" class="w-4 h-4 animate-spin" />
+                                    <AlertCircle v-else class="w-4 h-4" />
+                                    Refund
+                                </button>
+                                <button
+                                    @click="handleOrganizerPayout(item.id, item.organisateur.stripe_account_id)"
+                                    :disabled="processingId === item.id || !item.organisateur.stripe_account_id"
+                                    class="flex-[2] mt-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition text-sm"
+                                >
+                                    <RefreshCw v-if="processingId === item.id" class="w-4 h-4 animate-spin" />
+                                    <ExternalLink v-else class="w-4 h-4" />
+                                    Pay via Stripe
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

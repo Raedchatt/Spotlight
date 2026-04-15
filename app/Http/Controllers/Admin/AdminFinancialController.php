@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Stripe\Stripe;
 use Stripe\Transfer;
+use Stripe\Refund;
 
 class AdminFinancialController extends Controller
 {
@@ -173,5 +174,55 @@ class AdminFinancialController extends Controller
             \Illuminate\Support\Facades\Log::error('Stripe Transfer failed: ' . $e->getMessage());
             return back()->with('error', 'Stripe Transfer failed: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Refund participants for an event and mark it as cancelled.
+     */
+    public function refund(Evenement $event)
+    {
+        if ($event->is_paid_out) {
+            return back()->with('error', 'This event has already been paid out.');
+        }
+
+        Stripe::setApiKey(config('services.stripe.secret'));
+
+        $reservations = \App\Models\Reservation::where('evenement_id', '=', $event->id)
+            ->where('statut', '=', \App\Enums\StatutReservation::Confirmed->value)
+            ->get();
+
+        $refundedCount = 0;
+        $failedCount = 0;
+
+        foreach ($reservations as $reservation) {
+            $paiement = \App\Models\Paiement::where('reservation_id', '=', $reservation->id)
+                ->where('statut', '=', \App\Enums\StatutPaiement::Succeeded->value)
+                ->first();
+
+            if ($paiement && $paiement->stripe_payment_intent_id) {
+                try {
+                    Refund::create([
+                        'payment_intent' => $paiement->stripe_payment_intent_id,
+                    ]);
+
+                    $paiement->update(['statut' => \App\Enums\StatutPaiement::Refunded]);
+                    $refundedCount++;
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("Refund failed for reservation {$reservation->id}: " . $e->getMessage());
+                    $failedCount++;
+                }
+            }
+            
+            $reservation->update(['statut' => \App\Enums\StatutReservation::Cancelled]);
+        }
+
+        $event->update(['statut' => \App\Enums\StatutEvenement::Annule]);
+
+        // Reverse any pending commissions
+        \App\Models\Commission::where('evenement_id', $event->id)
+            ->where('status', \App\Enums\StatutCommission::Pending)
+            ->update(['status' => \App\Enums\StatutCommission::Reversed]);
+
+        return back()->with('success', "Event refunded successfully. $refundedCount refunds processed.");
     }
 }

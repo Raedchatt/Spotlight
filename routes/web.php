@@ -75,10 +75,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/my-reservations', [ReservationController::class, 'chercherReservationParParticipant']);
         Route::get('/events/{evenement}/reservations', [ReservationController::class, 'chercherReservationParEvenement']);
         Route::patch('/reservations/{reservation}/annuler', [ReservationController::class, 'annuler']);
-        
+
         // Stripe Payments
         Route::post('/paiement/checkout/{reservation}', [\App\Http\Controllers\StripeController::class, 'createCheckoutSession'])->name('paiement.checkout');
-        
+
         // Organizers Profile Management (via Session)
         Route::put('/organisateurs/{organisateur}', [\App\Http\Controllers\OrganisateurController::class, 'update']);
 
@@ -120,7 +120,7 @@ Route::middleware(['auth'])->group(function () {
     // ─────────────────────────────────────────────────────────────────────────
     Route::middleware(['role:administrateur'])->prefix('admin')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('admin.dashboard');
-        
+
         // Admin - User Management
         Route::get('/users', [\App\Http\Controllers\Admin\AdminUserController::class, 'index'])->name('admin.users.index');
         Route::post('/users', [\App\Http\Controllers\Admin\AdminUserController::class, 'store'])->name('admin.users.store');
@@ -135,6 +135,7 @@ Route::middleware(['auth'])->group(function () {
         // Admin - Financial Management
         Route::get('/financials', [\App\Http\Controllers\Admin\AdminFinancialController::class, 'index'])->name('admin.financials.index');
         Route::post('/financials/organizer/{event}/pay', [\App\Http\Controllers\Admin\AdminFinancialController::class, 'pay'])->name('admin.financials.pay');
+        Route::post('/financials/organizer/{event}/refund', [\App\Http\Controllers\Admin\AdminFinancialController::class, 'refund'])->name('admin.financials.refund');
         Route::post('/financials/affiliate/{commission}/approve', [\App\Http\Controllers\Admin\AdminFinancialController::class, 'approveAffiliate'])->name('admin.financials.approve');
     });
 
@@ -143,7 +144,7 @@ Route::middleware(['auth'])->group(function () {
     // ─────────────────────────────────────────────────────────────────────────
     Route::middleware(['role:organisateur'])->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
-        
+
         Route::prefix('dashboard')->group(function () {
             Route::get('/events', function () {
                 return Inertia::render('Events/EventsList');
