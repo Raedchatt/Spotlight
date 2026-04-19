@@ -88,7 +88,9 @@ const handleReject = (id: number) => {
                             </div>
                             <div class="flex items-center gap-2">
                                 <Tag class="w-4 h-4 text-indigo-500" />
-                                <span class="capitalize">{{ event.categorie }}</span>
+                                <span class="capitalize">
+                                    {{ event.categorie === 'autre' && event.categorie_autre ? event.categorie_autre : event.categorie }}
+                                </span>
                             </div>
                             <div class="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold">
                                 <span>Price: {{ formatCurrency(event.prix_spectateur) }}</span>

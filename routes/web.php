@@ -59,6 +59,7 @@ Route::prefix('web-api')->group(function () {
     Route::get('/events/search', [EvenementController::class, 'search']);
     Route::get('/events/{id}', [EvenementController::class, 'show']);
     Route::get('/events/{id}/management-stats', [EvenementController::class, 'managementStats'])->middleware('auth');
+    Route::get('/categories', [\App\Http\Controllers\CategoryController::class, 'index']);
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -129,8 +130,11 @@ Route::middleware(['auth'])->group(function () {
 
         // Admin - Event Management
         Route::get('/events', [\App\Http\Controllers\Admin\AdminEventController::class, 'index'])->name('admin.events.index');
+        Route::get('/events/all', [\App\Http\Controllers\Admin\AdminEventController::class, 'allEvents'])->name('admin.events.all');
+        Route::get('/organizers/search', [\App\Http\Controllers\Admin\AdminEventController::class, 'searchOrganizers'])->name('admin.organizers.search');
         Route::patch('/events/{event}/approve', [\App\Http\Controllers\Admin\AdminEventController::class, 'approve'])->name('admin.events.approve');
         Route::patch('/events/{event}/reject', [\App\Http\Controllers\Admin\AdminEventController::class, 'reject'])->name('admin.events.reject');
+        Route::delete('/events/{event}', [\App\Http\Controllers\Admin\AdminEventController::class, 'destroy'])->name('admin.events.destroy');
 
         // Admin - Financial Management
         Route::get('/financials', [\App\Http\Controllers\Admin\AdminFinancialController::class, 'index'])->name('admin.financials.index');

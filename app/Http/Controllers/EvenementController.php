@@ -250,6 +250,7 @@ class EvenementController extends Controller
             'prix_spectateur' => 'required|numeric',
             'capacite_spectateur' => 'required|integer',
             'categorie' => ['required', new Enum(CategorieEvenement::class)],
+            'categorie_autre' => 'required_if:categorie,autre|nullable|string|max:255',
         ]);
 
         $user = Auth::user();
@@ -276,6 +277,7 @@ class EvenementController extends Controller
             'prix_spectateur' => $request->input('prix_spectateur'),
             'capacite_spectateur' => $request->input('capacite_spectateur'),
             'categorie' => $request->input('categorie'),
+            'categorie_autre' => $request->input('categorie') === 'autre' ? $request->input('categorie_autre') : null,
             // Tournament fields
             'is_tournoi' => $request->has('is_tournoi') ? $request->boolean('is_tournoi') : false,
             'type_tournoi' => $request->type_tournoi ?? null,
@@ -405,6 +407,7 @@ class EvenementController extends Controller
                 'prix_spectateur' => 'required|numeric',
                 'capacite_spectateur' => 'required|integer',
                 'categorie' => ['required', new Enum(CategorieEvenement::class)],
+                'categorie_autre' => 'required_if:categorie,autre|nullable|string|max:255',
                 'statut' => ['required', new Enum(StatutEvenement::class)],
                 'is_tournoi' => 'sometimes|boolean',
                 'type_tournoi' => 'exclude_if:is_tournoi,0|required_if:is_tournoi,1|in:equipe,individuel',
@@ -429,6 +432,7 @@ class EvenementController extends Controller
             'prix_spectateur' => $request->prix_spectateur,
             'capacite_spectateur' => $request->capacite_spectateur,
             'categorie' => $request->categorie,
+            'categorie_autre' => $request->categorie === 'autre' ? $request->categorie_autre : null,
             'statut' => $request->statut,
             // Tournament fields
             'is_tournoi' => $request->has('is_tournoi') ? $request->boolean('is_tournoi') : false,

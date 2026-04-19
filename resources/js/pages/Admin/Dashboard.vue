@@ -7,8 +7,7 @@ import {
     Wallet, 
     ArrowUpRight, 
     ExternalLink,
-    Search,
-    Filter
+    Search
 } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -58,11 +57,7 @@ const formatCurrency = (amount: number) => {
                     <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">Admin Overview</h1>
                     <p class="text-gray-500 dark:text-gray-400 mt-1">Global platform performance and management.</p>
                 </div>
-                <div class="flex items-center gap-3">
-                    <button class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-500/20">
-                        <Filter class="w-4 h-4" /> Filter Range
-                    </button>
-                </div>
+                
             </div>
 
             <!-- ── KPI Cards ────────────────────────────────────────────────── -->

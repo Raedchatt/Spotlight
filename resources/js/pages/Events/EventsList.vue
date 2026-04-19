@@ -36,6 +36,16 @@ const breadcrumbs = [
 
 const events = ref<Evenement[]>([]);
 const loading = ref(true);
+const categories = ref<{slug: string; label: string}[]>([]);
+
+const fetchCategories = async () => {
+    try {
+        const res = await axios.get('/web-api/categories');
+        categories.value = res.data;
+    } catch (e) {
+        console.error('Failed to load categories', e);
+    }
+};
 
 const page = usePage();
 const auth = computed(() => page.props.auth as any);
@@ -137,6 +147,7 @@ const resetFilters = () => {
 };
 
 onMounted(() => {
+    fetchCategories();
     fetchEvents();
 });
 
@@ -200,11 +211,7 @@ const getStatusLabel = (statut: StatutEvenement) => {
                     <label class="text-sm font-medium">Category</label>
                     <select v-model="filters.categorie" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                         <option value="all">All Categories</option>
-                        <option value="sportifs">Sportifs</option>
-                        <option value="culturels">Culturels</option>
-                        <option value="scientifiques">Scientifiques</option>
-                        <option value="musicaux">Musicaux</option>
-                        <option value="commerciaux">Commerciaux</option>
+                        <option v-for="cat in categories" :key="cat.slug" :value="cat.slug">{{ cat.label }}</option>
                     </select>
                 </div>
 

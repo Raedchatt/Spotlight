@@ -59,6 +59,11 @@ const mainNavItems = computed<NavItem[]>(() => [
                     count: counts.value.event_validation,
                 },
                 {
+                    title: 'All Events',
+                    href: '/admin/events/all',
+                    icon: Search,
+                },
+                {
                     title: 'Financials',
                     href: '/admin/financials',
                     icon: Wallet,

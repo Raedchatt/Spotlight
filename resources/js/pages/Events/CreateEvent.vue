@@ -3,8 +3,10 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import { ChevronLeft, CircleDollarSign, Info, MapPin, Save, Sparkles, Users, AlertCircle } from 'lucide-vue-next';
 import { X } from 'lucide-vue-next';
-import { ref, computed, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { toast } from 'vue-sonner';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -49,6 +51,7 @@ const form = ref({
     prix_spectateur: 0,
     capacite_spectateur: 0,
     categorie: '',
+    categorie_autre: '',
     is_tournoi: false,
     type_tournoi: '',
     prix_participant: 0,
@@ -74,6 +77,17 @@ const isGenerating = ref(false);
 const generateError = ref<string | null>(null);
 const generationAttempts = ref(0);
 const MAX_ATTEMPTS = 3;
+
+// Categories (dynamic from API)
+const categories = ref<{ slug: string; label: string }[]>([]);
+const fetchCategories = async () => {
+    try {
+        const res = await axios.get('/web-api/categories');
+        categories.value = res.data;
+    } catch (e) {
+        console.error('Failed to load categories', e);
+    }
+};
 
 // Timeout manager
 const timeouts = new Set<ReturnType<typeof setTimeout>>();
@@ -199,7 +213,140 @@ const handleFileChange = (event: Event) => {
     }
 };
 
-// Submit form
+// Map Logic
+const mapContainer = ref<HTMLElement | null>(null);
+const map = ref<L.Map | null>(null);
+const marker = ref<L.Marker | null>(null);
+const isSearchingLocation = ref(false);
+const isUpdatingFromMap = ref(false);
+const locationSuggestions = ref<any[]>([]);
+const isFetchingSuggestions = ref(false);
+
+const initMap = () => {
+    if (!mapContainer.value) return;
+
+    // Fix for Leaflet default icon issues in build tools
+    const DefaultIcon = L.icon({
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+    });
+    L.Marker.prototype.options.icon = DefaultIcon;
+
+    map.value = L.map(mapContainer.value).setView([36.8065, 10.1815], 13); // Default to Tunis
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map.value);
+
+    marker.value = L.marker([36.8065, 10.1815], { draggable: true }).addTo(map.value);
+
+    marker.value.on('dragend', async () => {
+        const position = marker.value?.getLatLng();
+        if (position) {
+            updateAddressFromCoords(position.lat, position.lng);
+        }
+    });
+
+    // Handle map clicks
+    map.value.on('click', (e) => {
+        const { lat, lng } = e.latlng;
+        marker.value?.setLatLng([lat, lng]);
+        updateAddressFromCoords(lat, lng);
+    });
+};
+
+const updateAddressFromCoords = async (lat: number, lng: number) => {
+    try {
+        const response = await axios.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, { withCredentials: false });
+        if (response.data && response.data.display_name) {
+            isUpdatingFromMap.value = true;
+            form.value.lieu = response.data.display_name;
+            setTimeout(() => { isUpdatingFromMap.value = false; }, 500);
+        }
+    } catch (e) {
+        console.error('Reverse geocoding failed', e);
+    }
+};
+
+let geocodeTimeout: any = null;
+watch(() => form.value.lieu, (newVal) => {
+    if (!newVal || newVal.length < 3 || isSearchingLocation.value || isUpdatingFromMap.value) {
+        locationSuggestions.value = [];
+        return;
+    }
+
+    if (geocodeTimeout) clearTimeout(geocodeTimeout);
+    geocodeTimeout = setTimeout(async () => {
+        isFetchingSuggestions.value = true;
+        try {
+            // Added accept-language for better multilingual matching
+            const response = await axios.get(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(newVal)}&limit=5&accept-language=fr,en,ar`, { withCredentials: false });
+            locationSuggestions.value = response.data;
+            
+            // Real-time update: move map to first result found immediately
+            if (response.data && response.data.length > 0 && !isUpdatingFromMap.value) {
+                const { lat, lon } = response.data[0];
+                const newPos = new L.LatLng(parseFloat(lat), parseFloat(lon));
+                map.value?.setView(newPos, 14); // Zoom out slightly for real-time overview
+                marker.value?.setLatLng(newPos);
+            }
+        } catch (e) {
+            console.error('Fetching suggestions failed', e);
+        } finally {
+            isFetchingSuggestions.value = false;
+        }
+    }, 300);
+});
+
+const selectLocation = (suggestion: any) => {
+    const { lat, lon, display_name } = suggestion;
+    const newPos = new L.LatLng(parseFloat(lat), parseFloat(lon));
+    
+    isUpdatingFromMap.value = true;
+    form.value.lieu = display_name;
+    locationSuggestions.value = [];
+    
+    map.value?.setView(newPos, 16);
+    marker.value?.setLatLng(newPos);
+    
+    setTimeout(() => { isUpdatingFromMap.value = false; }, 500);
+};
+
+const handleLocationKeydown = (e: KeyboardEvent) => {
+    if (e.key === 'Enter' && locationSuggestions.value.length > 0) {
+        e.preventDefault();
+        selectLocation(locationSuggestions.value[0]);
+    }
+};
+
+const pingLocation = () => {
+    if (!navigator.geolocation) {
+        toast.error('Geolocation is not supported by your browser');
+        return;
+    }
+
+    isSearchingLocation.value = true;
+    navigator.geolocation.getCurrentPosition(
+        async (position) => {
+            const { latitude, longitude } = position.coords;
+            const newPos = new L.LatLng(latitude, longitude);
+            
+            map.value?.setView(newPos, 16);
+            marker.value?.setLatLng(newPos);
+            
+            await updateAddressFromCoords(latitude, longitude);
+            isSearchingLocation.value = false;
+        },
+        (error) => {
+            toast.error('Unable to retrieve your location');
+            isSearchingLocation.value = false;
+        }
+    );
+};
+
+// Original submit logic
 const submit = async () => {
     if (processing.value || isMissingStripe.value) return;
 
@@ -216,6 +363,10 @@ const submit = async () => {
                 value.forEach((u: string) => formData.append('ai_media_urls[]', u));
             } else if (key === 'collaborator_ids') {
                 value.forEach((id: number) => formData.append('collaborator_ids[]', String(id)));
+            } else if (key === 'categorie_autre') {
+                if (form.value.categorie === 'autre') {
+                    formData.append(key, String(value));
+                }
             } else {
                 formData.append(key, String(value));
             }
@@ -238,6 +389,11 @@ const submit = async () => {
         processing.value = false;
     }
 };
+
+onMounted(() => {
+    fetchCategories();
+    initMap();
+});
 
 onUnmounted(() => {
     clearSuggestedTimeouts();
@@ -307,13 +463,17 @@ onUnmounted(() => {
                                 <label class="text-sm font-medium">Category *</label>
                                 <select v-model="form.categorie" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                                     <option value="" disabled>Select a category</option>
-                                    <option value="sportifs">Sportifs</option>
-                                    <option value="culturels">Culturels</option>
-                                    <option value="scientifiques">Scientifiques</option>
-                                    <option value="musicaux">Musicaux</option>
-                                    <option value="commerciaux">Commerciaux</option>
+                                    <option v-for="cat in categories" :key="cat.slug" :value="cat.slug">{{ cat.label }}</option>
+                                    <option value="autre">Autre</option>
                                 </select>
                                 <InputError :message="formErrors?.categorie?.[0]" />
+                            </div>
+
+                            <!-- Custom category input when 'autre' is selected -->
+                            <div v-if="form.categorie === 'autre'" class="space-y-2">
+                                <label class="text-sm font-medium">Custom Category *</label>
+                                <Input v-model="form.categorie_autre" placeholder="Enter your custom category name..." />
+                                <InputError :message="formErrors?.categorie_autre?.[0]" />
                             </div>
                         </CardContent>
                     </Card>
@@ -330,7 +490,32 @@ onUnmounted(() => {
                                 <label class="text-sm font-medium">Venue / Location *</label>
                                 <div class="relative">
                                     <MapPin class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                                    <Input v-model="form.lieu" placeholder="Online or Physical Address" class="pl-10" />
+                                    <Input 
+                                        v-model="form.lieu" 
+                                        placeholder="Online or Physical Address" 
+                                        class="pl-10"
+                                        @keydown="handleLocationKeydown"
+                                        @blur="setTimeout(() => { locationSuggestions = [] }, 200)"
+                                    />
+                                    
+                                    <!-- Location Suggestions Dropdown -->
+                                    <div v-if="locationSuggestions.length > 0" class="absolute z-[100] w-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xl max-h-64 overflow-y-auto">
+                                        <button 
+                                            v-for="(s, i) in locationSuggestions" 
+                                            :key="i"
+                                            type="button"
+                                            class="w-full text-left px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 border-b border-slate-100 dark:border-slate-800 last:border-0 transition-colors flex items-start gap-3 group"
+                                            @mousedown="selectLocation(s)"
+                                        >
+                                            <div class="mt-1 w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-100 dark:group-hover:bg-blue-800/50 transition-colors">
+                                                <MapPin class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                            </div>
+                                            <div class="flex flex-col flex-1 min-w-0">
+                                                <span class="text-sm font-semibold truncate text-slate-900 dark:text-slate-100">{{ s.display_name.split(',')[0] }}</span>
+                                                <span class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 leading-relaxed">{{ s.display_name }}</span>
+                                            </div>
+                                        </button>
+                                    </div>
                                 </div>
                                 <InputError :message="formErrors?.lieu?.[0]" />
                             </div>
@@ -577,13 +762,16 @@ onUnmounted(() => {
                     </div>
                 </div>
 
-                <!-- Guidance Info Section -->
+                <!-- Guidance Info Section & Map -->
                 <div class="space-y-6">
-                    <Card class="bg-blue-600 text-white">
+                    <Card class="bg-blue-600 text-white shadow-lg overflow-hidden relative">
+                        <div class="absolute top-0 right-0 p-4 opacity-10">
+                            <Sparkles class="w-16 h-16" />
+                        </div>
                         <CardHeader>
                             <CardTitle class="text-lg">Tips for Success</CardTitle>
                         </CardHeader>
-                        <CardContent class="space-y-4 text-sm">
+                        <CardContent class="space-y-4 text-sm relative z-10">
                             <div class="flex gap-3">
                                 <Info class="w-5 h-5 flex-shrink-0" />
                                 <p>Use a catchy title that clearly states what the event is about.</p>
@@ -591,6 +779,37 @@ onUnmounted(() => {
                             <div class="flex gap-3">
                                 <Info class="w-5 h-5 flex-shrink-0" />
                                 <p>High-quality descriptions attract 40% more attendees.</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <!-- Map Card -->
+                    <Card class="overflow-hidden border-blue-100 shadow-md">
+                        <CardHeader class="pb-3 bg-slate-50/50">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2 text-blue-600">
+                                    <MapPin class="w-4 h-4" />
+                                    <CardTitle class="text-sm font-semibold">Event Location</CardTitle>
+                                </div>
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    class="h-8 gap-1.5 text-xs bg-white"
+                                    @click="pingLocation"
+                                    :disabled="isSearchingLocation"
+                                >
+                                    <Sparkles class="w-3.5 h-3.5" :class="{ 'animate-spin': isSearchingLocation }" />
+                                    {{ isSearchingLocation ? 'Locating...' : 'Ping My Location' }}
+                                </Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent class="p-0">
+                            <div ref="mapContainer" class="h-[300px] w-full z-0"></div>
+                            <div class="p-3 bg-blue-50/30 border-t border-blue-50">
+                                <p class="text-[11px] text-blue-700/70 flex items-center gap-1.5">
+                                    <Info class="w-3 h-3" />
+                                    Tip: Drag the marker or click on the map to refine the location.
+                                </p>
                             </div>
                         </CardContent>
                     </Card>

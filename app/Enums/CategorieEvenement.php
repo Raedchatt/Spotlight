@@ -9,4 +9,5 @@ enum CategorieEvenement: string
     case Scientifiques = 'scientifiques';
     case Musicaux = 'musicaux';
     case Commerciaux = 'commerciaux';
+    case Autre = 'autre';
 }

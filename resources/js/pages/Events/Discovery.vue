@@ -11,7 +11,7 @@ import {
     ChevronLeft,
     ChevronRight
 } from 'lucide-vue-next';
-import { ref, onMounted, watch} from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import EventCard from '@/components/EventCard.vue';
 import Reserver from '@/components/Reserver.vue';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +28,16 @@ const breadcrumbs = [
 
 const events = ref<Evenement[]>([]);
 const loading = ref(true);
+const categories = ref<{slug: string; label: string}[]>([]);
+
+const fetchCategories = async () => {
+    try {
+        const res = await axios.get('/web-api/categories');
+        categories.value = res.data;
+    } catch (e) {
+        console.error('Failed to load categories', e);
+    }
+};
 
 // Pagination state
 const pagination = ref({
@@ -88,6 +98,7 @@ const handlePageChange = (newPage: number) => {
 };
 
 onMounted(() => {
+    fetchCategories();
     fetchEvents();
 });
 
@@ -156,11 +167,7 @@ const resetFilters = () => {
                     <label class="text-sm font-medium">Category</label>
                     <select v-model="filters.categorie" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                         <option value="all">All Categories</option>
-                        <option value="sportifs">Sports</option>
-                        <option value="culturels">Cultural</option>
-                        <option value="scientifiques">Scientific</option>
-                        <option value="musicaux">Musical</option>
-                        <option value="commerciaux">Commercial</option>
+                        <option v-for="cat in categories" :key="cat.slug" :value="cat.slug">{{ cat.label }}</option>
                     </select>
                 </div>
 

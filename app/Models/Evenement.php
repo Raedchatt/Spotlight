@@ -27,6 +27,7 @@ class Evenement extends Model
         'is_paid_out',
         'paid_out_at',
         'categorie',
+        'categorie_autre',
         'is_tournoi',
         'type_tournoi',
         'prix_participant',
@@ -138,6 +139,11 @@ class Evenement extends Model
     public function isManagedBy(?int $userId, ?string $permission = null): bool
     {
         if (!$userId) return false;
+
+        $user = User::find($userId);
+        if ($user && $user->role === \App\Enums\Role::Administrateur) {
+            return true;
+        }
 
         if ($this->organisateur_id === $userId) {
             return true;
