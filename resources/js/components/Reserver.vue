@@ -92,7 +92,7 @@
       </div>
 
       <!-- Total Calculation Card -->
-      <div class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700/50 dark:to-gray-800/50 rounded-2xl p-5 mb-6 border border-gray-200/50 dark:border-gray-600/50">
+      <div class="bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-700/50 dark:to-gray-800/50 rounded-2xl p-5 mb-6 border border-gray-200/50 dark:border-gray-600/50">
         <div class="flex justify-between items-center">
           <span class="text-sm font-semibold text-gray-600 dark:text-gray-300">Total Price</span>
           <span class="text-3xl font-black text-blue-600 dark:text-blue-400">

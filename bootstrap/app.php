@@ -45,6 +45,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->redirectGuestsTo('/');
     })
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+        $schedule->command('app:update-event-status')->everyMinute();
+    })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

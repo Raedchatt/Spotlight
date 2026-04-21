@@ -140,7 +140,21 @@ const bannerImage = computed(() => {
             :style="{ backgroundImage: `url(${bannerImage})` }"
         >
             <div class="absolute top-4 left-4 flex flex-col gap-2">
-                <Badge :variant="getStatusVariant(event.statut)" class="capitalize shadow-sm w-fit bg-blue-600 hover:bg-blue-700 border-0 text-white">
+                <Badge 
+                    :variant="getStatusVariant(event.statut)" 
+                    :class="[
+                        'capitalize shadow-sm w-fit border-0 font-bold flex items-center gap-1.5 px-2.5 py-0.5',
+                        event.statut === 'encours' 
+                            ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' 
+                            : (event.statut === 'ouvert' || event.statut === 'valide' 
+                                ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                                : '')
+                    ]"
+                >
+                    <span v-if="event.statut === 'encours'" class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                    </span>
                     {{ getStatusLabel(event.statut) }}
                 </Badge>
                 <Badge v-if="event.is_tournoi" variant="default" class="bg-amber-500 hover:bg-amber-600 shadow-sm w-fit border-0 font-bold">
@@ -187,7 +201,7 @@ const bannerImage = computed(() => {
                         </template>
                     </span>
                     <span class="text-[10px] text-muted-foreground">
-                        {{ event.capacite_spectateur - (event.reservations_count || 0) }} seats left
+                        {{ event.capacite_spectateur - (Number(event.total_tickets_reserved) || 0) }} seats left
                     </span>
                 </div>
                 

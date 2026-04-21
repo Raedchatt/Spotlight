@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+
 import { Head } from '@inertiajs/vue3';
 import { 
   Languages, 
@@ -12,7 +12,7 @@ import {
   Database, 
   Scale 
 } from 'lucide-vue-next';
-
+import { ref, computed } from 'vue';
 type Language = 'en' | 'fr' | 'ar';
 
 const currentLang = ref<Language>('fr');

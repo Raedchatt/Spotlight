@@ -46,6 +46,7 @@ export interface Evenement {
     tournoi?: Tournoi;
     is_reserved?: boolean;
     reservations_count?: number;
+    total_tickets_reserved?: number | string;
     created_at: string;
     updated_at: string;
 }

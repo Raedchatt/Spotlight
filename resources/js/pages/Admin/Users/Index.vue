@@ -162,7 +162,7 @@ const displayRole = (role: string) => {
                             Add User
                         </button>
                     </DialogTrigger>
-                    <DialogContent class="sm:max-w-[425px] dark:bg-neutral-900 dark:border-neutral-800">
+                    <DialogContent class="sm:max-w-106.25 dark:bg-neutral-900 dark:border-neutral-800">
                         <DialogHeader>
                             <DialogTitle class="dark:text-white">Add New User</DialogTitle>
                             <DialogDescription class="dark:text-gray-400">
@@ -280,7 +280,7 @@ const displayRole = (role: string) => {
 
         <!-- Edit Modal -->
         <Dialog v-model:open="isEditModalOpen">
-            <DialogContent class="sm:max-w-[425px] dark:bg-neutral-900 dark:border-neutral-800">
+            <DialogContent class="sm:max-w-106.25 dark:bg-neutral-900 dark:border-neutral-800">
                 <DialogHeader>
                     <DialogTitle class="dark:text-white">Edit User</DialogTitle>
                     <DialogDescription class="dark:text-gray-400">
@@ -327,7 +327,7 @@ const displayRole = (role: string) => {
 
         <!-- Show Modal -->
         <Dialog v-model:open="isShowModalOpen">
-            <DialogContent class="sm:max-w-[425px] dark:bg-neutral-900 dark:border-neutral-800" v-if="selectedUser">
+            <DialogContent class="sm:max-w-106.25 dark:bg-neutral-900 dark:border-neutral-800" v-if="selectedUser">
                 <DialogHeader>
                     <DialogTitle class="dark:text-white">User Profile</DialogTitle>
                 </DialogHeader>

@@ -134,6 +134,11 @@ const getStatusBadge = (status: string) => {
 <template>
     <Dialog :open="open" @update:open="$emit('update:open', $event)">
         <DialogContent class="w-full max-w-full sm:max-w-[95vw] lg:max-w-[1200px] h-[100dvh] sm:h-[90vh] overflow-y-auto p-0 border-none bg-zinc-50 dark:bg-zinc-950 shadow-2xl transition-all duration-300">
+            <DialogHeader class="sr-only">
+                <DialogTitle>Event Management Dashboard</DialogTitle>
+                <DialogDescription>View statistics, participants, and manage event permissions.</DialogDescription>
+            </DialogHeader>
+
             <div v-if="loading" class="flex flex-col items-center justify-center py-24 space-y-4">
                 <Loader2 class="w-10 h-10 animate-spin text-blue-600" />
                 <p class="text-muted-foreground font-medium">Loading event intelligence...</p>

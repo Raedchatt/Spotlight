@@ -67,8 +67,8 @@ const fetchEvents = async () => {
         params.append('page', filters.value.page.toString());
         params.append('per_page', '9');
         
-        // Request only 'ouvert' events for the discovery page
-        params.append('statut', 'ouvert');
+        // Request both 'ouvert' and 'encours' events for the discovery page
+        params.append('statut', 'ouvert,encours');
         
         const response = await axios.get(`/web-api/events/search?${params.toString()}`);
         
@@ -172,7 +172,7 @@ const resetFilters = () => {
                 </div>
 
                 <div class="w-48 space-y-1.5">
-                    <label class="text-sm font-medium">Date</label>
+                    <label class="text-sm font-medium">Starting from</label>
                     <Input v-model="filters.date" type="date" />
                 </div>
 

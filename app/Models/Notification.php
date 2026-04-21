@@ -70,7 +70,11 @@ class Notification extends Model
             'data'       => !empty($data) ? $data : null,
         ]);
 
-        broadcast(new \App\Events\NotificationSent($notification));
+        try {
+            broadcast(new \App\Events\NotificationSent($notification));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Broadcast failed: ' . $e->getMessage());
+        }
 
         return $notification;
     }

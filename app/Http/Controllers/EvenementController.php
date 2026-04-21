@@ -53,22 +53,24 @@ class EvenementController extends Controller
         // Stats calculation
         $stats = [];
         if (!$event->is_tournoi) {
-            $totalReserved = Reservation::where('evenement_id', '=', $id)
-                ->where('statut', '=', 'confirmed')
-                ->count();
+            $totalReserved = (int) $event->reservations()
+                ->whereIn('statut', ['confirmed', 'pending'])
+                ->sum('nombre_tickets');
             $stats = [
                 'total_reserved' => $totalReserved,
                 'remaining' => max(0, $event->capacite_spectateur - $totalReserved),
+                'total_revenue' => (float) ($totalReserved * $event->prix_spectateur * 0.8),
             ];
-            $participantReserved = Reservation::where('evenement_id', '=', $id)
+        } else {
+            $participantReserved = (int) $event->reservations()
                 ->where('ticket_type', '=', 'participant')
-                ->where('statut', '=', 'confirmed')
-                ->count();
+                ->whereIn('statut', ['confirmed', 'pending'])
+                ->sum('nombre_tickets');
 
-            $spectatorReserved = Reservation::where('evenement_id', '=', $id)
+            $spectatorReserved = (int) $event->reservations()
                 ->where('ticket_type', '=', 'spectator')
-                ->where('statut', '=', 'confirmed')
-                ->count();
+                ->whereIn('statut', ['confirmed', 'pending'])
+                ->sum('nombre_tickets');
 
             $participantCapacity = ($event->type_tournoi === 'equipe' && $event->tournoi 
                     && $event->tournoi->nombre_equipes > 0 && $event->tournoi->joueurs_par_equipe > 0) 
@@ -80,6 +82,7 @@ class EvenementController extends Controller
                 'spectator_reserved' => $spectatorReserved,
                 'participant_remaining' => max(0, $participantCapacity - $participantReserved),
                 'spectator_remaining' => max(0, $event->capacite_spectateur - $spectatorReserved),
+                'total_revenue' => (float) (($participantReserved * ($event->prix_participant ?? 0) * 0.8) + ($spectatorReserved * $event->prix_spectateur * 0.8)),
             ];
         }
 
@@ -116,7 +119,12 @@ class EvenementController extends Controller
 
         if ($request->is('api/*') || ($request->wantsJson() && !$request->hasHeader('X-Inertia'))) {
             $event->loadCount('reservations');
+            $totalTicketsReserved = (int) $event->reservations()
+                ->whereIn('statut', ['confirmed', 'pending'])
+                ->sum('nombre_tickets');
+            
             return response()->json(array_merge($event->toArray(), [
+                'total_tickets_reserved' => $totalTicketsReserved,
                 'medias' => $event->medias,
                 'stats' => $stats,
                 'is_reserved' => $isReserved,
@@ -157,13 +165,13 @@ class EvenementController extends Controller
         // [Existing stats logic here, I'll use a larger replacement to be safe]
         if (!$event->is_tournoi) {
             $totalReserved = Reservation::where('evenement_id', '=', $id)
-                ->where('statut', '=', 'confirmed')
+                ->whereIn('statut', ['confirmed', 'pending'])
                 ->sum('nombre_tickets');
             
             $totalRevenue = Reservation::where('evenement_id', '=', $id)
                 ->where('statut', '=', 'confirmed')
                 ->get()
-                ->sum(fn($r) => $r->nombre_tickets * $event->prix_spectateur);
+                ->sum(fn($r) => $r->nombre_tickets * $event->prix_spectateur * 0.8);
 
             $stats = [
                 'total_reserved' => (int) $totalReserved,
@@ -171,6 +179,7 @@ class EvenementController extends Controller
                 'total_revenue' => (float) $totalRevenue,
                 'capacity' => $event->capacite_spectateur
             ];
+        } else {
             $participantReserved = Reservation::where('evenement_id', '=', $id)
                 ->where('ticket_type', '=', 'participant')
                 ->where('statut', '=', 'confirmed')
@@ -178,20 +187,20 @@ class EvenementController extends Controller
 
             $spectatorReserved = Reservation::where('evenement_id', '=', $id)
                 ->where('ticket_type', '=', 'spectator')
-                ->where('statut', '=', 'confirmed')
+                ->whereIn('statut', ['confirmed', 'pending'])
                 ->sum('nombre_tickets');
             
             $participantRevenue = Reservation::where('evenement_id', '=', $id)
                 ->where('ticket_type', '=', 'participant')
                 ->where('statut', '=', 'confirmed')
                 ->get()
-                ->sum(fn($r) => $r->nombre_tickets * ($event->prix_participant ?? 0));
+                ->sum(fn($r) => $r->nombre_tickets * ($event->prix_participant ?? 0) * 0.8);
             
             $spectatorRevenue = Reservation::where('evenement_id', '=', $id)
                 ->where('ticket_type', '=', 'spectator')
                 ->where('statut', '=', 'confirmed')
                 ->get()
-                ->sum(fn($r) => $r->nombre_tickets * $event->prix_spectateur);
+                ->sum(fn($r) => $r->nombre_tickets * $event->prix_spectateur * 0.8);
 
             $participantCapacity = ($event->type_tournoi === 'equipe' && $event->tournoi 
                     && $event->tournoi->nombre_equipes > 0 && $event->tournoi->joueurs_par_equipe > 0) 
@@ -590,7 +599,11 @@ class EvenementController extends Controller
     // Search events
     public function search(Request $request)
     {
-        $query = Evenement::with('medias')->withCount('reservations');
+        $query = Evenement::with('medias')
+            ->withCount('reservations')
+            ->withSum(['reservations as total_tickets_reserved' => function($q) {
+                $q->whereIn('statut', ['confirmed', 'pending']);
+            }], 'nombre_tickets');
 
         if ($request->has('organisateur_id')) {
             $query->parOrganisateur($request->input('organisateur_id'));

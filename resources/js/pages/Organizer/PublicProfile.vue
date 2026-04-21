@@ -9,6 +9,7 @@ interface Event {
     lieu: string;
     date_debut: string;
     categorie: string;
+    statut: string;
     reservations_count?: number;
     medias?: { url: string }[];
 }
@@ -198,10 +199,14 @@ const formatDate = (dateString: string) => {
                                 </div>
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
                                 
-                                <!-- Category Badge -->
-                                <div class="absolute top-4 left-4">
-                                    <span class="bg-white/95 dark:bg-neutral-900/95 backdrop-blur-sm text-gray-900 dark:text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest ring-1 ring-black/5">
-                                        {{ event.categorie }}
+                                <!-- Status & Category Badges -->
+                                <div class="absolute top-4 left-4 flex flex-col gap-2">
+                                    <span class="bg-white/95 dark:bg-neutral-900/95 backdrop-blur-sm text-gray-900 dark:text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest ring-1 ring-black/5 flex items-center gap-1.5">
+                                        <span v-if="event.statut === 'encours'" class="relative flex h-2 w-2">
+                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                                        </span>
+                                        {{ event.statut?.replace('_', ' ') || event.categorie }}
                                     </span>
                                 </div>
                             </div>

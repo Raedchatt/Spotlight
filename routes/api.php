@@ -10,6 +10,7 @@ use App\Http\Controllers\NotificationController;
 Route::get('/events/search', [EvenementController::class, 'search']);
 Route::get('/events', [EvenementController::class, 'index']);
 Route::get('/events/{event}', [EvenementController::class, 'show']);
+Route::get('/categories', [\App\Http\Controllers\CategoryController::class, 'index']);
 
 // Device Tokens (Public for mobile app)
 Route::post('/device-tokens', [\App\Http\Controllers\DeviceTokenController::class, 'store']);

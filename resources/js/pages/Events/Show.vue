@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, usePage, router } from '@inertiajs/vue3';
+import axios from 'axios';
+
+import L from 'leaflet';
 import { 
     Calendar, 
     MapPin, 
@@ -20,21 +23,18 @@ import {
     CheckCircle
 } from 'lucide-vue-next';
 import { computed, ref, onMounted, onUnmounted } from 'vue';
-import AppHeader from '@/components/AppHeader.vue';
-import AppFooter from '@/components/AppFooter.vue';
-import { useAuthModal } from '@/composables/useAuthModal';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { Button } from '@/components/ui/button/index';
+import { toast } from 'vue-sonner';
+import Reserver from '@/components/Reserver.vue';
 import { Badge } from '@/components/ui/badge/index';
+import { Button } from '@/components/ui/button/index';
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog';
-import Reserver from '@/components/Reserver.vue';
+
+import { useAuthModal } from '@/composables/useAuthModal';
+import AppLayout from '@/layouts/AppLayout.vue';
+import 'leaflet/dist/leaflet.css';
 
 interface EventMedia {
     id: number;
@@ -91,6 +91,7 @@ interface Props {
                 };
             };
         }>;
+        statut: string;
         medias: EventMedia[];
     };
     stats: {
@@ -100,6 +101,7 @@ interface Props {
         spectator_reserved?: number;
         participant_remaining?: number;
         spectator_remaining?: number;
+        total_revenue?: number;
     };
     is_reserved: boolean;
     is_pending_collaborator?: boolean;
@@ -131,9 +133,6 @@ const getInitials = (name: string) => {
     return name?.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) || '??';
 };
 
-const organizerName = computed(() => {
-    return props.event.organisateur?.organisateur?.nom_organisation || props.event.organisateur?.name || 'Unknown Organizer';
-});
 
 const eventTeam = computed(() => {
     const team = [];
@@ -211,17 +210,72 @@ const resetTimer = () => {
     startTimer();
 };
 
-onMounted(startTimer);
-onUnmounted(() => { if (timer) clearInterval(timer); });
+onMounted(() => {
+    startTimer();
+    initMap();
+});
+onUnmounted(() => { 
+    if (timer) clearInterval(timer); 
+    if (mapInstance.value) {
+        mapInstance.value.remove();
+    }
+});
 
 const progressPercentage = (reserved: number, total: number) => {
     if (total === 0) return 0;
     return Math.min(100, (reserved / total) * 100);
 };
 
-const mapUrl = computed(() => {
-    return `https://maps.google.com/maps?q=${encodeURIComponent(props.event.lieu)}&output=embed`;
-});
+const mapContainer = ref<HTMLElement | null>(null);
+const mapInstance = ref<L.Map | null>(null);
+
+const initMap = async () => {
+    if (!mapContainer.value) return;
+
+    let lat = 36.8065; // Default (Tunis)
+    let lon = 10.1815;
+    let zoom = 13;
+
+    try {
+        // Geocode address using Nominatim (OSM)
+        // Note: withCredentials: false is crucial to avoid CORS pre-flight failures on public APIs
+        const response = await axios.get(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(props.event.lieu)}&limit=1`, {
+            headers: { 'Accept-Language': 'fr,en,ar' },
+            withCredentials: false
+        });
+        
+        const results = response.data;
+        if (results && results.length > 0) {
+            lat = parseFloat(results[0].lat);
+            lon = parseFloat(results[0].lon);
+            zoom = 15;
+        }
+    } catch (error) {
+        console.error('Geocoding failed, using default coordinates:', error);
+    }
+
+    try {
+        // Initialize map (with fallback coordinates if geocoding failed)
+        mapInstance.value = L.map(mapContainer.value).setView([lat, lon], zoom);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(mapInstance.value as any);
+
+        // Add Marker
+        L.marker([lat, lon]).addTo(mapInstance.value as any)
+            .bindPopup(props.event.titre)
+            .openPopup();
+            
+        // Fix Leaflet tile loading issue in some containers
+        setTimeout(() => {
+            mapInstance.value?.invalidateSize();
+        }, 300);
+
+    } catch (error) {
+        console.error('Map initialization failed:', error);
+    }
+};
 
 const isFullyBooked = computed(() => {
     if (!props.event.is_tournoi) {
@@ -266,10 +320,6 @@ const reserveButtonText = computed(() => {
 
 const { openLogin } = useAuthModal();
 
-import axios from 'axios';
-import { toast } from 'vue-sonner';
-
-const isReserving = ref(false);
 const showReservationModal = ref(false);
 
 const onReservationSuccess = (data: any) => {
@@ -360,8 +410,6 @@ const handleReserveClick = () => {
     showReservationModal.value = true;
 };
 
-import { router } from '@inertiajs/vue3';
-
 const handleCollaboration = async (action: 'accept' | 'reject') => {
     try {
         await axios.post(`/web-api/events/${props.event.id}/collaborators/${action}`);
@@ -403,10 +451,10 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
             </div>
 
             <!-- 1. HERO SECTION -->
-            <div class="relative h-72 md:h-[500px] w-full overflow-hidden bg-zinc-900">
+            <div class="relative h-72 md:h-125 w-full overflow-hidden bg-zinc-900">
 
                 <!-- No media fallback -->
-                <div v-if="allMedias.length === 0" class="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center">
+                <div v-if="allMedias.length === 0" class="w-full h-full bg-linear-to-br from-zinc-700 to-zinc-900 flex items-center justify-center">
                     <Calendar class="w-20 h-20 text-zinc-600" />
                 </div>
 
@@ -479,7 +527,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                     </div>
                 </template>
 
-                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                <div class="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent"></div>
                 
                 <div class="absolute bottom-0 left-0 w-full p-6 md:p-12 max-w-7xl mx-auto right-0">
                     <div class="space-y-4">
@@ -576,15 +624,8 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                     <span class="font-medium">{{ props.event.lieu }}</span>
                                 </div>
                                 
-                                <div class="aspect-video w-full rounded-xl overflow-hidden grayscale contrast-125 border border-zinc-100 shadow-inner">
-                                    <iframe
-                                        width="100%"
-                                        height="100%"
-                                        frameborder="0"
-                                        style="border:0"
-                                        :src="mapUrl"
-                                        allowfullscreen
-                                    ></iframe>
+                                <div class="aspect-video w-full rounded-xl overflow-hidden border border-zinc-100 shadow-inner z-0">
+                                    <div ref="mapContainer" class="w-full h-full"></div>
                                 </div>
                             </div>
                         </div>
@@ -636,7 +677,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                     <div class="w-full bg-muted rounded-full h-3 overflow-hidden">
                                         <div 
                                             class="bg-blue-600 h-full transition-all duration-1000" 
-                                            :style="{ width: progressPercentage(props.stats.participant_reserved ?? 0, (props.event.type_tournoi === 'equipe' && props.event.tournoi) ? props.event.tournoi.nombre_equipes : (props.event.capacite_participant ?? 1)) + '%' }"
+                                            :style="{ width: progressPercentage(props.stats.participant_reserved ?? 0, (props.event.type_tournoi === 'equipe' && props.event.tournoi) ? (props.event.tournoi.nombre_equipes ?? 1) : (props.event.capacite_participant ?? 1)) + '%' }"
                                         ></div>
                                     </div>
                                     <div class="flex justify-between text-xs font-bold uppercase tracking-wider text-zinc-400">
@@ -687,8 +728,20 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                     <div class="space-y-6">
                                         <div class="flex items-center justify-between p-4 bg-muted/30 rounded-xl border border-border">
                                             <div class="text-sm font-bold text-muted-foreground uppercase tracking-wider">Status</div>
-                                            <Badge variant="outline" class="capitalize font-bold text-blue-600 border-blue-100 bg-blue-50/50">
-                                                Active
+                                            <Badge 
+                                                variant="outline" 
+                                                :class="[
+                                                    'capitalize font-bold flex items-center gap-1.5 px-3 py-1',
+                                                    props.event.statut === 'encours' 
+                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
+                                                        : 'text-blue-600 border-blue-100 bg-blue-50/50'
+                                                ]"
+                                            >
+                                                <span v-if="props.event.statut === 'encours'" class="relative flex h-2 w-2">
+                                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                                                </span>
+                                                {{ props.event.statut.replace('_', ' ') }}
                                             </Badge>
                                         </div>
 
@@ -696,11 +749,11 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                             <div class="p-4 bg-muted/30 rounded-xl border border-border">
                                                 <div class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Total Revenue</div>
                                                 <div class="text-lg font-black text-foreground">
-                                                    {{ ((props.stats.spectator_reserved ?? 0) * props.event.prix_spectateur) + ((props.stats.participant_reserved ?? 0) * (props.event.prix_participant ?? 0)) }} TND
+                                                    {{ props.stats.total_revenue ?? 0 }} TND
                                                 </div>
                                             </div>
                                             <div class="p-4 bg-muted/30 rounded-xl border border-border">
-                                                <div class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Reservations</div>
+                                                <div class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Spots Reserved</div>
                                                 <div class="text-lg font-black text-foreground">
                                                     {{ (props.stats.total_reserved ?? 0) + (props.stats.participant_reserved ?? 0) + (props.stats.spectator_reserved ?? 0) }}
                                                 </div>

@@ -238,9 +238,9 @@ const initMap = () => {
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map.value);
+    }).addTo(map.value as any);
 
-    marker.value = L.marker([36.8065, 10.1815], { draggable: true }).addTo(map.value);
+    marker.value = L.marker([36.8065, 10.1815], { draggable: true }).addTo(map.value as any);
 
     marker.value.on('dragend', async () => {
         const position = marker.value?.getLatLng();
@@ -319,6 +319,12 @@ const handleLocationKeydown = (e: KeyboardEvent) => {
         e.preventDefault();
         selectLocation(locationSuggestions.value[0]);
     }
+};
+
+const clearSuggestions = () => {
+    setTimeout(() => {
+        locationSuggestions.value = [];
+    }, 200);
 };
 
 const pingLocation = () => {
@@ -495,7 +501,7 @@ onUnmounted(() => {
                                         placeholder="Online or Physical Address" 
                                         class="pl-10"
                                         @keydown="handleLocationKeydown"
-                                        @blur="setTimeout(() => { locationSuggestions = [] }, 200)"
+                                        @blur="clearSuggestions"
                                     />
                                     
                                     <!-- Location Suggestions Dropdown -->

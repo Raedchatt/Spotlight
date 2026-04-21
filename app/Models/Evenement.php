@@ -113,9 +113,9 @@ class Evenement extends Model
      */
     public function hasAvailableSpots(): bool
     {
-        $taken = $this->reservations()
+        $taken = (int) $this->reservations()
             ->whereIn('statut', ['pending', 'confirmed'])
-            ->count();
+            ->sum('nombre_tickets');
 
         return $taken < $this->capacite_spectateur;
     }
@@ -128,7 +128,7 @@ class Evenement extends Model
     {
         return $this->reservations()
             ->where('user_id', $user->id)
-            ->whereIn('statut', ['pending', 'confirmed'])
+            ->whereIn('statut', ['confirmed'])
             ->exists();
     }
 
@@ -141,7 +141,7 @@ class Evenement extends Model
         if (!$userId) return false;
 
         $user = User::find($userId);
-        if ($user && $user->role === \App\Enums\Role::Administrateur) {
+        if ($user && $user->role === \App\Enums\Role::Admin) {
             return true;
         }
 
@@ -181,8 +181,7 @@ class Evenement extends Model
      */
     public function scopeParDate(Builder $query, string $date): Builder
     {
-        return $query->whereDate('date_debut', '<=', $date)
-            ->whereDate('date_fin', '>=', $date);
+        return $query->whereDate('date_debut', '>=', $date);
     }
 
     /**
