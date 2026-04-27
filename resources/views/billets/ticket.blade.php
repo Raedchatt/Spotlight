@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Billet - {{ $evenement->titre }}</title>
+    <title>Ticket - {{ $evenement->titre }}</title>
     <style>
         body { 
             font-family: 'DejaVu Sans', sans-serif; 
@@ -148,33 +148,33 @@
     <div class="ticket">
         <div class="header">
             <h1>SPOTLIGHT<span class="dot">.</span></h1>
-            <p class="subtitle">Billet Électronique Officiel</p>
+            <p class="subtitle">Official Electronic Ticket</p>
         </div>
 
         <div class="content clearfix">
             <div class="col-left">
-                <div class="section-title">Détails de l'évènement</div>
+                <div class="section-title">Event Details</div>
                 <h2 class="event-title">{{ $evenement->titre }}</h2>
                 
                 <div class="info-row">
                     <strong>Date :</strong> {{ \Carbon\Carbon::parse($evenement->date_debut)->format('d/m/Y H:i') }}
                 </div>
                 <div class="info-row">
-                    <strong>Lieu :</strong> {{ $evenement->lieu }}
+                    <strong>Location :</strong> {{ $evenement->lieu }}
                 </div>
 
                 <div class="reservation-box">
-                    <div class="section-title" style="color:#6b7280;">Informations Réservation</div>
-                    <div class="info-row"><strong>Titulaire :</strong> {{ $user->username }}</div>
+                    <div class="section-title" style="color:#6b7280;">Reservation Information</div>
+                    <div class="info-row"><strong>Holder :</strong> {{ $user->username }}</div>
                     <div class="info-row"><strong>Type :</strong> <span style="text-transform: capitalize;">{{ $reservation->ticket_type }}</span></div>
-                    <div class="info-row"><strong>Quantité :</strong> {{ $reservation->nombre_tickets }} place(s)</div>
+                    <div class="info-row"><strong>Quantity :</strong> {{ $reservation->nombre_tickets }} place(s)</div>
                     <div class="info-row" style="margin-top: 15px; border-top: 1px solid #e5e7eb; padding-top: 15px;">
-                        <strong>Montant payé :</strong>
+                        <strong>Amount Paid :</strong>
                         <span class="total-price">
                             @if($paiement)
                                 {{ number_format($paiement->montant, 2) }} TND
                             @else
-                                GRATUIT
+                                FREE
                             @endif
                         </span>
                     </div>
@@ -183,19 +183,19 @@
 
             <div class="col-right">
                 <div class="qr-section">
-                    <div class="qr-label">Code d'entrée</div>
+                    <div class="qr-label">Entry Code</div>
                     <div class="qr-code">
-                        <img src="{{ $qrCode }}" alt="Code QR">
+                        <img src="{{ $qrCode }}" alt="QR Code">
                     </div>
                     <div class="qr-text">{{ $billet->codeQR }}</div>
-                    <div style="font-size: 10px; color:#9ca3af; margin-top: 15px; text-transform: uppercase; font-weight: bold;">Valide pour 1 entrée</div>
+                    <div style="font-size: 10px; color:#9ca3af; margin-top: 15px; text-transform: uppercase; font-weight: bold;">Valid for 1 entry</div>
                 </div>
             </div>
         </div>
 
         <div class="footer">
-            <p>Ce billet est unique et ne peut être utilisé qu'une seule fois.</p>
-            <p>Généré le {{ \Carbon\Carbon::parse($billet->dateEmission)->format('d/m/Y H:i') }}</p>
+            <p>This ticket is unique and can only be used once.</p>
+            <p>Generated on {{ \Carbon\Carbon::parse($billet->dateEmission)->format('d/m/Y H:i') }}</p>
         </div>
     </div>
 </body>

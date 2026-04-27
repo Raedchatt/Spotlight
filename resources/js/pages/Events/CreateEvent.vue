@@ -5,6 +5,7 @@ import { ChevronLeft, CircleDollarSign, Info, MapPin, Save, Sparkles, Users, Ale
 import { X } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { toast } from 'vue-sonner';
+// @ts-ignore
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -250,7 +251,7 @@ const initMap = () => {
     });
 
     // Handle map clicks
-    map.value.on('click', (e) => {
+    map.value.on('click', (e: any) => {
         const { lat, lng } = e.latlng;
         marker.value?.setLatLng([lat, lng]);
         updateAddressFromCoords(lat, lng);

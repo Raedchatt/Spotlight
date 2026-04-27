@@ -12,7 +12,7 @@ const isPermanent = computed(() => !props.blockedUntil);
 
 const formattedDate = computed(() => {
     if (!props.blockedUntil) return null;
-    return new Date(props.blockedUntil).toLocaleString('fr-FR', {
+    return new Date(props.blockedUntil).toLocaleString('en-US', {
         day: '2-digit',
         month: 'long',
         year: 'numeric',
@@ -33,7 +33,7 @@ const logout = () => {
 </script>
 
 <template>
-    <Head title="Compte Bloqué" />
+    <Head title="Account Blocked" />
 
     <div class="min-h-screen bg-gradient-to-br from-gray-900 via-red-950 to-gray-900 flex items-center justify-center p-4">
         <!-- Background pattern -->
@@ -50,9 +50,9 @@ const logout = () => {
                 </div>
 
                 <!-- Title -->
-                <h1 class="text-3xl font-bold text-white mb-2">Compte Suspendu</h1>
+                <h1 class="text-3xl font-bold text-white mb-2">Account Suspended</h1>
                 <p class="text-red-300/80 text-base mb-8">
-                    Votre accès à la plateforme a été temporairement restreint par un administrateur.
+                    Your access to the platform has been temporarily restricted by an administrator.
                 </p>
 
                 <!-- Block Info Card -->
@@ -62,8 +62,8 @@ const logout = () => {
                             <ShieldBan class="w-5 h-5 text-red-400" />
                         </div>
                         <div>
-                            <p class="text-xs text-red-400/70 uppercase font-semibold tracking-wider">Durée</p>
-                            <p class="text-white font-semibold">Suspension permanente</p>
+                            <p class="text-xs text-red-400/70 uppercase font-semibold tracking-wider">Duration</p>
+                            <p class="text-white font-semibold">Permanent suspension</p>
                         </div>
                     </div>
 
@@ -73,15 +73,15 @@ const logout = () => {
                                 <Clock class="w-5 h-5 text-orange-400" />
                             </div>
                             <div>
-                                <p class="text-xs text-orange-400/70 uppercase font-semibold tracking-wider">Bloqué jusqu'au</p>
+                                <p class="text-xs text-orange-400/70 uppercase font-semibold tracking-wider">Blocked until</p>
                                 <p class="text-white font-semibold">{{ formattedDate }}</p>
                             </div>
                         </div>
                         <div class="border-t border-white/5 pt-4">
                             <p class="text-orange-300/70 text-sm text-center">
-                                Il vous reste encore
-                                <span class="font-bold text-orange-300 text-base"> {{ daysRemaining }} jour{{ daysRemaining !== 1 ? 's' : '' }} </span>
-                                de suspension.
+                                You still have
+                                <span class="font-bold text-orange-300 text-base"> {{ daysRemaining }} day{{ daysRemaining !== 1 ? 's' : '' }} </span>
+                                of suspension remaining.
                             </p>
                         </div>
                     </template>
@@ -89,7 +89,7 @@ const logout = () => {
 
                 <!-- Message -->
                 <p class="text-gray-400 text-sm mb-8">
-                    Si vous pensez que c'est une erreur, veuillez contacter le support de la plateforme.
+                    If you believe this is an error, please contact the platform support.
                 </p>
 
                 <!-- Buttons -->
@@ -99,14 +99,14 @@ const logout = () => {
                         class="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 border border-white/10 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200"
                     >
                         <ArrowLeft class="w-4 h-4" />
-                        Retour à la connexion
+                        Back to Login
                     </button>
                     <button
                         @click="logout"
                         class="w-full flex items-center justify-center gap-2 text-gray-500 hover:text-gray-300 font-medium py-2 px-6 rounded-xl transition-all duration-200 text-sm"
                     >
                         <LogOut class="w-4 h-4" />
-                        Se déconnecter uniquement
+                        Logout only
                     </button>
                 </div>
             </div>

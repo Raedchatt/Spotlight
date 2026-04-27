@@ -36,7 +36,7 @@ const fetchReservations = async () => {
 };
 
 const cancelReservation = async (id: number) => {
-    if (!confirm('Voulez-vous vraiment annuler cette réservation ?')) return;
+    if (!confirm('Are you sure you want to cancel this reservation?')) return;
 
     try {
         await axios.patch(`/web-api/reservations/${id}/annuler`);
@@ -81,7 +81,7 @@ const getStatusIcon = (statut: string) => {
 };
 
 const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-FR', {
+    return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'TND'
     }).format(price);
@@ -195,7 +195,7 @@ const isEventEnded = (dateString: string) => {
                                     variant="outline" 
                                     class="text-destructive hover:bg-destructive/5 border-destructive disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <XCircle class="w-4 h-4 mr-1" /> Annuler
+                                    <XCircle class="w-4 h-4 mr-1" /> Cancel
                                 </Button>
                             </div>
                         </div>
