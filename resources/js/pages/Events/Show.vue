@@ -2,6 +2,7 @@
 import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import axios from 'axios';
 
+// @ts-ignore
 import L from 'leaflet';
 import { 
     Calendar, 
@@ -164,7 +165,7 @@ const eventTeam = computed(() => {
 });
 
 const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
+    return new Date(dateString).toLocaleDateString('en-US', {
         day: 'numeric',
         month: 'long',
         year: 'numeric'
@@ -172,7 +173,7 @@ const formatDate = (dateString: string) => {
 };
 
 const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('fr-FR', {
+    return new Date(dateString).toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit'
     });
@@ -240,7 +241,7 @@ const initMap = async () => {
         // Geocode address using Nominatim (OSM)
         // Note: withCredentials: false is crucial to avoid CORS pre-flight failures on public APIs
         const response = await axios.get(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(props.event.lieu)}&limit=1`, {
-            headers: { 'Accept-Language': 'fr,en,ar' },
+            headers: { 'Accept-Language': 'en,fr,ar' },
             withCredentials: false
         });
         

@@ -13,7 +13,7 @@ const props = defineProps({
 });
 
 const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString('fr-FR', {
+    return new Date(dateString).toLocaleString('en-US', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -30,7 +30,7 @@ const printTicket = () => {
 <template>
     <!-- Screen View -->
     <div class="print:hidden">
-        <Head title="Votre Billet" />
+        <Head title="Your Ticket" />
 
         <AppLayout>
             <div class="py-12 bg-gray-50 dark:bg-gray-900 min-h-screen">
@@ -41,7 +41,7 @@ const printTicket = () => {
                             class="inline-flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors text-sm font-bold gap-2 bg-white dark:bg-gray-800 px-4 py-2 rounded-xl shadow-sm hover:shadow-md border border-gray-100 dark:border-gray-700 w-fit"
                         >
                             <ArrowLeft class="w-4 h-4" />
-                            Retour aux évènements
+                            Back to Events
                         </Link>
                     </div>
 
@@ -55,7 +55,7 @@ const printTicket = () => {
                                     <h1 class="text-4xl font-black text-gray-900 dark:text-white tracking-tight mb-2">
                                         SPOTLIGHT <span class="text-rose-600">.</span>
                                     </h1>
-                                    <p class="text-gray-500 dark:text-gray-400 font-medium tracking-wide text-sm uppercase">Billet Électronique Officiel</p>
+                                    <p class="text-gray-500 dark:text-gray-400 font-medium tracking-wide text-sm uppercase">Official Electronic Ticket</p>
                                 </div>
                                 <div class="mt-4 md:mt-0 flex gap-4 print:hidden">
                                     <a 
@@ -65,13 +65,13 @@ const printTicket = () => {
                                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                         </svg>
-                                        Télécharger PDF
+                                        Download PDF
                                     </a>
                                     <button 
                                         @click="printTicket"
                                         class="inline-flex items-center px-6 py-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-white font-bold rounded-2xl hover:bg-gray-50 transition-all text-sm"
                                     >
-                                        Imprimer
+                                        Print
                                     </button>
                                 </div>
                             </div>
@@ -82,7 +82,7 @@ const printTicket = () => {
                                 
                                 <div class="space-y-8 md:pr-6">
                                     <div>
-                                        <h2 class="text-xs font-bold text-rose-600 uppercase tracking-widest mb-4">Détails de l'évènement</h2>
+                                        <h2 class="text-xs font-bold text-rose-600 uppercase tracking-widest mb-4">Event Details</h2>
                                         <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2 uppercase">{{ evenement.titre }}</h3>
                                         <div class="flex items-center text-gray-600 dark:text-gray-300 mb-2 font-medium">
                                             <svg class="w-5 h-5 mr-2 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -95,10 +95,10 @@ const printTicket = () => {
                                     </div>
 
                                     <div class="bg-gray-50/80 dark:bg-gray-700/50 p-6 rounded-2xl border border-gray-100 dark:border-gray-600 shadow-sm backdrop-blur-sm print:bg-white print:border-gray-200 text-sm">
-                                        <h2 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-4">Informations Réservation</h2>
+                                        <h2 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-4">Reservation Information</h2>
                                         <div class="grid grid-cols-2 gap-4">
                                             <div>
-                                                <p class="text-gray-500 dark:text-gray-400">Titulaire</p>
+                                                <p class="text-gray-500 dark:text-gray-400">Holder</p>
                                                 <p class="font-bold text-gray-900 dark:text-white text-base">{{ user.username }}</p>
                                             </div>
                                             <div>
@@ -106,17 +106,17 @@ const printTicket = () => {
                                                 <p class="font-bold text-gray-900 dark:text-white capitalize text-base">{{ reservation.ticket_type }}</p>
                                             </div>
                                             <div>
-                                                <p class="text-gray-500 dark:text-gray-400">Quantité</p>
+                                                <p class="text-gray-500 dark:text-gray-400">Quantity</p>
                                                 <p class="font-bold text-gray-900 dark:text-white text-base">{{ reservation.nombre_tickets }} place(s)</p>
                                             </div>
                                             <div>
-                                                <p class="text-gray-500 dark:text-gray-400">Montant payé</p>
+                                                <p class="text-gray-500 dark:text-gray-400">Amount Paid</p>
                                                 <p class="font-bold text-rose-600 text-lg">
                                                     <template v-if="paiement">
-                                                        {{ paiement.montant.toLocaleString('fr-FR') }} TND
+                                                        {{ paiement.montant.toLocaleString('en-US') }} TND
                                                     </template>
                                                     <template v-else>
-                                                        GRATUIT
+                                                        FREE
                                                     </template>
                                                 </p>
                                             </div>
@@ -132,15 +132,15 @@ const printTicket = () => {
                                     </div>
                                     
                                     <div class="relative z-10 text-center">
-                                        <p class="text-xs font-bold text-rose-500 uppercase tracking-tighter mb-1">Code de validation</p>
+                                        <p class="text-xs font-bold text-rose-500 uppercase tracking-tighter mb-1">Validation Code</p>
                                         <p class="text-2xl font-mono tracking-[0.3em] font-black print:text-black">{{ billet.codeQR }}</p>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="mt-12 text-center text-gray-400 text-xs">
-                                <p>Ce billet est unique et ne peut être utilisé qu'une seule fois.</p>
-                                <p class="mt-1">• Date d'émission : {{ formatDate(billet.dateEmission) }} •</p>
+                                <p>This ticket is unique and can only be used once.</p>
+                                <p class="mt-1">• Issue Date : {{ formatDate(billet.dateEmission) }} •</p>
                             </div>
                         </div>
                     </div>
@@ -151,7 +151,7 @@ const printTicket = () => {
                             class="inline-flex items-center text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors text-sm font-medium gap-2"
                         >
                             <ArrowLeft class="w-4 h-4" />
-                            Retour aux évènements
+                            Back to Events
                         </Link>
                     </div>
                 </div>
@@ -163,34 +163,34 @@ const printTicket = () => {
     <div class="hidden print:block print-ticket-container">
         <div class="p-header">
             <h1>SPOTLIGHT<span class="p-dot">.</span></h1>
-            <p class="p-subtitle">Billet Électronique Officiel</p>
+            <p class="p-subtitle">Official Electronic Ticket</p>
         </div>
 
         <div class="p-content p-clearfix">
             <div class="p-col-left">
-                <div class="p-section-title">Détails de l'évènement</div>
+                <div class="p-section-title">Event Details</div>
                 <h2 class="p-event-title">{{ evenement.titre }}</h2>
                 
                 <div class="p-info-row">
                     <strong>Date :</strong> {{ formatDate(evenement.date_debut) }}
                 </div>
                 <div class="p-info-row">
-                    <strong>Lieu :</strong> {{ evenement.lieu }}
+                    <strong>Location :</strong> {{ evenement.lieu }}
                 </div>
 
                 <div class="p-reservation-box">
-                    <div class="p-section-title" style="color:#6b7280;">Informations Réservation</div>
-                    <div class="p-info-row"><strong>Titulaire :</strong> {{ user.username }}</div>
+                    <div class="p-section-title" style="color:#6b7280;">Reservation Information</div>
+                    <div class="p-info-row"><strong>Holder :</strong> {{ user.username }}</div>
                     <div class="p-info-row"><strong>Type :</strong> <span style="text-transform: capitalize;">{{ reservation.ticket_type }}</span></div>
-                    <div class="p-info-row"><strong>Quantité :</strong> {{ reservation.nombre_tickets }} place(s)</div>
+                    <div class="p-info-row"><strong>Quantity :</strong> {{ reservation.nombre_tickets }} place(s)</div>
                     <div class="p-info-row" style="margin-top: 15px; border-top: 1px solid #e5e7eb; padding-top: 15px;">
-                        <strong>Montant payé :</strong>
+                        <strong>Amount Paid :</strong>
                         <span class="p-total-price">
                             <template v-if="paiement">
-                                {{ paiement.montant.toLocaleString('fr-FR') }} TND
+                                {{ paiement.montant.toLocaleString('en-US') }} TND
                             </template>
                             <template v-else>
-                                GRATUIT
+                                FREE
                             </template>
                         </span>
                     </div>
@@ -199,19 +199,19 @@ const printTicket = () => {
 
             <div class="p-col-right">
                 <div class="p-qr-section">
-                    <div class="p-qr-label">Code d'entrée</div>
+                    <div class="p-qr-label">Entry Code</div>
                     <div class="p-qr-code">
-                        <img :src="qrCode" alt="Code QR">
+                        <img :src="qrCode" alt="QR Code">
                     </div>
                     <div class="p-qr-text">{{ billet.codeQR }}</div>
-                    <div style="font-size: 10px; color:#9ca3af; margin-top: 15px; text-transform: uppercase; font-weight: bold;">Valide pour 1 entrée</div>
+                    <div style="font-size: 10px; color:#9ca3af; margin-top: 15px; text-transform: uppercase; font-weight: bold;">Valid for 1 entry</div>
                 </div>
             </div>
         </div>
 
         <div class="p-footer">
-            <p>Ce billet est unique et ne peut être utilisé qu'une seule fois.</p>
-            <p>Généré le {{ formatDate(billet.dateEmission) }}</p>
+            <p>This ticket is unique and can only be used once.</p>
+            <p>Generated on {{ formatDate(billet.dateEmission) }}</p>
         </div>
     </div>
 </template>

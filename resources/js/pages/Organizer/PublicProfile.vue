@@ -39,7 +39,7 @@ const getInitials = (name: string) => {
 };
 
 const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
+    return new Date(dateString).toLocaleDateString('en-US', {
         day: 'numeric',
         month: 'long',
         year: 'numeric'
@@ -49,7 +49,7 @@ const formatDate = (dateString: string) => {
 
 <template>
     <AppLayout>
-        <Head :title="props.organizer.name + ' - Profil Organisateur'" />
+        <Head :title="props.organizer.name + ' - Organizer Profile'" />
 
         <div class="min-h-screen bg-slate-50/50 dark:bg-black transition-colors duration-500">
             <div class="max-w-6xl mx-auto px-4 py-8 sm:py-12 lg:py-16 space-y-12">

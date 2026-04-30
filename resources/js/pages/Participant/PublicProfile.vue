@@ -37,7 +37,7 @@ const getInitials = (name: string) => {
 
 <template>
     <AppLayout>
-        <Head :title="props.participant.name + ' - Profil Participant'" />
+        <Head :title="props.participant.name + ' - Participant Profile'" />
 
         <div class="min-h-screen bg-slate-50/50 dark:bg-black transition-colors duration-500">
             <div class="max-w-5xl mx-auto px-4 py-8 sm:py-12 lg:py-16 space-y-8">

@@ -15,7 +15,7 @@ import {
 import { ref, computed } from 'vue';
 type Language = 'en' | 'fr' | 'ar';
 
-const currentLang = ref<Language>('fr');
+const currentLang = ref<Language>('en');
 
 const content = {
   en: {
