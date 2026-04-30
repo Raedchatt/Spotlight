@@ -168,10 +168,11 @@ class EvenementController extends Controller
                 ->whereIn('statut', ['confirmed', 'pending'])
                 ->sum('nombre_tickets');
             
-            $totalRevenue = Reservation::where('evenement_id', '=', $id)
-                ->where('statut', '=', 'confirmed')
-                ->get()
-                ->sum(fn($r) => $r->nombre_tickets * $event->prix_spectateur * 0.8);
+            $totalRevenueAmount = Paiement::whereHas('reservation', function($q) use ($id) {
+                $q->where('evenement_id', '=', $id);
+            })->where('statut', '=', StatutPaiement::Succeeded->value)->sum('montant');
+            
+            $totalRevenue = $totalRevenueAmount * 0.8;
 
             $stats = [
                 'total_reserved' => (int) $totalReserved,
@@ -190,17 +191,18 @@ class EvenementController extends Controller
                 ->whereIn('statut', ['confirmed', 'pending'])
                 ->sum('nombre_tickets');
             
-            $participantRevenue = Reservation::where('evenement_id', '=', $id)
-                ->where('ticket_type', '=', 'participant')
-                ->where('statut', '=', 'confirmed')
-                ->get()
-                ->sum(fn($r) => $r->nombre_tickets * ($event->prix_participant ?? 0) * 0.8);
+            $participantRevenueAmount = Paiement::whereHas('reservation', function($q) use ($id) {
+                $q->where('evenement_id', '=', $id)
+                  ->where('ticket_type', '=', 'participant');
+            })->where('statut', '=', StatutPaiement::Succeeded->value)->sum('montant');
             
-            $spectatorRevenue = Reservation::where('evenement_id', '=', $id)
-                ->where('ticket_type', '=', 'spectator')
-                ->where('statut', '=', 'confirmed')
-                ->get()
-                ->sum(fn($r) => $r->nombre_tickets * $event->prix_spectateur * 0.8);
+            $spectatorRevenueAmount = Paiement::whereHas('reservation', function($q) use ($id) {
+                $q->where('evenement_id', '=', $id)
+                  ->where('ticket_type', '=', 'spectator');
+            })->where('statut', '=', StatutPaiement::Succeeded->value)->sum('montant');
+
+            $participantRevenue = $participantRevenueAmount * 0.8;
+            $spectatorRevenue = $spectatorRevenueAmount * 0.8;
 
             $participantCapacity = ($event->type_tournoi === 'equipe' && $event->tournoi 
                     && $event->tournoi->nombre_equipes > 0 && $event->tournoi->joueurs_par_equipe > 0) 

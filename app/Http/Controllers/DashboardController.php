@@ -85,13 +85,16 @@ class DashboardController extends Controller
                     $q->where('evenement_id', '=', $event->id);
                 })->where('statut', '=', StatutPaiement::Succeeded)->sum('montant');
 
+                // Organizer gets 80% of the total payment amount
+                $organizerCut = $revenue * 0.80;
+
                 return [
                     'id'        => $event->id,
                     'titre'     => $event->titre,
                     'categorie' => $event->categorie instanceof \App\Enums\CategorieEvenement ? $event->categorie->value : $event->categorie,
                     'lieu'      => $event->lieu,
                     'statut'    => $event->statut instanceof \App\Enums\StatutEvenement ? $event->statut->value : $event->statut,
-                    'revenue'   => round($revenue, 2),
+                    'revenue'   => round($organizerCut, 2),
                 ];
             });
 

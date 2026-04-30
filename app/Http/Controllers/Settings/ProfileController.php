@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
 use App\Enums\StatutReservation;
+use App\Enums\StatutPaiement;
 use App\Models\Evenement;
 use App\Models\Paiement;
 use App\Models\Reservation;
@@ -33,7 +34,8 @@ class ProfileController extends Controller
                 'events_count' => Evenement::where('organisateur_id', $user->id)->count(),
                 'revenue' => (float) Paiement::whereHas('reservation.evenement', function ($query) use ($user) {
                     $query->where('organisateur_id', $user->id);
-                })->sum('montant'),
+                })->where('statut', StatutPaiement::Succeeded->value)
+                  ->sum('montant') * 0.8,
             ];
 
             $bestEvents = Evenement::where('organisateur_id', $user->id)
