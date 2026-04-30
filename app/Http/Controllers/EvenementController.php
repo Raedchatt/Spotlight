@@ -250,7 +250,7 @@ class EvenementController extends Controller
     // Create Event
     public function store(Request $request)
     {
-        $request->validate([
+        $validationRules = [
             'titre' => 'required|string|max:255',
             'description' => 'required',
             'date_debut' => 'required|date',
@@ -260,10 +260,19 @@ class EvenementController extends Controller
             'capacite_spectateur' => 'required|integer',
             'categorie' => ['required', new Enum(CategorieEvenement::class)],
             'categorie_autre' => 'required_if:categorie,autre|nullable|string|max:255',
-        ]);
+        ];
 
         $user = Auth::user();
-        if ($user->role === \App\Enums\Role::Organisateur) {
+
+        // Admin can create events on behalf of an organizer
+        if ($user->isAdmin()) {
+            $validationRules['organisateur_id'] = 'required|exists:users,id';
+        }
+
+        $request->validate($validationRules);
+
+        // For non-admin organizers, check Stripe
+        if (!$user->isAdmin() && $user->role === \App\Enums\Role::Organisateur) {
             $hasStripe = \App\Models\Organisateur::where('user_id', $user->id)
                 ->whereNotNull('stripe_account_id')
                 ->exists();
@@ -276,8 +285,11 @@ class EvenementController extends Controller
             }
         }
 
+        // Determine the organizer: admin can specify, others use their own ID
+        $organisateurId = $user->isAdmin() ? $request->input('organisateur_id') : Auth::id();
+
         $event = Evenement::create([
-            'organisateur_id' => Auth::id(),
+            'organisateur_id' => $organisateurId,
             'titre' => $request->input('titre'),
             'description' => $request->input('description'),
             'date_debut' => $request->input('date_debut'),

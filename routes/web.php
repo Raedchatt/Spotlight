@@ -141,6 +141,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/financials/organizer/{event}/pay', [\App\Http\Controllers\Admin\AdminFinancialController::class, 'pay'])->name('admin.financials.pay');
         Route::post('/financials/organizer/{event}/refund', [\App\Http\Controllers\Admin\AdminFinancialController::class, 'refund'])->name('admin.financials.refund');
         Route::post('/financials/affiliate/{commission}/approve', [\App\Http\Controllers\Admin\AdminFinancialController::class, 'approveAffiliate'])->name('admin.financials.approve');
+
+        // Admin - Reservation Management
+        Route::get('/reservations', [\App\Http\Controllers\Admin\AdminReservationController::class, 'index'])->name('admin.reservations.index');
+        Route::post('/reservations', [\App\Http\Controllers\Admin\AdminReservationController::class, 'store'])->name('admin.reservations.store');
+        Route::get('/reservations/search-users', [\App\Http\Controllers\Admin\AdminReservationController::class, 'searchUsers'])->name('admin.reservations.search-users');
+        Route::get('/reservations/search-events', [\App\Http\Controllers\Admin\AdminReservationController::class, 'searchEvents'])->name('admin.reservations.search-events');
+        Route::patch('/reservations/{reservation}/cancel', [\App\Http\Controllers\Admin\AdminReservationController::class, 'cancel'])->name('admin.reservations.cancel');
     });
 
     // ─────────────────────────────────────────────────────────────────────────

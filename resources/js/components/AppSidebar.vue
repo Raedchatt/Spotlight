@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { usePage, Link, router } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Search, Calendar, MessageSquare, Bell, Users, Wallet, LogOut, User, TrendingUp } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Search, Calendar, MessageSquare, Bell, Users, Wallet, LogOut, User, TrendingUp, Ticket } from 'lucide-vue-next';
 import { computed } from 'vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -68,6 +68,11 @@ const mainNavItems = computed<NavItem[]>(() => [
                     href: '/admin/financials',
                     icon: Wallet,
                     count: counts.value.financials,
+                },
+                {
+                    title: 'Reservations',
+                    href: '/admin/reservations',
+                    icon: Ticket,
                 },
             ]
             : (auth.value.user?.role === 'revendeur'

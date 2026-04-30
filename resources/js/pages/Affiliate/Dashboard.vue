@@ -219,7 +219,7 @@ const breadcrumbs = [{ title: 'Affiliate Dashboard', href: '/affiliate/dashboard
                                         <td class="px-6 py-5">
                                             <div class="flex flex-col">
                                                 <Link :href="`/events/${referral.event.id}`" class="font-bold text-gray-950 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{{ referral.event.titre }}</Link>
-                                                <span class="text-xs font-medium text-indigo-600 dark:text-indigo-400 capitalize bg-indigo-50 dark:bg-indigo-900/20 px-2 py-0.5 rounded w-fit mt-1">{{ referral.event.categorie }}</span>
+                                                <span class="text-xs font-medium text-indigo-600 dark:text-indigo-400 capitalize bg-indigo-50 dark:bg-indigo-900/20 px-2 py-0.5 rounded w-fit mt-1">{{ referral.event.categorie === 'autre' && referral.event.categorie_autre ? referral.event.categorie_autre : referral.event.categorie }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5">

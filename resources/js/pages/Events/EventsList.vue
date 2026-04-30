@@ -318,7 +318,7 @@ const getStatusLabel = (statut: StatutEvenement) => {
                             <div class="space-y-1">
                                 <h2 class="text-xl font-bold line-clamp-1 capitalize">{{ event.titre }}</h2>
                                 <Badge variant="outline" class="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                                    {{ event.categorie }}
+                                    {{ event.categorie === 'autre' && event.categorie_autre ? event.categorie_autre : event.categorie }}
                                 </Badge>
                             </div>
 

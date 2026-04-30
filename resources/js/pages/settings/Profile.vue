@@ -32,6 +32,7 @@ type Props = {
         id: number;
         titre: string;
         categorie: string;
+        categorie_autre?: string;
         reservations_count: number;
         medias: Array<{ url: string }>;
     }>;
@@ -368,7 +369,7 @@ const connectStripe = async () => {
                                 </div>
                                 <div class="absolute top-2 left-2">
                                     <span class="bg-background/90 backdrop-blur-sm text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider border border-border">
-                                        {{ event.categorie }}
+                                        {{ event.categorie === 'autre' && event.categorie_autre ? event.categorie_autre : event.categorie }}
                                     </span>
                                 </div>
                             </div>
