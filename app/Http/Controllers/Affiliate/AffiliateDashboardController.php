@@ -24,7 +24,7 @@ class AffiliateDashboardController extends Controller
             ['user_id' => $user->id],
             [
                 'referral_code' => strtoupper(\Illuminate\Support\Str::random(8)),
-                'balance'       => 0,
+                'balance' => 0,
             ]
         );
 
@@ -69,26 +69,27 @@ class AffiliateDashboardController extends Controller
 
         $referrals = $referralsQuery->latest()->get()->map(function ($res) {
             return [
-                'id'        => $res->id,
+                'id' => $res->id,
                 'participant' => [
-                    'id'       => $res->user->id,
-                    'name'     => $res->user->username,
-                    'avatar'   => null,
+                    'id' => $res->user->id,
+                    'name' => $res->user->username,
+                    'avatar' => null,
                 ],
-                'event'     => [
-                    'id'        => $res->evenement->id,
-                    'titre'     => $res->evenement->titre,
+                'event' => [
+                    'id' => $res->evenement->id,
+                    'titre' => $res->evenement->titre,
                     'categorie' => $res->evenement->categorie,
                 ],
-                'date'      => $res->created_at->format('Y-m-d H:i'),
+                'date' => $res->created_at->format('Y-m-d H:i'),
             ];
         });
 
         return Inertia::render('Affiliate/Dashboard', [
-            'stats'       => $stats,
+            'stats' => $stats,
             'commissions' => $commissions,
-            'referrals'   => $referrals,
-            'filters'     => $request->only(['name', 'category']),
+            'referrals' => $referrals,
+            'filters' => $request->only(['name', 'category']),
+            'referral_code' => $revendeur->referral_code,
         ]);
     }
 }

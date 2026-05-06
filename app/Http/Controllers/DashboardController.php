@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Evenement;
 use App\Models\Reservation;
 use App\Models\Paiement;
+use App\Models\Commission;
 use App\Enums\StatutPaiement;
 use App\Enums\StatutReservation;
 use App\Enums\Role;
@@ -140,7 +141,7 @@ class DashboardController extends Controller
 
         // 2. Financial Stats
         $totalRevenue = Paiement::where('statut', '=', StatutPaiement::Succeeded)->sum('montant');
-        $siteCommission = $totalRevenue * 0.10;
+        $siteCommission = Commission::sum('commission_admin');
 
         // 3. Events Stats list
         $recentEvents = Evenement::with(['organisateur:id,username'])

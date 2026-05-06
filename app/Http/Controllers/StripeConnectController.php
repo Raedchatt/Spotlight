@@ -19,15 +19,15 @@ class StripeConnectController extends Controller
     public function connect(Request $request)
     {
         $user = Auth::user();
-        $organisateur = $user->organisateur;
+        $profile = $user->organisateur ?: $user->revendeur;
 
-        if (!$organisateur) {
-            return response()->json(['error' => 'You do not have an organizer profile.'], 403);
+        if (!$profile) {
+            return response()->json(['error' => 'You do not have an eligible profile for Stripe Connect.'], 403);
         }
 
         try {
             // Re-use existing Stripe Account ID or create a new one
-            $stripeAccountId = $organisateur->stripe_account_id;
+            $stripeAccountId = $profile->stripe_account_id;
 
             if (!$stripeAccountId) {
                 $account = Account::create([
@@ -37,7 +37,7 @@ class StripeConnectController extends Controller
                 ]);
                 $stripeAccountId = $account->id;
                 
-                $organisateur->update(['stripe_account_id' => $stripeAccountId]);
+                $profile->update(['stripe_account_id' => $stripeAccountId]);
             }
 
             // Create Account Link for onboarding
@@ -55,7 +55,7 @@ class StripeConnectController extends Controller
             
             $msg = 'Unable to connect to Stripe right now.';
             if (str_contains($e->getMessage(), 'signed up for Connect')) {
-                $msg = 'Stripe Connect is not enabled on this platform. The administrator must enable it at dashboard.stripe.com/connect before organizers can sign up.';
+                $msg = 'Stripe Connect is not enabled on this platform. The administrator must enable it at dashboard.stripe.com/connect before signups can happen.';
             }
 
             return response()->json(['error' => $msg], 500);
@@ -65,13 +65,15 @@ class StripeConnectController extends Controller
     public function returnHandler(Request $request)
     {
         $user = Auth::user();
-        if (!$user || !$user->organisateur || !$user->organisateur->stripe_account_id) {
+        $profile = $user->organisateur ?: $user->revendeur;
+
+        if (!$user || !$profile || !$profile->stripe_account_id) {
             return redirect()->route('profile.edit')->with('error', 'Stripe account not found.');
         }
 
         try {
             // Verify if details were submitted
-            $account = Account::retrieve($user->organisateur->stripe_account_id);
+            $account = Account::retrieve($profile->stripe_account_id);
             
             if ($account->details_submitted) {
                 return redirect()->route('profile.edit')->with('success', 'Stripe account connected successfully!');

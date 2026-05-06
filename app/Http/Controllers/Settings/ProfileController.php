@@ -27,25 +27,36 @@ class ProfileController extends Controller
         $user = $request->user();
         $stats = null;
 
-        if ($user->isOrganisateur()) {
-            $stats = [
-                'type' => 'organizer',
-                'events_count' => Evenement::where('organisateur_id', $user->id)->count(),
-                'revenue' => (float) Paiement::whereHas('reservation.evenement', function ($query) use ($user) {
-                    $query->where('organisateur_id', $user->id);
-                })->sum('montant'),
-            ];
+        if ($user->isOrganisateur() || $user->isRevendeur()) {
+            if ($user->isOrganisateur()) {
+                $stats = [
+                    'type' => 'organizer',
+                    'events_count' => Evenement::where('organisateur_id', $user->id)->count(),
+                    'revenue' => (float) Paiement::whereHas('reservation.evenement', function ($query) use ($user) {
+                        $query->where('organisateur_id', $user->id);
+                    })->sum('montant'),
+                ];
 
-            $bestEvents = Evenement::where('organisateur_id', $user->id)
-                ->with(['medias'])
-                ->withCount([
-                    'reservations' => function ($query) {
-                        $query->confirmed();
-                    }
-                ])
-                ->orderBy('reservations_count', 'desc')
-                ->take(5)
-                ->get();
+                $bestEvents = Evenement::where('organisateur_id', $user->id)
+                    ->with(['medias'])
+                    ->withCount([
+                        'reservations' => function ($query) {
+                            $query->confirmed();
+                        }
+                    ])
+                    ->orderBy('reservations_count', 'desc')
+                    ->take(5)
+                    ->get();
+            } else {
+                $stats = [
+                    'type' => 'revendeur',
+                    'events_count' => \App\Models\Commission::where('revendeur_id', $user->revendeur->id)->distinct('evenement_id')->count(),
+                    'revenue' => (float) \App\Models\Commission::where('revendeur_id', $user->revendeur->id)
+                        ->where('status', \App\Enums\StatutCommission::Approved)
+                        ->sum('commission_revendeur'),
+                ];
+                $bestEvents = [];
+            }
 
             return Inertia::render('settings/Profile', [
                 'mustVerifyEmail' => $user instanceof MustVerifyEmail,

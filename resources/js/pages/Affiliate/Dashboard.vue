@@ -13,9 +13,11 @@ import {
     Calendar,
     User,
     ChevronRight,
-    ArrowUpRight
+    ArrowUpRight,
+    Award
 } from 'lucide-vue-next';
 import { Input } from '@/components/ui/input';
+import AffiliateGuide from './AffiliateGuide.vue';
 
 
 const props = defineProps<{
@@ -67,44 +69,36 @@ const formatCurrency = (val: number) => {
 };
 
 const breadcrumbs = [{ title: 'Affiliate Dashboard', href: '/affiliate/dashboard' }];
+
+const showGuideModal = ref(false);
 </script>
 
 <template>
     <Head title="Affiliate Dashboard" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="w-full px-4 py-8 md:px-8 space-y-8 max-w-[1600px] mx-auto">
-            
-            <!-- Hero Banner -->
-            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-8 md:p-12 shadow-2xl border border-white/5">
-                <div class="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl"></div>
-                <div class="absolute bottom-0 left-10 -mb-10 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl"></div>
-                
-                <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div class="max-w-2xl">
-                        <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">Affiliate Hub</h1>
-                        <p class="text-indigo-200/80 text-lg font-medium leading-relaxed">
-                            Track your referrals, manage your commissions, and monitor your financial growth in real-time.
-                        </p>
+            <div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold text-sm uppercase tracking-wider">
+                        <Award class="w-4 h-4" />
+                        Affiliate Program
+                    </div>
+                    <h1 class="text-4xl font-black text-slate-900 dark:text-white">Partner Hub</h1>
+                    <p class="text-slate-500 dark:text-slate-400 max-w-md">Premium management for our top performers.</p>
+                </div>
+
+                <div class="w-full md:w-80 shrink-0">
+                    <div class="p-5 rounded-2xl bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100/50 dark:border-indigo-500/10">
+                        <h4 class="text-sm font-bold text-indigo-900 dark:text-indigo-300 mb-2">Need help?</h4>
+                        <p class="text-xs text-indigo-700/70 dark:text-indigo-400/70 leading-relaxed mb-4">Check our affiliate guidelines to maximize your reach and earnings.</p>
+                        <button @click="showGuideModal = true" class="w-full py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-500/20">
+                            Affiliate Guide
+                        </button>
                     </div>
                 </div>
             </div>
-
             <!-- Stats Row -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Current Balance -->
-                <div class="bg-white dark:bg-neutral-900 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-neutral-800 hover:shadow-lg transition-all duration-300 group">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
-                            <Wallet class="w-6 h-6" />
-                        </div>
-                    </div>
-                    <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Available Balance</p>
-                    <div class="flex items-baseline gap-2">
-                        <span class="text-3xl font-black text-gray-900 dark:text-white">{{ formatCurrency(stats.balance) }}</span>
-                        <span class="text-sm font-bold text-gray-400">DT</span>
-                    </div>
-                </div>
-
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ">
                 <!-- Total Earnings -->
                 <div class="bg-white dark:bg-neutral-900 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-neutral-800 hover:shadow-lg transition-all duration-300 group">
                     <div class="flex items-center justify-between mb-4">
@@ -119,7 +113,6 @@ const breadcrumbs = [{ title: 'Affiliate Dashboard', href: '/affiliate/dashboard
                         <span class="text-sm font-bold text-gray-400">DT</span>
                     </div>
                 </div>
-
                 <!-- Pending -->
                 <div class="bg-white dark:bg-neutral-900 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-neutral-800 hover:shadow-lg transition-all duration-300 group">
                     <div class="flex items-center justify-between mb-4">
@@ -284,20 +277,13 @@ const breadcrumbs = [{ title: 'Affiliate Dashboard', href: '/affiliate/dashboard
                             </div>
                         </div>
                         
-                        <div class="mt-auto pt-8">
-                            <div class="p-5 rounded-2xl bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100/50 dark:border-indigo-500/10">
-                                <h4 class="text-sm font-bold text-indigo-900 dark:text-indigo-300 mb-2">Need help?</h4>
-                                <p class="text-xs text-indigo-700/70 dark:text-indigo-400/70 leading-relaxed mb-4">Check our affiliate guidelines to maximize your reach and earnings.</p>
-                                <button class="w-full py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-500/20">
-                                    Affiliate Guide
-                                </button>
-                            </div>
-                        </div>
+
                     </div>
                 </div>
 
             </div>
         </div>
+        <AffiliateGuide :is-open="showGuideModal" @close="showGuideModal = false" />
     </AppLayout>
 </template>
 

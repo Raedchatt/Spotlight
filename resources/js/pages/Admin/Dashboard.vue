@@ -123,7 +123,7 @@ const formatCurrency = (amount: number) => {
                         <div class="p-3 rounded-2xl bg-white/20 text-white">
                             <TrendingUp class="w-6 h-6" />
                         </div>
-                        <span class="text-xs font-extrabold bg-white/20 px-2 py-1 rounded-full">10% FEE</span>
+                        <span class="text-xs font-extrabold bg-white/20 px-2 py-1 rounded-full">20% FEE</span>
                     </div>
                     <div>
                         <p class="text-xs font-bold text-indigo-100 uppercase tracking-widest">Platform Commission</p>

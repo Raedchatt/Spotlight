@@ -14,6 +14,7 @@ class Revendeur extends Model
     protected $fillable = [
         'user_id',
         'referral_code',
+        'stripe_account_id',
         'balance',
     ];
 

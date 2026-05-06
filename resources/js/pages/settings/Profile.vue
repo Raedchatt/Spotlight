@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { edit } from '@/routes/profile';
@@ -22,7 +23,7 @@ type Props = {
     mustVerifyEmail: boolean;
     status?: string;
     stats?: {
-        type: 'organizer' | 'participant';
+        type: 'organizer' | 'participant' | 'revendeur';
         events_count?: number;
         revenue?: number;
         total_events?: number;
@@ -105,7 +106,13 @@ const connectStripe = async () => {
                                             <span class="text-2xl font-bold text-primary">{{ user.username.substring(0, 2).toUpperCase() }}</span>
                                         </div>
                                         <h3 class="font-bold text-lg">{{ user.username }}</h3>
-                                        <p class="text-xs text-muted-foreground capitalize">{{ user.role }}</p>
+                                        <div v-if="(user.role?.value || user.role) === 'revendeur'" class="mt-1">
+                                            <Badge class="bg-blue-600 hover:bg-blue-700 text-[10px] py-0 px-2 h-5 flex items-center gap-1">
+                                                <Check class="w-2.5 h-2.5" />
+                                                Verified Reseller
+                                            </Badge>
+                                        </div>
+                                        <p v-else class="text-xs text-muted-foreground capitalize">{{ user.role }}</p>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -173,6 +180,39 @@ const connectStripe = async () => {
                                         <CardContent>
                                             <div class="text-xl font-bold truncate">{{ stats.best_category ?? 'None' }}</div>
                                             <p class="text-xs text-muted-foreground mt-1">Most attended category</p>
+                                        </CardContent>
+                                    </Card>
+                                </template>
+
+                                <!-- Revendeur Stats -->
+                                <template v-else-if="stats.type === 'revendeur'">
+                                    <Card class="border-none shadow-sm">
+                                        <CardHeader class="pb-2">
+                                            <div class="flex items-center gap-2">
+                                                <div class="p-2 bg-blue-500/10 rounded-lg">
+                                                    <Calendar class="h-4 w-4 text-blue-500" />
+                                                </div>
+                                                <CardTitle class="text-sm font-medium">Promoted Events</CardTitle>
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div class="text-2xl font-bold">{{ stats.events_count ?? 0 }}</div>
+                                            <p class="text-xs text-muted-foreground mt-1">Events you are promoting</p>
+                                        </CardContent>
+                                    </Card>
+
+                                    <Card class="border-none shadow-sm">
+                                        <CardHeader class="pb-2">
+                                            <div class="flex items-center gap-2">
+                                                <div class="p-2 bg-emerald-500/10 rounded-lg">
+                                                    <DollarSign class="h-4 w-4 text-emerald-500" />
+                                                </div>
+                                                <CardTitle class="text-sm font-medium">Earnings</CardTitle>
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div class="text-2xl font-bold">{{ stats.revenue?.toLocaleString('fr-FR', { style: 'currency', currency: 'TND' }) ?? '0,00 TND' }}</div>
+                                            <p class="text-xs text-muted-foreground mt-1">Total commissions earned</p>
                                         </CardContent>
                                     </Card>
                                 </template>
@@ -249,8 +289,8 @@ const connectStripe = async () => {
                                 </CardContent>
                             </Card>
 
-                            <!-- Bank Information Section (Organizers Only) -->
-                            <Card v-if="(user.role?.value || user.role) === 'organisateur'" class="mt-6">
+                            <!-- Bank Information Section (Organizers & Resellers) -->
+                            <Card v-if="(user.role?.value || user.role) === 'organisateur' || (user.role?.value || user.role) === 'revendeur'" class="mt-6">
                                 <CardHeader>
                                     <div class="flex items-center gap-2">
                                         <div class="p-2 bg-blue-500/10 rounded-lg">
@@ -267,7 +307,9 @@ const connectStripe = async () => {
                                             </div>
                                             <div>
                                                 <h4 class="font-bold text-emerald-900 dark:text-emerald-300">Stripe Account Connected</h4>
-                                                <p class="text-sm text-emerald-700 dark:text-emerald-400 font-mono mt-1">{{ page.props.auth.user?.organisateur?.stripe_account_id }}</p>
+                                                <p class="text-xs text-emerald-700 dark:text-emerald-400 font-mono mt-1">
+                                                    {{ user.organisateur?.stripe_account_id || user.revendeur?.stripe_account_id }}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
@@ -275,7 +317,7 @@ const connectStripe = async () => {
                                         <div class="p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl">
                                             <h4 class="font-bold text-indigo-900 dark:text-indigo-300">Connect with Stripe</h4>
                                             <p class="text-sm text-indigo-700 dark:text-indigo-400 mt-1 mb-3">
-                                                Spotlight uses Stripe to send your funds instantly and securely. You must connect your account to receive payouts and create events.
+                                                Spotlight uses Stripe to send your funds instantly and securely. You must connect your account to receive your payouts.
                                             </p>
                                             <Button @click.prevent="connectStripe" :disabled="connectingStripe" class="bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto">
                                                 {{ connectingStripe ? 'Connecting...' : 'Connect Stripe Account' }}
