@@ -138,7 +138,8 @@ class Evenement extends Model
      */
     public function isManagedBy(?int $userId, ?string $permission = null): bool
     {
-        if (!$userId) return false;
+        if (!$userId)
+            return false;
 
         $user = User::find($userId);
         if ($user && $user->role === \App\Enums\Role::Admin) {
@@ -152,7 +153,7 @@ class Evenement extends Model
         $query = $this->collaborateurs()
             ->where('organizer_id', $userId)
             ->where('statut', 'accepted');
-        
+
         if ($permission) {
             $query->where($permission, true);
         }

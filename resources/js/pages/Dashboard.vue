@@ -292,7 +292,7 @@ const initials = (name: string) =>
                                     </td>
                                     <td class="px-6 py-4">
                                         <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold capitalize bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-300">
-                                            {{ event.categorie }}
+                                            {{ event.categorie === 'autre' && event.categorie_autre ? event.categorie_autre : event.categorie }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4">

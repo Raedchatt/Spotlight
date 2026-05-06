@@ -534,7 +534,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                     <div class="space-y-4">
                         <span class="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md text-white border border-white/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
                             <component :is="props.event.is_tournoi ? Trophy : Star" class="w-3.5 h-3.5" />
-                            {{ props.event.is_tournoi ? 'Tournament' : props.event.categorie }}
+                            {{ props.event.is_tournoi ? 'Tournament' : (props.event.categorie === 'autre' && props.event.categorie_autre ? props.event.categorie_autre : props.event.categorie) }}
                         </span>
                         
                         <h1 class="text-3xl md:text-5xl font-bold text-white max-w-4xl leading-tight">

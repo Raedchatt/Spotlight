@@ -9,6 +9,7 @@ interface Event {
     lieu: string;
     date_debut: string;
     categorie: string;
+    categorie_autre?: string;
     statut: string;
     reservations_count?: number;
     medias?: { url: string }[];
@@ -206,7 +207,7 @@ const formatDate = (dateString: string) => {
                                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                                             <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                                         </span>
-                                        {{ event.statut?.replace('_', ' ') || event.categorie }}
+                                        {{ event.statut?.replace('_', ' ') || (event.categorie === 'autre' && event.categorie_autre ? event.categorie_autre : event.categorie) }}
                                     </span>
                                 </div>
                             </div>

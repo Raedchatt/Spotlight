@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, Link } from '@inertiajs/vue3';
-import { Calendar, Building, MapPin, Search, FilterX, Eye, X, Loader2, Edit, Trash2 } from 'lucide-vue-next';
+import { Calendar, Building, MapPin, Search, FilterX, Eye, X, Loader2, Edit, Trash2, Plus } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -137,6 +137,146 @@ const closeSuggestions = () => {
         showSuggestions.value = false;
     }, 200);
 };
+
+// ── Create Event Modal ──
+const showCreateModal = ref(false);
+const createProcessing = ref(false);
+const createErrors = ref<Record<string, string[]>>({});
+
+// Organizer picker for new event
+const newEventOrganizer = ref<any>(null);
+const orgSearchQuery = ref('');
+const orgSearchResults = ref<any[]>([]);
+const isSearchingOrg = ref(false);
+let orgSearchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+const searchOrgForCreate = () => {
+    if (orgSearchTimeout) clearTimeout(orgSearchTimeout);
+    if (!orgSearchQuery.value || orgSearchQuery.value.length < 2) {
+        orgSearchResults.value = [];
+        return;
+    }
+    orgSearchTimeout = setTimeout(async () => {
+        isSearchingOrg.value = true;
+        try {
+            const res = await axios.get(`/admin/organizers/search?q=${orgSearchQuery.value}`);
+            orgSearchResults.value = res.data;
+        } catch (e) {
+            console.error('Failed to search organizers', e);
+        } finally {
+            isSearchingOrg.value = false;
+        }
+    }, 300);
+};
+
+const pickOrganizer = (org: any) => {
+    newEventOrganizer.value = org;
+    orgSearchQuery.value = '';
+    orgSearchResults.value = [];
+};
+
+const clearPickedOrganizer = () => {
+    newEventOrganizer.value = null;
+};
+
+// Categories for the create form
+const createCategories = ref<{ slug: string; label: string }[]>([]);
+const fetchCreateCategories = async () => {
+    try {
+        const res = await axios.get('/web-api/categories');
+        createCategories.value = res.data;
+    } catch (e) {
+        console.error('Failed to load categories', e);
+    }
+};
+
+const newEvent = ref({
+    titre: '',
+    description: '',
+    date_debut: '',
+    date_fin: '',
+    lieu: '',
+    prix_spectateur: 0,
+    capacite_spectateur: 0,
+    categorie: '',
+    categorie_autre: '',
+    is_tournoi: false,
+    type_tournoi: '',
+    prix_participant: 0,
+    capacite_participant: 0,
+    nombre_equipes: 0,
+    joueurs_par_equipe: 0,
+});
+
+const openCreateModal = () => {
+    fetchCreateCategories();
+    showCreateModal.value = true;
+};
+
+const closeCreateModal = () => {
+    showCreateModal.value = false;
+    newEventOrganizer.value = null;
+    orgSearchQuery.value = '';
+    orgSearchResults.value = [];
+    createErrors.value = {};
+    newEvent.value = {
+        titre: '',
+        description: '',
+        date_debut: '',
+        date_fin: '',
+        lieu: '',
+        prix_spectateur: 0,
+        capacite_spectateur: 0,
+        categorie: '',
+        categorie_autre: '',
+        is_tournoi: false,
+        type_tournoi: '',
+        prix_participant: 0,
+        capacite_participant: 0,
+        nombre_equipes: 0,
+        joueurs_par_equipe: 0,
+    };
+};
+
+const submitCreateEvent = async () => {
+    if (createProcessing.value) return;
+    if (!newEventOrganizer.value) {
+        toast.error('Please select an organizer first.');
+        return;
+    }
+
+    createProcessing.value = true;
+    createErrors.value = {};
+
+    try {
+        const formData = new FormData();
+        formData.append('organisateur_id', String(newEventOrganizer.value.id));
+        Object.keys(newEvent.value).forEach(key => {
+            const value = (newEvent.value as any)[key];
+            if (key === 'categorie_autre') {
+                if (newEvent.value.categorie === 'autre') {
+                    formData.append(key, String(value));
+                }
+            } else {
+                formData.append(key, String(value));
+            }
+        });
+
+        await axios.post('/web-api/events', formData);
+        toast.success('Event created successfully on behalf of ' + newEventOrganizer.value.username + '!');
+        closeCreateModal();
+        // Refresh the events list
+        router.reload({ only: ['events'] });
+    } catch (error: any) {
+        if (error.response?.data?.errors) {
+            createErrors.value = error.response.data.errors;
+        } else {
+            toast.error(error.response?.data?.message || 'Failed to create event.');
+        }
+    } finally {
+        createProcessing.value = false;
+    }
+};
 </script>
 
 <template>
@@ -151,6 +291,13 @@ const closeSuggestions = () => {
                     <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">All Events</h1>
                     <p class="text-gray-500 dark:text-gray-400 mt-1">Manage all platform events from one place.</p>
                 </div>
+                <button 
+                    @click="openCreateModal" 
+                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-2xl shadow-lg shadow-indigo-500/20 transition-all active:scale-95"
+                >
+                    <Plus class="w-5 h-5" />
+                    Create Event
+                </button>
             </div>
 
             <!-- Filters -->
@@ -305,5 +452,221 @@ const closeSuggestions = () => {
                 </div>
             </div>
         </div>
+        <!-- ── Create Event Modal ── -->
+        <Teleport to="body">
+            <Transition name="modal">
+                <div v-if="showCreateModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <!-- Backdrop -->
+                    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="closeCreateModal"></div>
+
+                    <!-- Modal -->
+                    <div class="relative bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl border border-gray-100 dark:border-neutral-800 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <!-- Header -->
+                        <div class="sticky top-0 z-10 flex items-center justify-between px-8 py-5 bg-white dark:bg-neutral-900 border-b border-gray-100 dark:border-neutral-800 rounded-t-3xl">
+                            <div>
+                                <h2 class="text-xl font-extrabold text-gray-900 dark:text-white">Create Event (Admin)</h2>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Create an event on behalf of an organizer</p>
+                            </div>
+                            <button @click="closeCreateModal" class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
+                                <X class="w-5 h-5 text-gray-500" />
+                            </button>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="p-8 space-y-6">
+                            <!-- Step 1: Select Organizer -->
+                            <div class="space-y-3">
+                                <label class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <Building class="w-4 h-4 text-indigo-500" />
+                                    Select Organizer *
+                                </label>
+                                <div v-if="newEventOrganizer" class="flex items-center justify-between p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-2xl">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold">{{ newEventOrganizer.username?.charAt(0)?.toUpperCase() }}</div>
+                                        <div>
+                                            <p class="font-bold text-gray-900 dark:text-white">{{ newEventOrganizer.username }}</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ newEventOrganizer.email }}</p>
+                                        </div>
+                                    </div>
+                                    <button @click="clearPickedOrganizer" class="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 text-red-500 transition-colors">
+                                        <X class="w-4 h-4" />
+                                    </button>
+                                </div>
+                                <div v-else class="relative">
+                                    <Building class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <input 
+                                        v-model="orgSearchQuery" 
+                                        type="text" 
+                                        placeholder="Search organizers by name..."
+                                        @input="searchOrgForCreate"
+                                        class="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm"
+                                    >
+                                    <div v-if="isSearchingOrg" class="absolute right-3 top-1/2 -translate-y-1/2">
+                                        <Loader2 class="w-4 h-4 text-gray-400 animate-spin" />
+                                    </div>
+                                    <div v-if="orgSearchResults.length > 0" class="absolute z-50 w-full mt-1 bg-white dark:bg-neutral-800 border border-gray-100 dark:border-neutral-700 rounded-2xl shadow-xl max-h-48 overflow-y-auto">
+                                        <div 
+                                            v-for="org in orgSearchResults" 
+                                            :key="org.id"
+                                            @click="pickOrganizer(org)"
+                                            class="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer flex flex-col border-b border-gray-50 dark:border-neutral-700 last:border-0"
+                                        >
+                                            <span class="font-bold text-gray-900 dark:text-white text-sm">{{ org.username }}</span>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400">{{ org.email }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p v-if="createErrors.organisateur_id" class="text-xs text-red-500 font-medium">{{ createErrors.organisateur_id[0] }}</p>
+                            </div>
+
+                            <hr class="border-gray-100 dark:border-neutral-800" />
+
+                            <!-- Event Details -->
+                            <div class="space-y-4">
+                                <div class="space-y-1.5">
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Event Title *</label>
+                                    <input v-model="newEvent.titre" type="text" placeholder="e.g. Summer Beats Festival" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
+                                    <p v-if="createErrors.titre" class="text-xs text-red-500">{{ createErrors.titre[0] }}</p>
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Description *</label>
+                                    <textarea v-model="newEvent.description" rows="3" placeholder="Describe the event..." class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500 resize-none"></textarea>
+                                    <p v-if="createErrors.description" class="text-xs text-red-500">{{ createErrors.description[0] }}</p>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="space-y-1.5">
+                                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Start Date *</label>
+                                        <input v-model="newEvent.date_debut" type="datetime-local" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
+                                        <p v-if="createErrors.date_debut" class="text-xs text-red-500">{{ createErrors.date_debut[0] }}</p>
+                                    </div>
+                                    <div class="space-y-1.5">
+                                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">End Date *</label>
+                                        <input v-model="newEvent.date_fin" type="datetime-local" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
+                                        <p v-if="createErrors.date_fin" class="text-xs text-red-500">{{ createErrors.date_fin[0] }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Location *</label>
+                                    <div class="relative">
+                                        <MapPin class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <input v-model="newEvent.lieu" type="text" placeholder="Event venue or address" class="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
+                                    </div>
+                                    <p v-if="createErrors.lieu" class="text-xs text-red-500">{{ createErrors.lieu[0] }}</p>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="space-y-1.5">
+                                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Category *</label>
+                                        <select v-model="newEvent.categorie" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500">
+                                            <option value="" disabled>Select a category</option>
+                                            <option v-for="cat in createCategories" :key="cat.slug" :value="cat.slug">{{ cat.label }}</option>
+                                            <option value="autre">Other</option>
+                                        </select>
+                                        <p v-if="createErrors.categorie" class="text-xs text-red-500">{{ createErrors.categorie[0] }}</p>
+                                    </div>
+                                    <div v-if="newEvent.categorie === 'autre'" class="space-y-1.5">
+                                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Custom Category *</label>
+                                        <input v-model="newEvent.categorie_autre" type="text" placeholder="Enter category name" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
+                                        <p v-if="createErrors.categorie_autre" class="text-xs text-red-500">{{ createErrors.categorie_autre[0] }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="space-y-1.5">
+                                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Max Seats *</label>
+                                        <input v-model.number="newEvent.capacite_spectateur" type="number" min="0" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
+                                        <p v-if="createErrors.capacite_spectateur" class="text-xs text-red-500">{{ createErrors.capacite_spectateur[0] }}</p>
+                                    </div>
+                                    <div class="space-y-1.5">
+                                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Ticket Price (TND) *</label>
+                                        <input v-model.number="newEvent.prix_spectateur" type="number" min="0" step="0.01" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
+                                        <p v-if="createErrors.prix_spectateur" class="text-xs text-red-500">{{ createErrors.prix_spectateur[0] }}</p>
+                                    </div>
+                                </div>
+
+                                <!-- Tournament Toggle -->
+                                <div class="mt-2 p-4 border border-gray-200 dark:border-neutral-700 rounded-2xl bg-gray-50/50 dark:bg-neutral-800/30">
+                                    <label class="flex items-center gap-3 text-sm font-medium cursor-pointer">
+                                        <input type="checkbox" v-model="newEvent.is_tournoi" class="w-4 h-4 text-indigo-600 rounded border-gray-300 dark:border-neutral-600 dark:bg-neutral-800 focus:ring-indigo-500" />
+                                        <span class="text-gray-900 dark:text-white">This is a Tournament</span>
+                                    </label>
+
+                                    <div v-if="newEvent.is_tournoi" class="mt-4 pt-4 border-t border-gray-200 dark:border-neutral-700 space-y-4">
+                                        <div class="space-y-1.5">
+                                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Tournament Type *</label>
+                                            <select v-model="newEvent.type_tournoi" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500">
+                                                <option value="" disabled>Select type</option>
+                                                <option value="equipe">Équipe</option>
+                                                <option value="individuel">Individuel</option>
+                                            </select>
+                                            <p v-if="createErrors.type_tournoi" class="text-xs text-red-500">{{ createErrors.type_tournoi[0] }}</p>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div class="space-y-1.5">
+                                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Participant Price (TND) *</label>
+                                                <input v-model.number="newEvent.prix_participant" type="number" min="0" step="0.01" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
+                                                <p v-if="createErrors.prix_participant" class="text-xs text-red-500">{{ createErrors.prix_participant[0] }}</p>
+                                            </div>
+                                            <div class="space-y-1.5">
+                                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                    {{ newEvent.type_tournoi === 'equipe' ? 'Players per Team *' : 'Participant Seats *' }}
+                                                </label>
+                                                <input v-model.number="newEvent.capacite_participant" type="number" min="0" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
+                                                <p v-if="createErrors.capacite_participant" class="text-xs text-red-500">{{ createErrors.capacite_participant[0] }}</p>
+                                            </div>
+                                        </div>
+
+                                        <div v-if="newEvent.type_tournoi === 'equipe'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div class="space-y-1.5">
+                                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Number of Teams *</label>
+                                                <input v-model.number="newEvent.nombre_equipes" type="number" min="0" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
+                                                <p v-if="createErrors.nombre_equipes" class="text-xs text-red-500">{{ createErrors.nombre_equipes[0] }}</p>
+                                            </div>
+                                            <div class="space-y-1.5">
+                                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Players per Team *</label>
+                                                <input v-model.number="newEvent.joueurs_par_equipe" type="number" min="0" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
+                                                <p v-if="createErrors.joueurs_par_equipe" class="text-xs text-red-500">{{ createErrors.joueurs_par_equipe[0] }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="sticky bottom-0 z-10 flex items-center justify-end gap-3 px-8 py-5 bg-gray-50 dark:bg-neutral-800/50 border-t border-gray-100 dark:border-neutral-800 rounded-b-3xl">
+                            <button @click="closeCreateModal" class="px-5 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
+                                Cancel
+                            </button>
+                            <button 
+                                @click="submitCreateEvent" 
+                                :disabled="createProcessing"
+                                class="px-6 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-xl shadow-lg shadow-indigo-500/20 transition-all active:scale-95 flex items-center gap-2"
+                            >
+                                <Loader2 v-if="createProcessing" class="w-4 h-4 animate-spin" />
+                                <Plus v-else class="w-4 h-4" />
+                                {{ createProcessing ? 'Creating...' : 'Create Event' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Transition>
+        </Teleport>
     </AppLayout>
 </template>
+
+<style scoped>
+.modal-enter-active, .modal-leave-active {
+    transition: all 0.3s ease;
+}
+.modal-enter-from, .modal-leave-to {
+    opacity: 0;
+}
+.modal-enter-from > div:last-child, .modal-leave-to > div:last-child {
+    transform: scale(0.95) translateY(10px);
+}
+</style>

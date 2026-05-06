@@ -23,6 +23,8 @@ const otherUserName = computed(() => {
     return props.otherUser?.username || 'User';
 });
 
+const isAdmin = computed(() => page.props.auth?.user?.role === 'administrateur');
+
 const scrollToBottom = async () => {
     await nextTick();
     if (messagesContainer.value) {
@@ -33,14 +35,16 @@ const scrollToBottom = async () => {
 onMounted(() => {
     scrollToBottom();
     
-    // Listen for real-time messages
-    window.Echo.private(`chat.${page.props.auth.user.id}`)
-        .listen('.message.sent', (e) => {
-            if (e.message.sender_id === props.otherUser.id) {
-                messages.value.push(e.message);
-                scrollToBottom();
-            }
-        });
+    // Listen for real-time messages only if not admin
+    if (!isAdmin.value) {
+        window.Echo.private(`chat.${page.props.auth.user.id}`)
+            .listen('.message.sent', (e) => {
+                if (e.message.sender_id === props.otherUser.id) {
+                    messages.value.push(e.message);
+                    scrollToBottom();
+                }
+            });
+    }
 });
 
 const sendMessage = async () => {
@@ -218,8 +222,8 @@ const formatTime = (dateString) => {
                     </div>
                 </div>
 
-                <!-- Input Area -->
-                <div class="flex-shrink-0 p-5 bg-background/50 backdrop-blur-md border-t border-border">
+                <!-- Input Area (hidden for admins observing messages) -->
+                <div v-if="!isAdmin" class="flex-shrink-0 p-5 bg-background/50 backdrop-blur-md border-t border-border">
                     <form @submit.prevent="sendMessage" class="flex gap-3 relative max-w-5xl mx-auto items-end">
                         <div class="relative flex-grow group">
                             <textarea 
@@ -254,6 +258,12 @@ const formatTime = (dateString) => {
                     </form>
                     <p class="text-[10px] text-center text-muted-foreground mt-3 font-medium uppercase tracking-tighter">
                         Messages are automatically reformulated for professional clarity
+                    </p>
+                </div>
+                <div v-else class="flex-shrink-0 p-5 bg-background/50 backdrop-blur-md border-t border-border flex justify-center items-center">
+                    <p class="text-sm text-yellow-600 dark:text-yellow-500 font-bold bg-yellow-50 dark:bg-yellow-900/20 px-6 py-3 rounded-full border border-yellow-200 dark:border-yellow-800">
+                        <svg class="h-5 w-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                        Admin Observation Mode (Read-Only)
                     </p>
                 </div>
             </div>
