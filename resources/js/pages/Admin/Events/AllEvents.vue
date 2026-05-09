@@ -5,6 +5,7 @@ import { ref, watch } from 'vue';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { toast } from 'vue-sonner';
+import { useI18n } from 'vue-i18n';
 
 interface CategoryItem {
     id: number;
@@ -46,6 +47,8 @@ const props = defineProps<{
     };
     categories?: CategoryItem[];
 }>();
+
+const { t } = useI18n();
 
 const search = ref(props.filters?.search || '');
 const category = ref(props.filters?.category || '');
@@ -113,10 +116,10 @@ const resetFilters = () => {
 };
 
 const deleteEvent = (event: any) => {
-    if (confirm(`Are you sure you want to delete/cancel the event "${event.titre}"?`)) {
+    if (confirm(t('events.confirmDeleteEvent', { title: event.titre }))) {
         router.delete(`/admin/events/${event.id}`, {
-            onSuccess: () => toast.success('Event deleted successfully.'),
-            onError: () => toast.error('Failed to delete event.')
+            onSuccess: () => toast.success(t('events.eventDeletedSuccess')),
+            onError: () => toast.error(t('events.eventDeletedError'))
         });
     }
 };
@@ -241,7 +244,7 @@ const closeCreateModal = () => {
 const submitCreateEvent = async () => {
     if (createProcessing.value) return;
     if (!newEventOrganizer.value) {
-        toast.error('Please select an organizer first.');
+        toast.error(t('events.selectOrganizerFirst'));
         return;
     }
 
@@ -263,7 +266,7 @@ const submitCreateEvent = async () => {
         });
 
         await axios.post('/web-api/events', formData);
-        toast.success('Event created successfully on behalf of ' + newEventOrganizer.value.username + '!');
+        toast.success(t('events.eventCreatedOnBehalf', { username: newEventOrganizer.value.username }));
         closeCreateModal();
         // Refresh the events list
         router.reload({ only: ['events'] });
@@ -271,7 +274,7 @@ const submitCreateEvent = async () => {
         if (error.response?.data?.errors) {
             createErrors.value = error.response.data.errors;
         } else {
-            toast.error(error.response?.data?.message || 'Failed to create event.');
+            toast.error(error.response?.data?.message || t('events.failedToCreateEvent'));
         }
     } finally {
         createProcessing.value = false;
@@ -280,7 +283,7 @@ const submitCreateEvent = async () => {
 </script>
 
 <template>
-    <Head title="All Events" />
+    <Head :title="t('events.allEvents')" />
 
     <AppLayout>
         <div class="px-4 py-8 md:px-8 space-y-8 max-w-[1400px] mx-auto">
@@ -288,15 +291,15 @@ const submitCreateEvent = async () => {
             <!-- Page Header -->
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">All Events</h1>
-                    <p class="text-gray-500 dark:text-gray-400 mt-1">Manage all platform events from one place.</p>
+                    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">{{ t('events.allEvents') }}</h1>
+                    <p class="text-gray-500 dark:text-gray-400 mt-1">{{ t('events.allEventsDesc') }}</p>
                 </div>
                 <button 
                     @click="openCreateModal" 
                     class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-2xl shadow-lg shadow-indigo-500/20 transition-all active:scale-95"
                 >
                     <Plus class="w-5 h-5" />
-                    Create Event
+                    {{ t('events.createEvent') }}
                 </button>
             </div>
 
@@ -307,14 +310,14 @@ const submitCreateEvent = async () => {
                     <input 
                         v-model="search" 
                         type="text" 
-                        placeholder="Search by title..."
+                        :placeholder="t('events.searchByTitle')"
                         class="w-full pl-10 pr-4 py-2 bg-gray-50/50 dark:bg-neutral-800/50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white"
                     >
                 </div>
                 
                 <div class="w-full md:w-48">
                     <select v-model="category" class="w-full px-4 py-2 bg-gray-50/50 dark:bg-neutral-800/50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white appearance-none cursor-pointer">
-                        <option value="">Categories</option>
+                        <option value="">{{ t('events.categories') }}</option>
                         <option v-for="cat in (categories as CategoryItem[])" :key="cat.id" :value="cat.label.toLowerCase()">
                             {{ cat.label }}
                         </option>
@@ -326,7 +329,7 @@ const submitCreateEvent = async () => {
                     <input 
                         v-model="organizer" 
                         type="text" 
-                        placeholder="Organizer..."
+                        :placeholder="t('events.organizerPlaceholder')"
                         @input="searchOrganizers"
                         @focus="showSuggestions = organizerSuggestions.length > 0"
                         @blur="closeSuggestions"
@@ -367,11 +370,11 @@ const submitCreateEvent = async () => {
                     <table class="w-full text-sm text-left">
                         <thead class="text-[11px] text-gray-400 dark:text-gray-500 uppercase tracking-widest bg-gray-50/50 dark:bg-neutral-800/30 border-b border-gray-100 dark:border-neutral-800">
                             <tr>
-                                <th class="px-6 py-4 font-black">Event</th>
-                                <th class="px-6 py-4 font-black">Organizer</th>
-                                <th class="px-6 py-4 font-black text-center">Category</th>
-                                <th class="px-6 py-4 font-black text-center">Status</th>
-                                <th class="px-6 py-4 font-black text-right">Actions</th>
+                                <th class="px-6 py-4 font-black">{{ t('events.event') }}</th>
+                                <th class="px-6 py-4 font-black">{{ t('events.organizer') }}</th>
+                                <th class="px-6 py-4 font-black text-center">{{ t('events.category') }}</th>
+                                <th class="px-6 py-4 font-black text-center">{{ t('events.status') }}</th>
+                                <th class="px-6 py-4 font-black text-right">{{ t('common.actions') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50 dark:divide-neutral-800/30">
@@ -409,7 +412,7 @@ const submitCreateEvent = async () => {
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <span :class="['px-3 py-1 text-[11px] font-bold rounded-full border shadow-sm', getStatusBadgeClass(event.statut)]">
-                                        {{ event.statut.toUpperCase() }}
+                                        {{ t(`events.status_${event.statut}`).toUpperCase() }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-right">
@@ -432,8 +435,8 @@ const submitCreateEvent = async () => {
                                         <div class="p-4 bg-gray-50 dark:bg-neutral-800 rounded-full">
                                             <Search class="w-8 h-8 text-gray-300 dark:text-gray-600" />
                                         </div>
-                                        <p class="font-bold text-gray-500 dark:text-gray-400">No events found matching your criteria.</p>
-                                        <button @click="resetFilters" class="text-indigo-600 dark:text-indigo-400 font-bold hover:underline">Clear all filters</button>
+                                        <p class="font-bold text-gray-500 dark:text-gray-400">{{ t('events.noEventsFoundCriteria') }}</p>
+                                        <button @click="resetFilters" class="text-indigo-600 dark:text-indigo-400 font-bold hover:underline">{{ t('events.clearAllFilters') }}</button>
                                     </div>
                                 </td>
                             </tr>
@@ -464,8 +467,8 @@ const submitCreateEvent = async () => {
                         <!-- Header -->
                         <div class="sticky top-0 z-10 flex items-center justify-between px-8 py-5 bg-white dark:bg-neutral-900 border-b border-gray-100 dark:border-neutral-800 rounded-t-3xl">
                             <div>
-                                <h2 class="text-xl font-extrabold text-gray-900 dark:text-white">Create Event (Admin)</h2>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Create an event on behalf of an organizer</p>
+                                <h2 class="text-xl font-extrabold text-gray-900 dark:text-white">{{ t('events.createEventAdmin') }}</h2>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('events.createEventAdminDesc') }}</p>
                             </div>
                             <button @click="closeCreateModal" class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
                                 <X class="w-5 h-5 text-gray-500" />
@@ -478,7 +481,7 @@ const submitCreateEvent = async () => {
                             <div class="space-y-3">
                                 <label class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
                                     <Building class="w-4 h-4 text-indigo-500" />
-                                    Select Organizer *
+                                    {{ t('events.selectOrganizer') }} *
                                 </label>
                                 <div v-if="newEventOrganizer" class="flex items-center justify-between p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-2xl">
                                     <div class="flex items-center gap-3">
@@ -497,7 +500,7 @@ const submitCreateEvent = async () => {
                                     <input 
                                         v-model="orgSearchQuery" 
                                         type="text" 
-                                        placeholder="Search organizers by name..."
+                                        :placeholder="t('events.searchOrganizersByName')"
                                         @input="searchOrgForCreate"
                                         class="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm"
                                     >
@@ -524,64 +527,64 @@ const submitCreateEvent = async () => {
                             <!-- Event Details -->
                             <div class="space-y-4">
                                 <div class="space-y-1.5">
-                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Event Title *</label>
-                                    <input v-model="newEvent.titre" type="text" placeholder="e.g. Summer Beats Festival" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('events.eventTitle') }} *</label>
+                                    <input v-model="newEvent.titre" type="text" :placeholder="t('events.eventTitlePlaceholder')" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
                                     <p v-if="createErrors.titre" class="text-xs text-red-500">{{ createErrors.titre[0] }}</p>
                                 </div>
 
                                 <div class="space-y-1.5">
-                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Description *</label>
-                                    <textarea v-model="newEvent.description" rows="3" placeholder="Describe the event..." class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500 resize-none"></textarea>
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('events.description') }} *</label>
+                                    <textarea v-model="newEvent.description" rows="3" :placeholder="t('events.eventDescriptionPlaceholder')" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500 resize-none"></textarea>
                                     <p v-if="createErrors.description" class="text-xs text-red-500">{{ createErrors.description[0] }}</p>
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div class="space-y-1.5">
-                                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Start Date *</label>
+                                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('events.startDate') }} *</label>
                                         <input v-model="newEvent.date_debut" type="datetime-local" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
                                         <p v-if="createErrors.date_debut" class="text-xs text-red-500">{{ createErrors.date_debut[0] }}</p>
                                     </div>
                                     <div class="space-y-1.5">
-                                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">End Date *</label>
+                                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('events.endDate') }} *</label>
                                         <input v-model="newEvent.date_fin" type="datetime-local" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
                                         <p v-if="createErrors.date_fin" class="text-xs text-red-500">{{ createErrors.date_fin[0] }}</p>
                                     </div>
                                 </div>
 
                                 <div class="space-y-1.5">
-                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Location *</label>
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('events.location') }} *</label>
                                     <div class="relative">
                                         <MapPin class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                        <input v-model="newEvent.lieu" type="text" placeholder="Event venue or address" class="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
+                                        <input v-model="newEvent.lieu" type="text" :placeholder="t('events.eventVenueAddress')" class="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
                                     </div>
                                     <p v-if="createErrors.lieu" class="text-xs text-red-500">{{ createErrors.lieu[0] }}</p>
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div class="space-y-1.5">
-                                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Category *</label>
+                                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('events.category') }} *</label>
                                         <select v-model="newEvent.categorie" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500">
-                                            <option value="" disabled>Select a category</option>
+                                            <option value="" disabled>{{ t('events.selectCategory') }}</option>
                                             <option v-for="cat in createCategories" :key="cat.slug" :value="cat.slug">{{ cat.label }}</option>
-                                            <option value="autre">Other</option>
+                                            <option value="autre">{{ t('events.other') }}</option>
                                         </select>
                                         <p v-if="createErrors.categorie" class="text-xs text-red-500">{{ createErrors.categorie[0] }}</p>
                                     </div>
                                     <div v-if="newEvent.categorie === 'autre'" class="space-y-1.5">
-                                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Custom Category *</label>
-                                        <input v-model="newEvent.categorie_autre" type="text" placeholder="Enter category name" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
+                                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('events.customCategory') }} *</label>
+                                        <input v-model="newEvent.categorie_autre" type="text" :placeholder="t('events.enterCategoryName')" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
                                         <p v-if="createErrors.categorie_autre" class="text-xs text-red-500">{{ createErrors.categorie_autre[0] }}</p>
                                     </div>
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div class="space-y-1.5">
-                                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Max Seats *</label>
+                                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('events.maxSeats') }} *</label>
                                         <input v-model.number="newEvent.capacite_spectateur" type="number" min="0" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
                                         <p v-if="createErrors.capacite_spectateur" class="text-xs text-red-500">{{ createErrors.capacite_spectateur[0] }}</p>
                                     </div>
                                     <div class="space-y-1.5">
-                                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Ticket Price (TND) *</label>
+                                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('events.ticketPrice') }} *</label>
                                         <input v-model.number="newEvent.prix_spectateur" type="number" min="0" step="0.01" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
                                         <p v-if="createErrors.prix_spectateur" class="text-xs text-red-500">{{ createErrors.prix_spectateur[0] }}</p>
                                     </div>
@@ -591,29 +594,29 @@ const submitCreateEvent = async () => {
                                 <div class="mt-2 p-4 border border-gray-200 dark:border-neutral-700 rounded-2xl bg-gray-50/50 dark:bg-neutral-800/30">
                                     <label class="flex items-center gap-3 text-sm font-medium cursor-pointer">
                                         <input type="checkbox" v-model="newEvent.is_tournoi" class="w-4 h-4 text-indigo-600 rounded border-gray-300 dark:border-neutral-600 dark:bg-neutral-800 focus:ring-indigo-500" />
-                                        <span class="text-gray-900 dark:text-white">This is a Tournament</span>
+                                        <span class="text-gray-900 dark:text-white">{{ t('events.isTournament') }}</span>
                                     </label>
 
                                     <div v-if="newEvent.is_tournoi" class="mt-4 pt-4 border-t border-gray-200 dark:border-neutral-700 space-y-4">
                                         <div class="space-y-1.5">
-                                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Tournament Type *</label>
+                                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('events.tournamentType') }} *</label>
                                             <select v-model="newEvent.type_tournoi" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500">
-                                                <option value="" disabled>Select type</option>
-                                                <option value="equipe">Équipe</option>
-                                                <option value="individuel">Individuel</option>
+                                                <option value="" disabled>{{ t('events.selectType') }}</option>
+                                                <option value="equipe">{{ t('events.teamType') }}</option>
+                                                <option value="individuel">{{ t('events.individualType') }}</option>
                                             </select>
                                             <p v-if="createErrors.type_tournoi" class="text-xs text-red-500">{{ createErrors.type_tournoi[0] }}</p>
                                         </div>
 
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div class="space-y-1.5">
-                                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Participant Price (TND) *</label>
+                                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('events.participantPrice') }} *</label>
                                                 <input v-model.number="newEvent.prix_participant" type="number" min="0" step="0.01" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
                                                 <p v-if="createErrors.prix_participant" class="text-xs text-red-500">{{ createErrors.prix_participant[0] }}</p>
                                             </div>
                                             <div class="space-y-1.5">
                                                 <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                    {{ newEvent.type_tournoi === 'equipe' ? 'Players per Team *' : 'Participant Seats *' }}
+                                                    {{ newEvent.type_tournoi === 'equipe' ? t('events.playersPerTeam') : t('events.participantSeats') }} *
                                                 </label>
                                                 <input v-model.number="newEvent.capacite_participant" type="number" min="0" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
                                                 <p v-if="createErrors.capacite_participant" class="text-xs text-red-500">{{ createErrors.capacite_participant[0] }}</p>
@@ -622,12 +625,12 @@ const submitCreateEvent = async () => {
 
                                         <div v-if="newEvent.type_tournoi === 'equipe'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div class="space-y-1.5">
-                                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Number of Teams *</label>
+                                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('events.numberOfTeams') }} *</label>
                                                 <input v-model.number="newEvent.nombre_equipes" type="number" min="0" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
                                                 <p v-if="createErrors.nombre_equipes" class="text-xs text-red-500">{{ createErrors.nombre_equipes[0] }}</p>
                                             </div>
                                             <div class="space-y-1.5">
-                                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Players per Team *</label>
+                                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('events.playersPerTeam') }} *</label>
                                                 <input v-model.number="newEvent.joueurs_par_equipe" type="number" min="0" class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
                                                 <p v-if="createErrors.joueurs_par_equipe" class="text-xs text-red-500">{{ createErrors.joueurs_par_equipe[0] }}</p>
                                             </div>
@@ -640,7 +643,7 @@ const submitCreateEvent = async () => {
                         <!-- Footer -->
                         <div class="sticky bottom-0 z-10 flex items-center justify-end gap-3 px-8 py-5 bg-gray-50 dark:bg-neutral-800/50 border-t border-gray-100 dark:border-neutral-800 rounded-b-3xl">
                             <button @click="closeCreateModal" class="px-5 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
-                                Cancel
+                                {{ t('common.cancel') }}
                             </button>
                             <button 
                                 @click="submitCreateEvent" 
@@ -649,7 +652,7 @@ const submitCreateEvent = async () => {
                             >
                                 <Loader2 v-if="createProcessing" class="w-4 h-4 animate-spin" />
                                 <Plus v-else class="w-4 h-4" />
-                                {{ createProcessing ? 'Creating...' : 'Create Event' }}
+                                {{ createProcessing ? t('events.creating') : t('events.createEvent') }}
                             </button>
                         </div>
                     </div>

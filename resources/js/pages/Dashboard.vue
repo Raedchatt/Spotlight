@@ -2,11 +2,13 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Eye, RefreshCw, TrendingUp, Clock, Wallet } from 'lucide-vue-next';
 
 const breadcrumbs = [{ title: 'Dashboard', href: '/dashboard' }];
 
 const page = usePage();
+const { t } = useI18n();
 const auth = computed(() => page.props.auth as any);
 const dashboardData = computed(() => (page.props as any).dashboardData as DashboardData | null);
 
@@ -97,9 +99,9 @@ const initials = (name: string) =>
                 <div class="absolute bottom-0 left-10 -mb-10 w-48 h-48 bg-purple-500/20 rounded-full blur-2xl"></div>
                 
                 <div class="relative z-10">
-                    <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">Welcome back!</h1>
+                    <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">{{ t('dashboard.welcomeBack') }}</h1>
                     <p class="text-indigo-100 text-lg md:text-xl font-medium max-w-xl">
-                        You currently have <strong class="text-white">{{ dashboardData.totalEvents }} active events</strong>. Here’s a summary of your performance and upcoming activities.
+                        {{ t('dashboard.activeEventsMsg', { count: dashboardData.totalEvents }) }}
                     </p>
                 </div>
             </div>
@@ -123,14 +125,14 @@ const initials = (name: string) =>
                             </span>
                         </div>
                         <div class="relative z-10">
-                            <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1 tracking-wide uppercase">Received Revenue (In Pocket)</p>
+                            <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1 tracking-wide uppercase">{{ t('dashboard.receivedRevenue') }}</p>
                             <div class="flex items-baseline gap-2">
                                 <p class="text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight text-gray-900 dark:text-white truncate">
                                     {{ dashboardData.totalReceived.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }}
                                 </p>
                                 <span class="text-xl font-bold text-gray-400 dark:text-gray-500">Dt</span>
                             </div>
-                            <p class="text-[10px] text-gray-400 mt-1 italic">Reflects your 80% share for paid-out events</p>
+                            <p class="text-[10px] text-gray-400 mt-1 italic">{{ t('dashboard.revenueNote') }}</p>
                         </div>
                     </div>
 
@@ -146,14 +148,14 @@ const initials = (name: string) =>
                             </span>
                         </div>
                         <div class="relative z-10">
-                            <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1 tracking-wide uppercase">Pending Payout</p>
+                            <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1 tracking-wide uppercase">{{ t('dashboard.pendingPayout') }}</p>
                             <div class="flex items-baseline gap-2">
                                 <p class="text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight text-gray-900 dark:text-white truncate">
                                     {{ dashboardData.pendingPayout.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }}
                                 </p>
                                 <span class="text-xl font-bold text-gray-400 dark:text-gray-500">Dt</span>
                             </div>
-                            <p class="text-[10px] text-gray-400 mt-1 italic">Total expected revenue (80%) for upcoming/unpaid events</p>
+                            <p class="text-[10px] text-gray-400 mt-1 italic">{{ t('dashboard.pendingNote') }}</p>
                         </div>
                     </div>
                 </div>
@@ -161,14 +163,14 @@ const initials = (name: string) =>
                 <!-- Most Used Category (Donut Chart) Takes 2 Columns ─────────────────────────────────────── -->
                 <div class="xl:col-span-2 bg-white dark:bg-neutral-900 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-neutral-800 flex flex-col justify-between h-full">
                     <div>
-                        <h3 class="text-base font-bold text-gray-900 dark:text-white mb-6">Category Breakdown</h3>
+                        <h3 class="text-base font-bold text-gray-900 dark:text-white mb-6">{{ t('dashboard.categoryBreakdown') }}</h3>
 
                         <div v-if="dashboardData.categoryBreakdown.length > 0" class="flex flex-col items-center">
                             <!-- Donut -->
                             <div class="relative mb-6">
                                 <div class="absolute inset-0 flex flex-col items-center justify-center">
                                     <span class="text-2xl font-black text-gray-900 dark:text-white">{{ dashboardData.totalEvents }}</span>
-                                    <span class="text-xs font-semibold text-gray-500">Events</span>
+                                    <span class="text-xs font-semibold text-gray-500">{{ t('common.events') }}</span>
                                 </div>
                                 <svg width="180" height="180" viewBox="0 0 140 140" class="drop-shadow-md">
                                     <!-- Background ring -->
@@ -209,7 +211,7 @@ const initials = (name: string) =>
                             <div class="w-16 h-16 rounded-full bg-gray-50 dark:bg-neutral-800 flex items-center justify-center mb-3">
                                 <TrendingUp class="w-8 h-8 opacity-50" />
                             </div>
-                            <p class="text-sm font-medium">No events calculated yet</p>
+                            <p class="text-sm font-medium">{{ t('dashboard.noEventsYet') }}</p>
                         </div>
                     </div>
                 </div>
@@ -226,7 +228,7 @@ const initials = (name: string) =>
                     <!-- Header -->
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-neutral-800 gap-4">
                         <div class="flex items-center gap-3">
-                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Current Events</h3>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ t('dashboard.currentEvents') }}</h3>
                             <span class="flex h-2.5 w-2.5 relative">
                                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                 <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
@@ -260,10 +262,10 @@ const initials = (name: string) =>
                         <table class="w-full text-sm border-separate border-spacing-y-2">
                             <thead>
                                 <tr class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest font-semibold">
-                                    <th class="px-6 py-3 text-left font-semibold">Event Name</th>
-                                    <th class="px-6 py-3 text-left font-semibold">Category</th>
-                                    <th class="px-6 py-3 text-left font-semibold whitespace-nowrap">Revenue</th>
-                                    <th class="px-6 py-3 text-center font-semibold">Actions</th>
+                                    <th class="px-6 py-3 text-left font-semibold">{{ t('dashboard.eventName') }}</th>
+                                    <th class="px-6 py-3 text-left font-semibold">{{ t('dashboard.category') }}</th>
+                                    <th class="px-6 py-3 text-left font-semibold whitespace-nowrap">{{ t('dashboard.revenue') }}</th>
+                                    <th class="px-6 py-3 text-center font-semibold">{{ t('common.actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -273,7 +275,7 @@ const initials = (name: string) =>
                                             <div class="w-12 h-12 rounded-full bg-gray-50 dark:bg-neutral-800/50 flex items-center justify-center">
                                                 <Clock class="w-6 h-6 text-gray-400" />
                                             </div>
-                                            <span class="text-gray-500">No events active right now.</span>
+                                            <span class="text-gray-500">{{ t('dashboard.noEventsActive') }}</span>
                                         </div>
                                     </td>
                                 </tr>
@@ -316,15 +318,15 @@ const initials = (name: string) =>
                 <!-- Active Participants (1 Col) ────────────────────────────────────── -->
                 <div class="lg:col-span-1 bg-white dark:bg-neutral-900 rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-sm p-6 lg:p-8 flex flex-col">
                     <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Active Users</h3>
-                        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 px-2.5 py-1 rounded-full">Top {{ dashboardData.activeParticipants.length }}</span>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ t('dashboard.activeUsers') }}</h3>
+                        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 px-2.5 py-1 rounded-full">{{ t('dashboard.top', { count: dashboardData.activeParticipants.length }) }}</span>
                     </div>
 
                     <div v-if="dashboardData.activeParticipants.length === 0" class="flex-1 flex flex-col items-center justify-center text-center py-8 text-gray-400">
                         <div class="w-16 h-16 rounded-full bg-gray-50 dark:bg-neutral-800 flex items-center justify-center mb-3">
                             <Clock class="w-8 h-8 opacity-50" />
                         </div>
-                        <p class="text-sm font-medium">No registrations yet.</p>
+                        <p class="text-sm font-medium">{{ t('dashboard.noRegistrations') }}</p>
                     </div>
 
                     <div v-else class="flex flex-col gap-4 overflow-y-auto max-h-[400px] pr-2 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-neutral-700"
@@ -351,7 +353,7 @@ const initials = (name: string) =>
                             <div class="ml-4 min-w-0 flex-1">
                                 <p class="text-sm font-bold text-gray-900 dark:text-gray-100 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{{ participant.username }}</p>
                                 <p class="text-xs text-gray-500 font-medium">
-                                    {{ participant.event_count }} <span class="text-gray-400">Tickets</span>
+                                    {{ participant.event_count }} <span class="text-gray-400">{{ t('common.tickets') }}</span>
                                 </p>
                             </div>
                         </div>

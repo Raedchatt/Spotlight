@@ -13,8 +13,8 @@ import {
     CheckCircle2,
     XCircle,
     CreditCard
-} from 'lucide-vue-next';
 import { ref, onMounted} from 'vue';
+import { useI18n } from 'vue-i18n';
 //import AppHeader from '@/components/AppHeader.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 
 const reservations = ref<any[]>([]);
 const loading = ref(true);
+const { t } = useI18n();
 
 const fetchReservations = async () => {
     loading.value = true;
@@ -36,14 +37,14 @@ const fetchReservations = async () => {
 };
 
 const cancelReservation = async (id: number) => {
-    if (!confirm('Are you sure you want to cancel this reservation?')) return;
+    if (!confirm(t('events.confirmCancelReservation'))) return;
 
     try {
         await axios.patch(`/web-api/reservations/${id}/annuler`);
-        toast.success('Reservation cancelled successfully.');
+        toast.success(t('events.reservationCancelled'));
         await fetchReservations();
     } catch (error: any) {
-        toast.error(error.response?.data?.message || 'An error occurred while cancelling the reservation.');
+        toast.error(error.response?.data?.message || t('events.errorCancelReservation'));
     }
 };
 
@@ -54,7 +55,7 @@ const checkoutReservation = async (id: number) => {
             window.location.href = response.data.checkout_url;
         }
     } catch (error: any) {
-        toast.error(error.response?.data?.message || 'An error occurred during checkout.');
+        toast.error(error.response?.data?.message || t('events.errorCheckout'));
     }
 };
 
@@ -93,18 +94,18 @@ const isEventEnded = (dateString: string) => {
 </script>
 
 <template>
-    <Head title="My Reservations - Spotlight" />
+    <Head :title="`${t('events.myReservations')} - Spotlight`" />
 
     <AppLayout>
         <div class="p-6 space-y-6">
             <div class="flex justify-between items-center">
                 <div>
-                    <h1 class="text-3xl font-bold tracking-tight">My Reservations</h1>
-                    <p class="text-muted-foreground">Manage your event bookings and track their status.</p>
+                    <h1 class="text-3xl font-bold tracking-tight">{{ t('events.myReservations') }}</h1>
+                    <p class="text-muted-foreground">{{ t('events.myReservationsDesc') }}</p>
                 </div>
                 <Badge variant="secondary" class="h-8 px-3 flex items-center gap-2">
                     <Ticket class="w-4 h-4" />
-                    <span>{{ reservations.length }} Reservations</span>
+                    <span>{{ t('events.reservationsCount', { count: reservations.length }) }}</span>
                 </Badge>
             </div>
 
@@ -118,10 +119,10 @@ const isEventEnded = (dateString: string) => {
                 <div class="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
                     <Ticket class="w-6 h-6 text-muted-foreground" />
                 </div>
-                <h3 class="text-lg font-medium">No reservations found</h3>
-                <p class="text-muted-foreground mb-4">You haven't made any reservations yet.</p>
+                <h3 class="text-lg font-medium">{{ t('events.noReservationsFound') }}</h3>
+                <p class="text-muted-foreground mb-4">{{ t('events.noReservationsDesc') }}</p>
                 <Link href="/dashboard/discovery">
-                    <Button variant="default" class="bg-blue-600 hover:bg-blue-700">Explore Events</Button>
+                    <Button variant="default" class="bg-blue-600 hover:bg-blue-700">{{ t('events.exploreEvents') }}</Button>
                 </Link>
             </div>
 
@@ -139,7 +140,7 @@ const isEventEnded = (dateString: string) => {
                              </div>
                              <Badge :variant="getStatusVariant(res.statut)" class="capitalize flex items-center gap-1 shadow-sm px-2" :class="res.statut === 'confirmed' ? 'bg-blue-600 hover:bg-blue-700 border-0 text-white' : ''">
                                 <component :is="getStatusIcon(res.statut)" class="w-3 h-3" />
-                                {{ res.statut }}
+                                {{ t(`events.status_${res.statut}`) }}
                              </Badge>
                         </div>
 
@@ -154,13 +155,13 @@ const isEventEnded = (dateString: string) => {
                             </div>
                              <div class="flex items-center gap-2">
                                 <Ticket class="w-4 h-4" />
-                                <span class="font-medium text-foreground">{{ res.nombre_tickets }} Tickets</span>
+                                <span class="font-medium text-foreground">{{ res.nombre_tickets }} {{ t('events.tickets') }}</span>
                             </div>
                         </div>
 
                         <div class="pt-4 border-t flex justify-between items-center">
                             <div class="flex flex-col">
-                                <span class="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Total Amount</span>
+                                <span class="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{{ t('events.totalAmount') }}</span>
                                 <span class="font-bold text-blue-600">
                                     {{ formatPrice(res.nombre_tickets * (res.ticket_type === 'participant' ? (res.evenement.prix_participant ?? res.evenement.prix_spectateur) : res.evenement.prix_spectateur)) }}
                                 </span>
@@ -175,7 +176,7 @@ const isEventEnded = (dateString: string) => {
                                         variant="default" 
                                         class="bg-blue-600 hover:bg-blue-700"
                                     >
-                                        <Ticket class="w-4 h-4 mr-1" /> Ticket
+                                        <Ticket class="w-4 h-4 mr-1" /> {{ t('events.ticket') }}
                                     </Button>
                                 </a>
                                 <Button
@@ -185,7 +186,7 @@ const isEventEnded = (dateString: string) => {
                                     variant="default"
                                     class="bg-green-600 hover:bg-green-700 text-white"
                                 >
-                                    <CreditCard class="w-4 h-4 mr-1" /> Checkout
+                                    <CreditCard class="w-4 h-4 mr-1" /> {{ t('events.checkout') }}
                                 </Button>
                                 <Button 
                                     v-if="res.statut !== 'cancelled'"
@@ -195,7 +196,7 @@ const isEventEnded = (dateString: string) => {
                                     variant="outline" 
                                     class="text-destructive hover:bg-destructive/5 border-destructive disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <XCircle class="w-4 h-4 mr-1" /> Cancel
+                                    <XCircle class="w-4 h-4 mr-1" /> {{ t('common.cancel') }}
                                 </Button>
                             </div>
                         </div>

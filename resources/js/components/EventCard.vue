@@ -11,6 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useAuthModal } from '@/composables/useAuthModal';
 import type { Evenement, StatutEvenement } from '@/types/event';
 
@@ -39,10 +40,18 @@ const getStatusVariant = (statut: StatutEvenement) => {
 };
 
 const getStatusLabel = (statut: StatutEvenement) => {
-    return statut.charAt(0).toUpperCase() + statut.slice(1).replace('_', ' ');
+    switch (statut) {
+        case 'ouvert': return t('common.open') || 'Ouvert';
+        case 'valide': return t('common.valid') || 'Valide';
+        case 'encours': return t('common.inProgress') || 'En cours';
+        case 'ferme': return t('common.closed') || 'Fermé';
+        case 'annule': return t('common.cancelled') || 'Annulé';
+        default: return statut.charAt(0).toUpperCase() + statut.slice(1).replace('_', ' ');
+    }
 };
 
 const page = usePage();
+const { t } = useI18n();
 const auth = computed(() => page.props.auth as any);
 const { openLogin } = useAuthModal();
 
@@ -158,7 +167,7 @@ const bannerImage = computed(() => {
                     {{ getStatusLabel(event.statut) }}
                 </Badge>
                 <Badge v-if="event.is_tournoi" variant="default" class="bg-amber-500 hover:bg-amber-600 shadow-sm w-fit border-0 font-bold">
-                    <Trophy class="w-3 h-3 mr-1" /> TOURNAMENT
+                    <Trophy class="w-3 h-3 mr-1" /> {{ t('events.tournament') }}
                 </Badge>
             </div>
             <div class="absolute bottom-4 right-4 animate-in fade-in zoom-in duration-300">
@@ -193,15 +202,15 @@ const bannerImage = computed(() => {
                 <div class="flex flex-col">
                     <span class="font-bold text-blue-600 text-lg">
                         <template v-if="event.is_tournoi">
-                            {{ event.prix_spectateur > 0 ? `${event.prix_spectateur} TND` : 'Free' }}
-                            <span class="text-[9px] text-muted-foreground ml-1">(Spectator)</span>
+                            {{ event.prix_spectateur > 0 ? `${event.prix_spectateur} TND` : t('common.free') }}
+                            <span class="text-[9px] text-muted-foreground ml-1">({{ t('events.spectator') }})</span>
                         </template>
                         <template v-else>
-                            {{ event.prix_spectateur > 0 ? `${event.prix_spectateur} TND` : 'Free' }}
+                            {{ event.prix_spectateur > 0 ? `${event.prix_spectateur} TND` : t('common.free') }}
                         </template>
                     </span>
                     <span class="text-[10px] text-muted-foreground">
-                        {{ event.capacite_spectateur - (Number(event.total_tickets_reserved) || 0) }} seats left
+                        {{ t('events.seatsLeft', { count: event.capacite_spectateur - (Number(event.total_tickets_reserved) || 0) }) }}
                     </span>
                 </div>
                 
@@ -219,11 +228,11 @@ const bannerImage = computed(() => {
                     <template v-if="isReseller">
                         <div class="flex items-center gap-2">
                             <component :is="copied ? Check : Copy" class="w-4 h-4" />
-                            {{ copied ? 'Copied!' : 'Copy Link' }}
+                            {{ copied ? t('events.copied') : t('events.copyLink') }}
                         </div>
                     </template>
                     <template v-else>
-                        {{ auth.user ? 'Book Now' : 'Login to Book' }}
+                        {{ auth.user ? t('events.bookNow') : t('events.loginToBook') }}
                     </template>
                 </Button>
             </div>

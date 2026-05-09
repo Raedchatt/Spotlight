@@ -5,6 +5,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { Calendar, Check, X, Building, MapPin, Tag } from 'lucide-vue-next';
 import { ref } from 'vue';
 import { toast } from 'vue-sonner';
+import { useI18n } from 'vue-i18n';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 
@@ -14,6 +15,8 @@ const props = defineProps({
     events: Object,
 });
 
+const { t } = useI18n();
+
 const processingEventId = ref<number | null>(null);
 
 const formatCurrency = (amount: number) => {
@@ -22,12 +25,12 @@ const formatCurrency = (amount: number) => {
 
 // Handle approve functionality
 const handleApprove = (id: number) => {
-    if (confirm("Are you sure you want to approve this event? It will become public.")) {
+    if (confirm(t('events.confirmApproveEvent'))) {
         processingEventId.value = id;
         router.patch(`/admin/events/${id}/approve`, {}, {
             preserveScroll: true,
-            onSuccess: () => toast.success('Event approved successfully.'),
-            onError: () => toast.error('Failed to approve event.'),
+            onSuccess: () => toast.success(t('events.eventApprovedSuccess')),
+            onError: () => toast.error(t('events.eventApprovedError')),
             onFinish: () => {
                 processingEventId.value = null;
             }
@@ -37,12 +40,12 @@ const handleApprove = (id: number) => {
 
 // Handle reject functionality
 const handleReject = (id: number) => {
-    if (confirm("Are you sure you want to reject this event? It will be marked as rejected and not visible to the public.")) {
+    if (confirm(t('events.confirmRejectEvent'))) {
         processingEventId.value = id;
         router.patch(`/admin/events/${id}/reject`, {}, {
             preserveScroll: true,
-            onSuccess: () => toast.success('Event rejected successfully.'),
-            onError: () => toast.error('Failed to reject event.'),
+            onSuccess: () => toast.success(t('events.eventRejectedSuccess')),
+            onError: () => toast.error(t('events.eventRejectedError')),
             onFinish: () => {
                 processingEventId.value = null;
             }
@@ -52,7 +55,7 @@ const handleReject = (id: number) => {
 </script>
 
 <template>
-    <Head title="Event Validation" />
+    <Head :title="t('events.eventValidation')" />
 
     <AppLayout>
         <div class="px-4 py-8 md:px-8 space-y-8 max-w-[1200px] mx-auto">
@@ -60,8 +63,8 @@ const handleReject = (id: number) => {
             <!-- Page Header -->
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">Event Validation</h1>
-                    <p class="text-gray-500 dark:text-gray-400 mt-1">Review pending events submitted by organizers.</p>
+                    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">{{ t('events.eventValidation') }}</h1>
+                    <p class="text-gray-500 dark:text-gray-400 mt-1">{{ t('events.eventValidationDesc') }}</p>
                 </div>
             </div>
 
@@ -80,7 +83,7 @@ const handleReject = (id: number) => {
                         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600 dark:text-gray-400">
                             <div class="flex items-center gap-2">
                                 <Building class="w-4 h-4 text-indigo-500" />
-                                <span class="font-medium">Organizer: {{ event.organisateur?.username || 'Unknown' }}</span>
+                                <span class="font-medium">{{ t('events.organizer') }}: {{ event.organisateur?.username || t('events.unknown') }}</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <MapPin class="w-4 h-4 text-indigo-500" />
@@ -93,8 +96,8 @@ const handleReject = (id: number) => {
                                 </span>
                             </div>
                             <div class="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold">
-                                <span>Price: {{ formatCurrency(event.prix_spectateur) }}</span>
-                                <span>• Capacity: {{ event.capacite_spectateur }}</span>
+                                <span>{{ t('events.price') }}: {{ formatCurrency(event.prix_spectateur) }}</span>
+                                <span>• {{ t('events.capacity') }}: {{ event.capacite_spectateur }}</span>
                             </div>
                         </div>
                         
@@ -109,7 +112,7 @@ const handleReject = (id: number) => {
                             class="flex-1 md:flex-none px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition"
                         >
                             <Check class="w-5 h-5" />
-                            Approve
+                            {{ t('events.approve') }}
                         </button>
                         <button
                             @click="handleReject(event.id)"
@@ -117,7 +120,7 @@ const handleReject = (id: number) => {
                             class="flex-1 md:flex-none px-6 py-2.5 bg-white dark:bg-neutral-800 border-2 border-red-100 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 disabled:opacity-50 font-bold rounded-xl flex items-center justify-center gap-2 transition"
                         >
                             <X class="w-5 h-5" />
-                            Reject
+                            {{ t('events.reject') }}
                         </button>
                     </div>
                 </div>
@@ -147,8 +150,8 @@ const handleReject = (id: number) => {
                     <Check class="w-8 h-8 text-emerald-500" />
                 </div>
                 <div>
-                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">All caught up!</h3>
-                    <p class="text-gray-500 dark:text-gray-400 mt-2">There are no pending events waiting for validation at this time.</p>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ t('events.allCaughtUp') }}</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mt-2">{{ t('events.noPendingEvents') }}</p>
                 </div>
             </div>
 

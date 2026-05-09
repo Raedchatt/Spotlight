@@ -5,6 +5,7 @@ import { ref, watch, computed } from 'vue';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { toast } from 'vue-sonner';
+import { useI18n } from 'vue-i18n';
 
 interface ReservationUser {
     id: number;
@@ -59,6 +60,7 @@ const props = defineProps<{
 const search = ref(props.filters?.search || '');
 const eventFilter = ref(props.filters?.event || '');
 const statusFilter = ref(props.filters?.status || '');
+const { t } = useI18n();
 
 let filterTimeout: ReturnType<typeof setTimeout> | null = null;
 const applyFilters = () => {
@@ -95,9 +97,9 @@ const statusColor = (status: string) => {
 
 const ticketTypeLabel = (type: string | null) => {
     switch (type) {
-        case 'participant': return 'Participant';
-        case 'spectator': return 'Spectator';
-        default: return 'Standard';
+        case 'participant': return t('events.ticketParticipant');
+        case 'spectator': return t('events.ticketSpectator');
+        default: return t('events.ticketStandard');
     }
 };
 
@@ -208,11 +210,11 @@ const closeCreateModal = () => {
 const submitCreateReservation = () => {
     if (createProcessing.value) return;
     if (!selectedUser.value) {
-        toast.error('Please select a participant.');
+        toast.error(t('events.selectParticipantError'));
         return;
     }
     if (!selectedEvent.value) {
-        toast.error('Please select an event.');
+        toast.error(t('events.selectEventError'));
         return;
     }
 
@@ -227,7 +229,7 @@ const submitCreateReservation = () => {
     }, {
         preserveScroll: true,
         onSuccess: () => {
-            toast.success(`Reservation created for ${selectedUser.value.username}!`);
+            toast.success(t('events.reservationCreatedSuccess', { username: selectedUser.value.username }));
             closeCreateModal();
         },
         onError: (errors) => {
@@ -246,16 +248,16 @@ const submitCreateReservation = () => {
 const cancellingId = ref<number | null>(null);
 
 const cancelReservation = (reservation: ReservationData) => {
-    if (!confirm(`Cancel reservation #${reservation.id} for ${reservation.user?.username}?`)) return;
+    if (!confirm(t('events.confirmCancelReservation', { id: reservation.id, username: reservation.user?.username }))) return;
 
     cancellingId.value = reservation.id;
     router.patch(`/admin/reservations/${reservation.id}/cancel`, {}, {
         preserveScroll: true,
         onSuccess: () => {
-            toast.success(`Reservation #${reservation.id} cancelled.`);
+            toast.success(t('events.reservationCancelledSuccess', { id: reservation.id }));
         },
         onError: () => {
-            toast.error('Failed to cancel reservation.');
+            toast.error(t('events.reservationCancelledError'));
         },
         onFinish: () => {
             cancellingId.value = null;
@@ -265,7 +267,7 @@ const cancelReservation = (reservation: ReservationData) => {
 </script>
 
 <template>
-    <Head title="Reservations Management" />
+    <Head :title="t('events.reservationsManagement')" />
 
     <AppLayout>
         <div class="px-4 py-8 md:px-8 space-y-8 max-w-[1400px] mx-auto">
@@ -273,15 +275,15 @@ const cancelReservation = (reservation: ReservationData) => {
             <!-- Page Header -->
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">Reservations</h1>
-                    <p class="text-gray-500 dark:text-gray-400 mt-1">Manage all platform reservations from one place.</p>
+                    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">{{ t('events.reservations') }}</h1>
+                    <p class="text-gray-500 dark:text-gray-400 mt-1">{{ t('events.reservationsDesc') }}</p>
                 </div>
                 <button
                     @click="openCreateModal"
                     class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-2xl shadow-lg shadow-indigo-500/20 transition-all active:scale-95"
                 >
                     <Plus class="w-5 h-5" />
-                    Add Reservation
+                    {{ t('events.addReservation') }}
                 </button>
             </div>
 
@@ -292,7 +294,7 @@ const cancelReservation = (reservation: ReservationData) => {
                     <input
                         v-model="search"
                         type="text"
-                        placeholder="Search participant name or email..."
+                        :placeholder="t('events.searchParticipant')"
                         class="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm"
                     >
                 </div>
@@ -301,7 +303,7 @@ const cancelReservation = (reservation: ReservationData) => {
                     <input
                         v-model="eventFilter"
                         type="text"
-                        placeholder="Filter by event title..."
+                        :placeholder="t('events.filterByEventTitle')"
                         class="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm"
                     >
                 </div>
@@ -309,29 +311,29 @@ const cancelReservation = (reservation: ReservationData) => {
                     v-model="statusFilter"
                     class="w-full md:w-48 px-4 py-2.5 bg-gray-50/50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm"
                 >
-                    <option value="">All Statuses</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="pending">Pending</option>
-                    <option value="cancelled">Cancelled</option>
+                    <option value="">{{ t('events.allStatuses') }}</option>
+                    <option value="confirmed">{{ t('events.statusConfirmed') }}</option>
+                    <option value="pending">{{ t('events.statusPending') }}</option>
+                    <option value="cancelled">{{ t('events.statusCancelled') }}</option>
                 </select>
                 <button v-if="hasActiveFilters" @click="resetFilters" class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors whitespace-nowrap">
                     <FilterX class="w-4 h-4" />
-                    Clear
+                    {{ t('common.clear') }}
                 </button>
             </div>
 
             <!-- Stats Summary -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="bg-white dark:bg-neutral-900 border border-gray-100 dark:border-neutral-800 rounded-2xl p-5 shadow-sm">
-                    <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Total Reservations</p>
+                    <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">{{ t('events.totalReservations') }}</p>
                     <p class="text-2xl font-extrabold text-gray-900 dark:text-white">{{ reservations?.total || 0 }}</p>
                 </div>
                 <div class="bg-white dark:bg-neutral-900 border border-gray-100 dark:border-neutral-800 rounded-2xl p-5 shadow-sm">
-                    <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">On This Page</p>
+                    <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">{{ t('events.onThisPage') }}</p>
                     <p class="text-2xl font-extrabold text-gray-900 dark:text-white">{{ reservations?.data?.length || 0 }}</p>
                 </div>
                 <div class="bg-white dark:bg-neutral-900 border border-gray-100 dark:border-neutral-800 rounded-2xl p-5 shadow-sm">
-                    <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Active Filters</p>
+                    <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">{{ t('events.activeFilters') }}</p>
                     <p class="text-2xl font-extrabold text-gray-900 dark:text-white">{{ [search, eventFilter, statusFilter].filter(Boolean).length }}</p>
                 </div>
             </div>
@@ -342,14 +344,14 @@ const cancelReservation = (reservation: ReservationData) => {
                     <table class="w-full">
                         <thead>
                             <tr class="bg-gray-50/80 dark:bg-neutral-800/50">
-                                <th class="text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">ID</th>
-                                <th class="text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">Participant</th>
-                                <th class="text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">Event</th>
-                                <th class="text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">Type</th>
-                                <th class="text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">Tickets</th>
-                                <th class="text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">Status</th>
-                                <th class="text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">Date</th>
-                                <th class="text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">Action</th>
+                                <th class="text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">{{ t('events.id') }}</th>
+                                <th class="text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">{{ t('events.participant') }}</th>
+                                <th class="text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">{{ t('events.event') }}</th>
+                                <th class="text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">{{ t('events.type') }}</th>
+                                <th class="text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">{{ t('events.ticketsLabel') }}</th>
+                                <th class="text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">{{ t('events.status') }}</th>
+                                <th class="text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">{{ t('events.date') }}</th>
+                                <th class="text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">{{ t('common.actions') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-neutral-800">
@@ -357,13 +359,13 @@ const cancelReservation = (reservation: ReservationData) => {
                                 <td class="px-6 py-4 text-sm font-mono text-gray-400 dark:text-gray-500">#{{ r.id }}</td>
                                 <td class="px-6 py-4">
                                     <div>
-                                        <p class="text-sm font-bold text-gray-900 dark:text-white">{{ r.user?.username || 'N/A' }}</p>
+                                        <p class="text-sm font-bold text-gray-900 dark:text-white">{{ r.user?.username || t('events.na') }}</p>
                                         <p class="text-xs text-gray-500 dark:text-gray-400">{{ r.user?.email || '' }}</p>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
                                     <Link :href="`/events/${r.evenement?.id}`" class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline truncate block max-w-[200px]">
-                                        {{ r.evenement?.titre || 'N/A' }}
+                                        {{ r.evenement?.titre || t('events.na') }}
                                     </Link>
                                 </td>
                                 <td class="px-6 py-4">
@@ -376,7 +378,7 @@ const cancelReservation = (reservation: ReservationData) => {
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <span :class="[statusColor(r.statut), 'text-xs font-bold px-3 py-1 rounded-full border capitalize']">
-                                        {{ r.statut }}
+                                        {{ t(`events.status_${r.statut}`) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
@@ -386,7 +388,7 @@ const cancelReservation = (reservation: ReservationData) => {
                                     <div class="flex items-center justify-center gap-2">
                                         <Link :href="`/events/${r.evenement?.id}`" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors">
                                             <Eye class="w-3.5 h-3.5" />
-                                            View
+                                            {{ t('common.view') }}
                                         </Link>
                                         <button
                                             v-if="r.statut !== 'cancelled' && new Date(r.evenement?.date_debut) > new Date()"
@@ -396,7 +398,7 @@ const cancelReservation = (reservation: ReservationData) => {
                                         >
                                             <Loader2 v-if="cancellingId === r.id" class="w-3.5 h-3.5 animate-spin" />
                                             <Ban v-else class="w-3.5 h-3.5" />
-                                            Cancel
+                                            {{ t('common.cancel') }}
                                         </button>
                                     </div>
                                 </td>
@@ -407,8 +409,8 @@ const cancelReservation = (reservation: ReservationData) => {
                                         <div class="w-16 h-16 bg-gray-100 dark:bg-neutral-800 rounded-2xl flex items-center justify-center">
                                             <Ticket class="w-8 h-8 text-gray-300 dark:text-gray-600" />
                                         </div>
-                                        <p class="font-bold text-gray-500 dark:text-gray-400">No reservations found.</p>
-                                        <button v-if="hasActiveFilters" @click="resetFilters" class="text-indigo-600 dark:text-indigo-400 font-bold hover:underline">Clear all filters</button>
+                                        <p class="font-bold text-gray-500 dark:text-gray-400">{{ t('events.noReservationsFound') }}</p>
+                                        <button v-if="hasActiveFilters" @click="resetFilters" class="text-indigo-600 dark:text-indigo-400 font-bold hover:underline">{{ t('events.clearAllFilters') }}</button>
                                     </div>
                                 </td>
                             </tr>
@@ -438,8 +440,8 @@ const cancelReservation = (reservation: ReservationData) => {
                         <!-- Header -->
                         <div class="sticky top-0 z-10 flex items-center justify-between px-8 py-5 bg-white dark:bg-neutral-900 border-b border-gray-100 dark:border-neutral-800 rounded-t-3xl">
                             <div>
-                                <h2 class="text-xl font-extrabold text-gray-900 dark:text-white">Add Reservation</h2>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Create a reservation on behalf of a participant (skip payment)</p>
+                                <h2 class="text-xl font-extrabold text-gray-900 dark:text-white">{{ t('events.addReservation') }}</h2>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('events.addReservationDesc') }}</p>
                             </div>
                             <button @click="closeCreateModal" class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
                                 <X class="w-5 h-5 text-gray-500" />
@@ -452,7 +454,7 @@ const cancelReservation = (reservation: ReservationData) => {
                             <div class="space-y-3">
                                 <label class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
                                     <Users class="w-4 h-4 text-indigo-500" />
-                                    Select Participant *
+                                    {{ t('events.selectParticipantReq') }}
                                 </label>
                                 <div v-if="selectedUser" class="flex items-center justify-between p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-2xl">
                                     <div class="flex items-center gap-3">
@@ -471,7 +473,7 @@ const cancelReservation = (reservation: ReservationData) => {
                                     <input
                                         v-model="userSearchQuery"
                                         type="text"
-                                        placeholder="Search by username or email..."
+                                        :placeholder="t('events.searchByUsernameOrEmail')"
                                         @input="searchUsersForCreate"
                                         class="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm"
                                     >
@@ -499,7 +501,7 @@ const cancelReservation = (reservation: ReservationData) => {
                             <div class="space-y-3">
                                 <label class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
                                     <Calendar class="w-4 h-4 text-indigo-500" />
-                                    Select Event *
+                                    {{ t('events.selectEventReq') }}
                                 </label>
                                 <div v-if="selectedEvent" class="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl">
                                     <div class="flex items-center gap-3">
@@ -509,8 +511,8 @@ const cancelReservation = (reservation: ReservationData) => {
                                         <div>
                                             <p class="font-bold text-gray-900 dark:text-white">{{ selectedEvent.titre }}</p>
                                             <p class="text-xs text-gray-500 dark:text-gray-400">
-                                                {{ selectedEvent.is_tournoi ? 'Tournament' : 'Event' }}
-                                                · Capacity: {{ selectedEvent.capacite_spectateur }} seats
+                                                {{ selectedEvent.is_tournoi ? t('events.tournament') : t('events.event') }}
+                                                · {{ t('events.capacity') }}: {{ selectedEvent.capacite_spectateur }} {{ t('events.seats') }}
                                             </p>
                                         </div>
                                     </div>
@@ -523,7 +525,7 @@ const cancelReservation = (reservation: ReservationData) => {
                                     <input
                                         v-model="eventSearchQuery"
                                         type="text"
-                                        placeholder="Search by event title..."
+                                        :placeholder="t('events.searchByEventTitle')"
                                         @input="searchEventsForCreate"
                                         class="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm"
                                     >
@@ -541,7 +543,7 @@ const cancelReservation = (reservation: ReservationData) => {
                                             <div class="flex flex-col">
                                                 <span class="font-bold text-gray-900 dark:text-white text-sm">{{ ev.titre }}</span>
                                                 <span class="text-xs text-gray-500 dark:text-gray-400">
-                                                    {{ ev.is_tournoi ? 'Tournament' : 'Event' }} · {{ ev.capacite_spectateur }} seats
+                                                    {{ ev.is_tournoi ? t('events.tournament') : t('events.event') }} · {{ ev.capacite_spectateur }} {{ t('events.seats') }}
                                                 </span>
                                             </div>
                                         </div>
@@ -554,7 +556,7 @@ const cancelReservation = (reservation: ReservationData) => {
 
                             <!-- Ticket Type (if tournament) -->
                             <div v-if="selectedEvent?.is_tournoi" class="space-y-2">
-                                <label class="text-sm font-bold text-gray-900 dark:text-white">Ticket Type *</label>
+                                <label class="text-sm font-bold text-gray-900 dark:text-white">{{ t('events.ticketTypeReq') }}</label>
                                 <div class="grid grid-cols-2 gap-3">
                                     <button
                                         type="button"
@@ -566,8 +568,8 @@ const cancelReservation = (reservation: ReservationData) => {
                                                 : 'border-gray-200 dark:border-neutral-700 hover:border-blue-300'
                                         ]"
                                     >
-                                        <p class="text-sm font-bold text-gray-900 dark:text-white">👀 Spectator</p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Watch the tournament</p>
+                                        <p class="text-sm font-bold text-gray-900 dark:text-white">👀 {{ t('events.spectator') }}</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t('events.watchTournament') }}</p>
                                     </button>
                                     <button
                                         type="button"
@@ -579,15 +581,15 @@ const cancelReservation = (reservation: ReservationData) => {
                                                 : 'border-gray-200 dark:border-neutral-700 hover:border-purple-300'
                                         ]"
                                     >
-                                        <p class="text-sm font-bold text-gray-900 dark:text-white">🎮 Participant</p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Compete in the tournament</p>
+                                        <p class="text-sm font-bold text-gray-900 dark:text-white">🎮 {{ t('events.participantLabel') }}</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t('events.competeTournament') }}</p>
                                     </button>
                                 </div>
                             </div>
 
                             <!-- Number of Tickets -->
                             <div class="space-y-2">
-                                <label class="text-sm font-bold text-gray-900 dark:text-white">Number of Tickets *</label>
+                                <label class="text-sm font-bold text-gray-900 dark:text-white">{{ t('events.numberOfTicketsReq') }}</label>
                                 <input
                                     v-model.number="newReservation.nombre_tickets"
                                     type="number"
@@ -601,8 +603,8 @@ const cancelReservation = (reservation: ReservationData) => {
                             <div class="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 flex gap-3 items-start">
                                 <span class="text-lg">⚡</span>
                                 <div>
-                                    <p class="text-sm font-bold text-amber-900 dark:text-amber-300">Payment Skipped</p>
-                                    <p class="text-xs text-amber-700 dark:text-amber-400">This reservation will be auto-confirmed without going through payment.</p>
+                                    <p class="text-sm font-bold text-amber-900 dark:text-amber-300">{{ t('events.paymentSkipped') }}</p>
+                                    <p class="text-xs text-amber-700 dark:text-amber-400">{{ t('events.paymentSkippedDesc') }}</p>
                                 </div>
                             </div>
                         </div>
@@ -610,7 +612,7 @@ const cancelReservation = (reservation: ReservationData) => {
                         <!-- Footer -->
                         <div class="sticky bottom-0 z-10 flex items-center justify-end gap-3 px-8 py-5 bg-gray-50 dark:bg-neutral-800/50 border-t border-gray-100 dark:border-neutral-800 rounded-b-3xl">
                             <button @click="closeCreateModal" class="px-5 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
-                                Cancel
+                                {{ t('common.cancel') }}
                             </button>
                             <button
                                 @click="submitCreateReservation"
@@ -619,7 +621,7 @@ const cancelReservation = (reservation: ReservationData) => {
                             >
                                 <Loader2 v-if="createProcessing" class="w-4 h-4 animate-spin" />
                                 <Plus v-else class="w-4 h-4" />
-                                {{ createProcessing ? 'Creating...' : 'Create Reservation' }}
+                                {{ createProcessing ? t('events.creating') : t('events.createReservation') }}
                             </button>
                         </div>
                     </div>

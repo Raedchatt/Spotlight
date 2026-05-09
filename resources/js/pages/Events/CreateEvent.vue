@@ -10,16 +10,18 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 import InputError from '@/components/InputError.vue';
+import { useI18n } from 'vue-i18n';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 // Breadcrumbs
+const { t } = useI18n();
 const breadcrumbs = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Events', href: '/dashboard/events' },
-    { title: 'Create Event', href: '/dashboard/events/create' },
+    { title: t('events.dashboard'), href: '/dashboard' },
+    { title: t('events.events'), href: '/dashboard/events' },
+    { title: t('events.createEvent'), href: '/dashboard/events/create' },
 ];
 
 // Types
@@ -100,12 +102,12 @@ const clearSuggestedTimeouts = () => {
 
 const generateIdeas = async () => {
     if (generationAttempts.value >= MAX_ATTEMPTS) {
-        generateError.value = 'Limit reached';
+        generateError.value = t('events.limitReached');
         return;
     }
 
     if (!form.value.titre) {
-        generateError.value = 'Enter title first';
+        generateError.value = t('events.enterTitleFirst');
         return;
     }
 
@@ -140,7 +142,7 @@ const generateIdeas = async () => {
         });
 
     } catch {
-        generateError.value = 'Generation failed';
+        generateError.value = t('events.generationFailed');
     } finally {
         isGenerating.value = false;
     }
@@ -161,7 +163,7 @@ const applySuggestion = async (s: Suggestion) => {
             form.value.ai_media_urls.push(response.data.secure_url);
         }
     } catch {
-        toast.error('AI image upload failed. Please try again.');
+        toast.error(t('events.aiUploadFailed'));
     } finally {
         s.isUploading = false;
     }
@@ -330,7 +332,7 @@ const clearSuggestions = () => {
 
 const pingLocation = () => {
     if (!navigator.geolocation) {
-        toast.error('Geolocation is not supported by your browser');
+        toast.error(t('events.geoNotSupported'));
         return;
     }
 
@@ -347,7 +349,7 @@ const pingLocation = () => {
             isSearchingLocation.value = false;
         },
         (error) => {
-            toast.error('Unable to retrieve your location');
+            toast.error(t('events.unableToRetrieveLocation'));
             isSearchingLocation.value = false;
         }
     );
@@ -380,7 +382,7 @@ const submit = async () => {
         });
 
         await axios.post('/web-api/events', formData);
-        toast.success('Event published successfully!');
+        toast.success(t('events.eventPublishedSuccess'));
         
         setTimeout(() => {
             router.visit('/dashboard/events');
@@ -390,7 +392,7 @@ const submit = async () => {
         if (error.response?.data?.errors) {
             formErrors.value = error.response.data.errors;
         } else {
-            toast.error('An unexpected error occurred. Please try again.');
+            toast.error(t('events.unexpectedError'));
         }
     } finally {
         processing.value = false;
@@ -408,7 +410,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <Head title="Create Event" />
+    <Head :title="t('events.createEvent')" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="max-w-4xl mx-auto p-6 space-y-8">
@@ -416,14 +418,14 @@ onUnmounted(() => {
                 <div class="space-y-1">
                     <Link href="/dashboard/events" class="flex items-center text-sm text-muted-foreground hover:text-blue-600 transition-colors mb-2">
                         <ChevronLeft class="w-4 h-4 mr-1" />
-                        Back to events
+                        {{ t('events.backToEvents') }}
                     </Link>
-                    <h1 class="text-3xl font-bold tracking-tight">Host an Event</h1>
-                    <p class="text-muted-foreground">Fill in the details below to publish your event to the platform.</p>
+                    <h1 class="text-3xl font-bold tracking-tight">{{ t('events.hostEvent') }}</h1>
+                    <p class="text-muted-foreground">{{ t('events.hostEventDesc') }}</p>
                 </div>
                 <Button @click="submit" :disabled="processing || isMissingStripe || dateError" class="bg-blue-600 hover:bg-blue-700">
                     <Save class="w-4 h-4 mr-2" />
-                    {{ processing ? 'Publishing...' : 'Publish Event' }}
+                    {{ processing ? t('events.publishing') : t('events.publishEvent') }}
                 </Button>
             </div>
 
@@ -433,12 +435,12 @@ onUnmounted(() => {
                     <AlertCircle class="w-6 h-6 text-red-600 dark:text-red-400" />
                 </div>
                 <div class="flex-1">
-                    <h3 class="text-sm font-semibold text-red-900 dark:text-red-300">Stripe Account Required</h3>
-                    <p class="text-sm text-red-800 dark:text-red-400">You must connect your Stripe account before you can publish events to receive payments.</p>
+                    <h3 class="text-sm font-semibold text-red-900 dark:text-red-300">{{ t('events.stripeAccountRequired') }}</h3>
+                    <p class="text-sm text-red-800 dark:text-red-400">{{ t('events.stripeAccountDesc') }}</p>
                 </div>
                 <Link href="/settings/profile">
                     <Button variant="outline" size="sm" class="border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-900/30 text-red-700 dark:text-red-400">
-                        Connect Stripe Now
+                        {{ t('events.connectStripeNow') }}
                     </Button>
                 </Link>
             </div>
@@ -450,36 +452,36 @@ onUnmounted(() => {
                         <CardHeader>
                             <div class="flex items-center gap-2 text-blue-600 mb-2">
                                 <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold">1</div>
-                                <CardTitle>Basic Information</CardTitle>
+                                <CardTitle>{{ t('events.basicInfo') }}</CardTitle>
                             </div>
                         </CardHeader>
                         <CardContent class="space-y-4">
                             <div class="space-y-2">
-                                <label class="text-sm font-medium">Event Title *</label>
-                                <Input v-model="form.titre" placeholder="e.g. Summer Beats Festival 2026" />
+                                <label class="text-sm font-medium">{{ t('events.eventTitle') }} *</label>
+                                <Input v-model="form.titre" :placeholder="t('events.eventTitlePlaceholder')" />
                                 <InputError :message="formErrors?.titre?.[0]" />
                             </div>
 
                             <div class="space-y-2">
-                                <label class="text-sm font-medium">Description *</label>
-                                <textarea v-model="form.description" placeholder="Describe what makes your event special..." class="flex min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"></textarea>
+                                <label class="text-sm font-medium">{{ t('events.description') }} *</label>
+                                <textarea v-model="form.description" :placeholder="t('events.descriptionPlaceholder')" class="flex min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"></textarea>
                                 <InputError :message="formErrors?.description?.[0]" />
                             </div>
 
                             <div class="space-y-2">
-                                <label class="text-sm font-medium">Category *</label>
+                                <label class="text-sm font-medium">{{ t('events.category') }} *</label>
                                 <select v-model="form.categorie" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                                    <option value="" disabled>Select a category</option>
+                                    <option value="" disabled>{{ t('events.selectCategory') }}</option>
                                     <option v-for="cat in categories" :key="cat.slug" :value="cat.slug">{{ cat.label }}</option>
-                                    <option value="autre">Autre</option>
+                                    <option value="autre">{{ t('events.other') }}</option>
                                 </select>
                                 <InputError :message="formErrors?.categorie?.[0]" />
                             </div>
 
                             <!-- Custom category input when 'autre' is selected -->
                             <div v-if="form.categorie === 'autre'" class="space-y-2">
-                                <label class="text-sm font-medium">Custom Category *</label>
-                                <Input v-model="form.categorie_autre" placeholder="Enter your custom category name..." />
+                                <label class="text-sm font-medium">{{ t('events.customCategory') }} *</label>
+                                <Input v-model="form.categorie_autre" :placeholder="t('events.customCategoryPlaceholder')" />
                                 <InputError :message="formErrors?.categorie_autre?.[0]" />
                             </div>
                         </CardContent>
@@ -489,17 +491,17 @@ onUnmounted(() => {
                         <CardHeader>
                             <div class="flex items-center gap-2 text-blue-600 mb-2">
                                 <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold">2</div>
-                                <CardTitle>Location & Time</CardTitle>
+                                <CardTitle>{{ t('events.locationTime') }}</CardTitle>
                             </div>
                         </CardHeader>
                         <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="md:col-span-2 space-y-2">
-                                <label class="text-sm font-medium">Venue / Location *</label>
+                                <label class="text-sm font-medium">{{ t('events.venueLocation') }} *</label>
                                 <div class="relative">
                                     <MapPin class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                                     <Input 
                                         v-model="form.lieu" 
-                                        placeholder="Online or Physical Address" 
+                                        :placeholder="t('events.venuePlaceholder')" 
                                         class="pl-10"
                                         @keydown="handleLocationKeydown"
                                         @blur="clearSuggestions"
@@ -528,18 +530,18 @@ onUnmounted(() => {
                             </div>
 
                             <div class="space-y-2">
-                                <label class="text-sm font-medium">Start Date & Time *</label>
+                                <label class="text-sm font-medium">{{ t('events.startDate') }} *</label>
                                 <Input v-model="form.date_debut" type="datetime-local" />
                                 <InputError :message="formErrors?.date_debut?.[0]" />
                             </div>
 
                             <div class="space-y-2">
-                                <label class="text-sm font-medium">End Date & Time *</label>
+                                <label class="text-sm font-medium">{{ t('events.endDate') }} *</label>
                                 <Input v-model="form.date_fin" type="datetime-local" :class="{ 'border-red-500': dateError }" />
                                 <InputError :message="formErrors?.date_fin?.[0]" />
                                 <p v-if="dateError" class="text-xs text-red-500 font-medium flex items-center gap-1">
                                     <AlertCircle class="w-3 h-3" />
-                                    End date must be after start date
+                                    {{ t('events.endDateError') }}
                                 </p>
                             </div>
                         </CardContent>
@@ -549,7 +551,7 @@ onUnmounted(() => {
                         <CardHeader>
                             <div class="flex items-center gap-2 text-blue-600 mb-2">
                                 <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold">3</div>
-                                <CardTitle>Media Uploads</CardTitle>
+                                <CardTitle>{{ t('events.mediaUploads') }}</CardTitle>
                             </div>
                             <div class="mb-4 flex items-center justify-between">
                                 <Button
@@ -561,21 +563,21 @@ onUnmounted(() => {
                                     @click.stop="generateIdeas"
                                 >
                                     <Sparkles class="w-4 h-4" :class="{ 'animate-spin': isGenerating }" />
-                                    {{ isGenerating ? 'Generating...' : (generationAttempts >= MAX_ATTEMPTS ? 'Limit Reached' : '✨ Generate Covers') }}
+                                    {{ isGenerating ? t('events.generating') : (generationAttempts >= MAX_ATTEMPTS ? t('events.limitReached') : `✨ ${t('events.generateCovers')}`) }}
                                 </Button>
                                 <span v-if="generationAttempts < MAX_ATTEMPTS" class="text-[10px] font-medium text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full uppercase tracking-tighter">
-                                    {{ MAX_ATTEMPTS - generationAttempts }} attempts left
+                                    {{ t('events.attemptsLeft', { count: MAX_ATTEMPTS - generationAttempts }) }}
                                 </span>
                             </div>
-                            <CardDescription>Upload up to 5 images or videos for your event.</CardDescription>
+                            <CardDescription>{{ t('events.mediaUploadDesc') }}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div class="space-y-4">
                                 <!-- AI Suggestions Panel -->
                                 <div v-if="suggestions.length > 0" class="space-y-3 mb-6 p-4 rounded-xl bg-purple-50/50 dark:bg-purple-950/10 border border-purple-100 dark:border-purple-900/30">
                                     <div class="flex items-center justify-between">
-                                        <p class="text-xs font-semibold text-purple-600 uppercase tracking-wide">✨ AI Suggested Generation History</p>
-                                        <button @click="suggestions = []; generationAttempts = 0" class="text-xs text-muted-foreground hover:text-foreground">Clear All</button>
+                                        <p class="text-xs font-semibold text-purple-600 uppercase tracking-wide">✨ {{ t('events.aiSuggestionHistory') }}</p>
+                                        <button @click="suggestions = []; generationAttempts = 0" class="text-xs text-muted-foreground hover:text-foreground">{{ t('common.clearAll') }}</button>
                                     </div>
                                     <div class="flex gap-4 overflow-x-auto pb-4 scrollbar-thin">
                                         <button
@@ -587,11 +589,11 @@ onUnmounted(() => {
                                         >
                                             <div v-if="s.isUploading" class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white z-10">
                                                 <div class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mb-2"></div>
-                                                <span class="text-[10px]">Uploading...</span>
+                                                <span class="text-[10px]">{{ t('events.uploading') }}</span>
                                             </div>
                                             <div v-if="!s.loaded && !s.error && !s.isUploading" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-2">
                                                 <Sparkles class="w-8 h-8 animate-pulse text-purple-500" />
-                                                <span class="text-[10px]">Generating vision...</span>
+                                                <span class="text-[10px]">{{ t('events.generatingVision') }}</span>
                                             </div>
                                             <img 
                                                 v-if="!s.error"
@@ -608,7 +610,7 @@ onUnmounted(() => {
                                                 }"
                                             />
                                             <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                                <span class="text-white text-xs font-medium px-2 py-1 bg-purple-600 rounded">Use this cover</span>
+                                                <span class="text-white text-xs font-medium px-2 py-1 bg-purple-600 rounded">{{ t('events.useThisCover') }}</span>
                                             </div>
                                         </button>
                                     </div>
@@ -618,15 +620,15 @@ onUnmounted(() => {
                                 <div class="flex items-center justify-center w-full">
                                     <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-700">
                                         <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                            <p class="mb-2 text-sm text-muted-foreground"><span class="font-bold text-foreground">Click to upload</span> or drag and drop</p>
-                                            <p class="text-xs text-muted-foreground">PNG, JPG, MP4 or MOV (MAX. 20MB)</p>
+                                            <p class="mb-2 text-sm text-muted-foreground"><span class="font-bold text-foreground">{{ t('events.clickToUpload') }}</span> {{ t('events.orDragAndDrop') }}</p>
+                                            <p class="text-xs text-muted-foreground">{{ t('events.supportedFormats') }}</p>
                                         </div>
                                         <input id="dropzone-file" type="file" multiple accept="image/*,video/*" class="hidden" @change="handleFileChange" />
                                     </label>
                                 </div>
                                 
                                 <div v-show="form.medias.length > 0 || form.ai_media_urls.length > 0" class="flex flex-col space-y-2 mt-4">
-                                    <h4 class="text-sm font-medium">Selected media:</h4>
+                                    <h4 class="text-sm font-medium">{{ t('events.selectedMedia') }}:</h4>
                                     <ul class="text-sm space-y-2">
                                         <li v-for="(file, idx) in form.medias" :key="'file-'+idx" class="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
                                             <span class="truncate flex-1 text-xs">{{ file.name }}</span>
@@ -634,7 +636,7 @@ onUnmounted(() => {
                                         </li>
                                         <li v-for="(url, idx) in form.ai_media_urls" :key="'ai-'+idx" class="flex items-center gap-2 p-2 bg-purple-50 rounded-lg">
                                             <img :src="url" class="w-8 h-8 object-cover rounded" />
-                                            <span class="truncate flex-1 text-xs italic">AI Generated Cover</span>
+                                            <span class="truncate flex-1 text-xs italic">{{ t('events.aiGeneratedCover') }}</span>
                                             <button @click="form.ai_media_urls.splice(idx, 1)" class="text-slate-400 hover:text-red-500">✕</button>
                                         </li>
                                     </ul>
@@ -648,12 +650,12 @@ onUnmounted(() => {
                         <CardHeader>
                             <div class="flex items-center gap-2 text-blue-600 mb-2">
                                 <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold">4</div>
-                                <CardTitle>Tickets & Capacity</CardTitle>
+                                <CardTitle>{{ t('events.ticketsCapacity') }}</CardTitle>
                             </div>
                         </CardHeader>
                         <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="space-y-2">
-                                <label class="text-sm font-medium">Maximum Seats *</label>
+                                <label class="text-sm font-medium">{{ t('events.maxSeats') }} *</label>
                                 <div class="relative">
                                     <Users class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                                     <Input v-model.number="form.capacite_spectateur" type="number" min="0" class="pl-10" />
@@ -662,7 +664,7 @@ onUnmounted(() => {
                             </div>
 
                             <div class="space-y-2">
-                                <label class="text-sm font-medium">Ticket Price (TND) *</label>
+                                <label class="text-sm font-medium">{{ t('events.ticketPrice') }} *</label>
                                 <div class="relative">
                                     <CircleDollarSign class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                                     <Input v-model.number="form.prix_spectateur" type="number" min="0" step="0.01" class="pl-10" />
@@ -674,36 +676,36 @@ onUnmounted(() => {
                             <div class="md:col-span-2 space-y-4 mt-2 p-4 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-900/50">
                                 <label class="flex items-center space-x-2 text-sm font-medium cursor-pointer">
                                     <input type="checkbox" v-model="form.is_tournoi" class="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600 dark:bg-slate-800 focus:ring-blue-500" />
-                                    <span>Is a Tournament?</span>
+                                    <span>{{ t('events.isTournament') }}</span>
                                 </label>
                                 
                                 <div v-if="form.is_tournoi" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
                                     <div class="md:col-span-2 space-y-2">
-                                        <label class="text-sm font-medium">Tournament Type *</label>
+                                        <label class="text-sm font-medium">{{ t('events.tournamentType') }} *</label>
                                         <select v-model="form.type_tournoi" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                                            <option value="" disabled>Select type</option>
-                                            <option value="equipe">Équipe</option>
-                                            <option value="individuel">Individuel</option>
+                                            <option value="" disabled>{{ t('events.selectType') }}</option>
+                                            <option value="equipe">{{ t('events.teamType') }}</option>
+                                            <option value="individuel">{{ t('events.individualType') }}</option>
                                         </select>
                                         <InputError :message="formErrors?.type_tournoi?.[0]" />
                                     </div>
                                     
                                     <div class="space-y-2">
-                                        <label class="text-sm font-medium">Participant Price (TND) *</label>
+                                        <label class="text-sm font-medium">{{ t('events.participantPrice') }} *</label>
                                         <Input v-model.number="form.prix_participant" type="number" min="0" step="0.01" />
                                         <InputError :message="formErrors?.prix_participant?.[0]" />
                                     </div>
                                     
                                     <div class="space-y-2">
                                         <label class="text-sm font-medium">
-                                            {{ form.type_tournoi === 'equipe' ? 'Number participant in equipe *' : 'Participant Seats *' }}
+                                            {{ form.type_tournoi === 'equipe' ? t('events.numParticipantsInTeam') : t('events.participantSeats') }} *
                                         </label>
                                         <Input v-model.number="form.capacite_participant" type="number" min="0" />
                                         <InputError :message="formErrors?.capacite_participant?.[0]" />
                                     </div>
 
                                     <div v-if="form.type_tournoi === 'equipe'" class="space-y-2">
-                                        <label class="text-sm font-medium">Equipe Number *</label>
+                                        <label class="text-sm font-medium">{{ t('events.equipeNumber') }} *</label>
                                         <Input v-model.number="form.nombre_equipes" type="number" />
                                         <InputError :message="formErrors?.nombre_equipes?.[0]" />
                                     </div>
@@ -717,17 +719,17 @@ onUnmounted(() => {
                         <CardHeader>
                             <div class="flex items-center gap-2 text-blue-600 mb-2">
                                 <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold">5</div>
-                                <CardTitle>Co-Organizers (Optional)</CardTitle>
+                                <CardTitle>{{ t('events.coOrganizersOptional') }}</CardTitle>
                             </div>
-                            <CardDescription>Invite other organizers to help manage your event.</CardDescription>
+                            <CardDescription>{{ t('events.coOrganizersDesc') }}</CardDescription>
                         </CardHeader>
                         <CardContent class="space-y-4">
                             <div class="space-y-3">
-                                <label class="text-sm font-medium">Search by Name or Email</label>
+                                <label class="text-sm font-medium">{{ t('events.searchByNameEmail') }}</label>
                                 <div class="relative">
                                     <Input 
                                         v-model="searchQuery" 
-                                        placeholder="Search organizers..." 
+                                        :placeholder="t('events.searchOrganizersPlaceholder')" 
                                         @input="searchOrganizers"
                                     />
                                     <!-- Search Results Dropdown -->
@@ -745,7 +747,7 @@ onUnmounted(() => {
                                 </div>
                                 
                                 <div v-if="selectedCollaborators.length > 0" class="pt-2 space-y-2">
-                                    <h5 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Selected Co-Organizers:</h5>
+                                    <h5 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{{ t('events.selectedCoOrganizers') }}:</h5>
                                     <div class="flex flex-wrap gap-2">
                                         <div v-for="(collab, idx) in selectedCollaborators" :key="collab.id" class="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/30 rounded-full text-sm">
                                             <span>{{ collab.username }}</span>
@@ -761,10 +763,10 @@ onUnmounted(() => {
                     
                     <div class="flex justify-end gap-3 pt-4">
                         <Link href="/dashboard/events">
-                            <Button variant="ghost">Cancel</Button>
+                            <Button variant="ghost">{{ t('common.cancel') }}</Button>
                         </Link>
                         <Button @click="submit" :disabled="processing || isMissingStripe" class="bg-blue-600 hover:bg-blue-700 min-w-[150px]">
-                            {{ processing ? 'Publishing...' : 'Publish Event' }}
+                            {{ processing ? t('events.publishing') : t('events.publishEvent') }}
                         </Button>
                     </div>
                 </div>
@@ -776,16 +778,16 @@ onUnmounted(() => {
                             <Sparkles class="w-16 h-16" />
                         </div>
                         <CardHeader>
-                            <CardTitle class="text-lg">Tips for Success</CardTitle>
+                            <CardTitle class="text-lg">{{ t('events.tipsForSuccess') }}</CardTitle>
                         </CardHeader>
                         <CardContent class="space-y-4 text-sm relative z-10">
                             <div class="flex gap-3">
                                 <Info class="w-5 h-5 flex-shrink-0" />
-                                <p>Use a catchy title that clearly states what the event is about.</p>
+                                <p>{{ t('events.tipTitle') }}</p>
                             </div>
                             <div class="flex gap-3">
                                 <Info class="w-5 h-5 flex-shrink-0" />
-                                <p>High-quality descriptions attract 40% more attendees.</p>
+                                <p>{{ t('events.tipDescription') }}</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -796,7 +798,7 @@ onUnmounted(() => {
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-2 text-blue-600">
                                     <MapPin class="w-4 h-4" />
-                                    <CardTitle class="text-sm font-semibold">Event Location</CardTitle>
+                                    <CardTitle class="text-sm font-semibold">{{ t('events.eventLocation') }}</CardTitle>
                                 </div>
                                 <Button 
                                     variant="outline" 
@@ -806,7 +808,7 @@ onUnmounted(() => {
                                     :disabled="isSearchingLocation"
                                 >
                                     <Sparkles class="w-3.5 h-3.5" :class="{ 'animate-spin': isSearchingLocation }" />
-                                    {{ isSearchingLocation ? 'Locating...' : 'Ping My Location' }}
+                                    {{ isSearchingLocation ? t('events.locating') : t('events.pingLocation') }}
                                 </Button>
                             </div>
                         </CardHeader>
@@ -815,7 +817,7 @@ onUnmounted(() => {
                             <div class="p-3 bg-blue-50/30 border-t border-blue-50">
                                 <p class="text-[11px] text-blue-700/70 flex items-center gap-1.5">
                                     <Info class="w-3 h-3" />
-                                    Tip: Drag the marker or click on the map to refine the location.
+                                    {{ t('events.mapTip') }}
                                 </p>
                             </div>
                         </CardContent>

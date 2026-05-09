@@ -3,7 +3,9 @@ import { Link, usePage, router } from '@inertiajs/vue3';
 import { Folder, LayoutGrid, Menu, Search, Calendar, User, LogOut, Users } from 'lucide-vue-next';
 import { MessageSquare, Bell } from 'lucide-vue-next';
 import { computed,onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import AppLogo from '@/components/AppLogo.vue';
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 
 import LoginModal from '@/components/auth/LoginModal.vue';
 import RegisterModal from '@/components/auth/RegisterModal.vue';
@@ -30,6 +32,8 @@ import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { useUnreadCounts } from '@/composables/useUnreadCounts';
 import { dashboard, logout } from '@/routes';
 import type { BreadcrumbItem, NavItem } from '@/types';
+
+const { t } = useI18n();
 
 
 
@@ -58,7 +62,7 @@ const mainNavItems = computed<NavItem[]>(() => {
     if (!auth.value.user) {
         return [
             {
-                title: 'Discovery',
+                title: t('nav.discovery'),
                 href: '/discovery',
                 icon: Search,
             }
@@ -68,12 +72,12 @@ const mainNavItems = computed<NavItem[]>(() => {
     if (auth.value.user.role === 'participant') {
         return [
             {
-                title: 'Discovery',
+                title: t('nav.discovery'),
                 href: '/discovery',
                 icon: Search,
             },
             {
-                title: 'My Reservations',
+                title: t('nav.myReservations'),
                 href: '/dashboard/reservations',
                 icon: Calendar,
             },
@@ -83,12 +87,12 @@ const mainNavItems = computed<NavItem[]>(() => {
     if (auth.value.user.role === 'revendeur') {
         return [
             {
-                title: 'Dashboard',
+                title: t('nav.dashboard'),
                 href: dashboard(),
                 icon: LayoutGrid,
             },
             {
-                title: 'Discovery',
+                title: t('nav.discovery'),
                 href: '/discovery',
                 icon: Search,
             },
@@ -97,18 +101,18 @@ const mainNavItems = computed<NavItem[]>(() => {
     
     return [
         {
-            title: 'Dashboard',
+            title: t('nav.dashboard'),
             href: dashboard(),
             icon: LayoutGrid,
         },
         {
-            title: 'My Hosted Events',
+            title: t('nav.myHostedEvents'),
             href: '/dashboard/events',
             icon: Folder,
         },
         ...(auth.value.has_collaborations 
             ? [{
-                title: 'My Collaborations',
+                title: t('nav.myCollaborations'),
                 href: '/dashboard/collaborations',
                 icon: Users,
             }] 
@@ -156,7 +160,7 @@ const handleLogout = () => {
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="left" class="w-[300px] p-6">
-                            <SheetTitle class="sr-only">Navigation Menu</SheetTitle>
+                            <SheetTitle class="sr-only">{{ t('nav.navigationMenu') }}</SheetTitle>
                             <SheetHeader class="flex justify-start text-left">
                                 <AppLogo />
                             </SheetHeader>
@@ -177,7 +181,7 @@ const handleLogout = () => {
                                     <div class="space-y-1 mb-2 border-b border-sidebar-border/50 pb-4">
                                         <Link href="/messages" class="flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent" :class="whenCurrentUrl('/messages', activeItemStyles)">
                                             <div class="flex items-center gap-x-3">
-                                                <MessageSquare class="h-5 w-5" /> Messages
+                                                <MessageSquare class="h-5 w-5" /> {{ t('nav.messages') }}
                                             </div>
                                             <Badge v-if="unreadMessagesCount > 0" variant="destructive" class="h-5 min-w-5 flex items-center justify-center rounded-full text-[10px] px-1">
                                                 {{ unreadMessagesCount }}
@@ -186,7 +190,7 @@ const handleLogout = () => {
                                         
                                         <Link href="/notifications" class="flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent" :class="whenCurrentUrl('/notifications', activeItemStyles)">
                                             <div class="flex items-center gap-x-3">
-                                                <Bell class="h-5 w-5" /> Notifications
+                                                <Bell class="h-5 w-5" /> {{ t('nav.notifications') }}
                                             </div>
                                             <Badge v-if="unreadNotificationsCount > 0" variant="destructive" class="h-5 min-w-5 flex items-center justify-center rounded-full text-[10px] px-1">
                                                 {{ unreadNotificationsCount }}
@@ -195,18 +199,18 @@ const handleLogout = () => {
                                     </div>
 
                                     <Link href="/settings/profile" class="flex items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent" :class="whenCurrentUrl('/settings/profile', activeItemStyles)">
-                                        <User class="h-5 w-5" /> Profile
+                                        <User class="h-5 w-5" /> {{ t('nav.profile') }}
                                     </Link>
                                     <button @click="handleLogout" class="flex w-full items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent">
-                                        <LogOut class="h-5 w-5" /> Log out
+                                        <LogOut class="h-5 w-5" /> {{ t('nav.logout') }}
                                     </button>
                                 </div>
                                 <div class="flex flex-col space-y-4" v-else>
                                     <button @click="openLogin" class="flex w-full items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent text-left">
-                                        Log in
+                                        {{ t('nav.login') }}
                                     </button>
                                     <button @click="openRegister" class="flex w-full items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent text-left">
-                                        Sign up
+                                        {{ t('nav.signup') }}
                                     </button>
                                 </div>
                             </div>
@@ -248,6 +252,7 @@ const handleLogout = () => {
                 <!-- Right Side Actions -->
                 <div class="ml-auto flex items-center space-x-2">
                     <div class="hidden lg:flex items-center gap-2">
+                        <LanguageSwitcher />
                         <template v-if="auth.user">
                             <InvitationsDropdown v-if="auth.user.role === 'organisateur'" />
                             <NotificationsDropdown :user-id="auth.user.id" />
@@ -262,8 +267,8 @@ const handleLogout = () => {
                             </Button>
                         </template>
                         <template v-else>
-                            <button @click="openLogin" class="text-sm font-semibold text-neutral-700 hover:underline dark:text-neutral-300">Log in</button>
-                            <button @click="openRegister" class="ml-4 text-sm font-semibold text-neutral-700 hover:underline dark:text-neutral-300">Sign up</button>
+                            <button @click="openLogin" class="text-sm font-semibold text-neutral-700 hover:underline dark:text-neutral-300">{{ t('nav.login') }}</button>
+                            <button @click="openRegister" class="ml-4 text-sm font-semibold text-neutral-700 hover:underline dark:text-neutral-300">{{ t('nav.signup') }}</button>
                         </template>
                     </div>
                 </div>

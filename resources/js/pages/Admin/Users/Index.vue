@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Eye, Edit, Trash2, UserPlus, ShieldBan, Search, CheckCircle } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import { toast } from 'vue-sonner';
+import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{
     users: any;
@@ -26,6 +27,8 @@ const isEditModalOpen = ref(false);
 const isShowModalOpen = ref(false);
 const isBlockModalOpen = ref(false);
 const selectedUser = ref<any>(null);
+
+const { t } = useI18n();
 
 // Form for Blocking
 const blockForm = useForm({
@@ -58,10 +61,10 @@ const submitAdd = () => {
         onSuccess: () => {
             isAddModalOpen.value = false;
             form.reset();
-            toast.success('User created successfully.');
+            toast.success(t('events.userCreatedSuccess'));
         },
         onError: () => {
-            toast.error('Failed to create user. Please check the form.');
+            toast.error(t('events.userCreatedError'));
         },
     });
 };
@@ -83,10 +86,10 @@ const submitEdit = () => {
         onSuccess: () => {
             isEditModalOpen.value = false;
             editForm.reset();
-            toast.success('User updated successfully.');
+            toast.success(t('events.userUpdatedSuccess'));
         },
         onError: () => {
-            toast.error('Failed to update user. Please check the form.');
+            toast.error(t('events.userUpdatedError'));
         },
     });
 };
@@ -97,10 +100,10 @@ const openShowModal = (user: any) => {
 };
 
 const confirmDelete = (user: any) => {
-    if (confirm(`Are you sure you want to delete ${user.first_name || 'this'} ${user.last_name || 'user'}?`)) {
+    if (confirm(t('events.confirmDeleteUser', { name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || t('events.thisUser') }))) {
         router.delete(`/admin/users/${user.id}`, {
-            onSuccess: () => toast.success('User deleted successfully.'),
-            onError: () => toast.error('Failed to delete user.'),
+            onSuccess: () => toast.success(t('events.userDeletedSuccess')),
+            onError: () => toast.error(t('events.userDeletedError')),
         });
     }
 };
@@ -117,10 +120,10 @@ const submitBlock = () => {
         onSuccess: () => {
             isBlockModalOpen.value = false;
             blockForm.reset();
-            toast.success('User blocked successfully.');
+            toast.success(t('events.userBlockedSuccess'));
         },
         onError: () => {
-            toast.error('Failed to block user.');
+            toast.error(t('events.userBlockedError'));
         },
     });
 };
@@ -135,15 +138,15 @@ const getRoleBadgeColor = (role: string) => {
 
 const displayRole = (role: string) => {
     switch (role) {
-        case 'administrateur': return 'Admin';
-        case 'organisateur': return 'Organizer';
-        default: return 'Participant';
+        case 'administrateur': return t('events.roleAdmin');
+        case 'organisateur': return t('events.roleOrganizer');
+        default: return t('events.roleParticipant');
     }
 };
 </script>
 
 <template>
-    <Head title="User Management" />
+    <Head :title="t('events.userManagement')" />
 
     <AppLayout>
         <div class="px-4 py-8 md:px-8 space-y-8 max-w-[1400px] mx-auto">
@@ -151,57 +154,57 @@ const displayRole = (role: string) => {
             <!-- Page Header -->
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">User Management</h1>
-                    <p class="text-gray-500 dark:text-gray-400 mt-1">Manage platform members including Admins, Organizers, and Participants.</p>
+                    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">{{ t('events.userManagement') }}</h1>
+                    <p class="text-gray-500 dark:text-gray-400 mt-1">{{ t('events.userManagementDesc') }}</p>
                 </div>
                 
                 <Dialog v-model:open="isAddModalOpen">
                     <DialogTrigger as-child>
                         <button class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:from-indigo-700 hover:to-violet-700 transition-all duration-300 shadow-lg shadow-indigo-500/25 active:scale-[0.98]">
                             <UserPlus class="w-5 h-5" />
-                            Add User
+                            {{ t('events.addUser') }}
                         </button>
                     </DialogTrigger>
                     <DialogContent class="sm:max-w-106.25 dark:bg-neutral-900 dark:border-neutral-800">
                         <DialogHeader>
-                            <DialogTitle class="dark:text-white">Add New User</DialogTitle>
+                            <DialogTitle class="dark:text-white">{{ t('events.addNewUser') }}</DialogTitle>
                             <DialogDescription class="dark:text-gray-400">
-                                Create a new account with specific access rights.
+                                {{ t('events.addNewUserDesc') }}
                             </DialogDescription>
                         </DialogHeader>
                         <form @submit.prevent="submitAdd" class="space-y-4 py-4">
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="space-y-2">
-                                    <Label for="first_name" class="dark:text-gray-300">First Name</Label>
+                                    <Label for="first_name" class="dark:text-gray-300">{{ t('events.firstName') }}</Label>
                                     <Input id="first_name" v-model="form.first_name" required class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" />
                                 </div>
                                 <div class="space-y-2">
-                                    <Label for="last_name" class="dark:text-gray-300">Last Name</Label>
+                                    <Label for="last_name" class="dark:text-gray-300">{{ t('events.lastName') }}</Label>
                                     <Input id="last_name" v-model="form.last_name" required class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" />
                                 </div>
                             </div>
                             <div class="space-y-2">
-                                <Label for="username" class="dark:text-gray-300">Username</Label>
+                                <Label for="username" class="dark:text-gray-300">{{ t('events.username') }}</Label>
                                 <Input id="username" v-model="form.username" required class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" />
                             </div>
                             <div class="space-y-2">
-                                <Label for="email" class="dark:text-gray-300">Email Address</Label>
+                                <Label for="email" class="dark:text-gray-300">{{ t('events.emailAddress') }}</Label>
                                 <Input id="email" type="email" v-model="form.email" required class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" />
                             </div>
                             <div class="space-y-2">
-                                <Label for="role" class="dark:text-gray-300">Role</Label>
+                                <Label for="role" class="dark:text-gray-300">{{ t('events.roleLabel') }}</Label>
                                 <select id="role" v-model="form.role" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" required>
-                                    <option value="participant">Participant</option>
-                                    <option value="organisateur">Organizer</option>
-                                    <option value="administrateur">Admin</option>
+                                    <option value="participant">{{ t('events.roleParticipant') }}</option>
+                                    <option value="organisateur">{{ t('events.roleOrganizer') }}</option>
+                                    <option value="administrateur">{{ t('events.roleAdmin') }}</option>
                                 </select>
                             </div>
                             <div class="space-y-2">
-                                <Label for="password" class="dark:text-gray-300">Password</Label>
+                                <Label for="password" class="dark:text-gray-300">{{ t('events.password') }}</Label>
                                 <Input id="password" type="password" v-model="form.password" required class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" />
                             </div>
                             <DialogFooter>
-                                <Button type="submit" :disabled="form.processing" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold rounded-xl h-11 shadow-md shadow-indigo-500/20">Create Account</Button>
+                                <Button type="submit" :disabled="form.processing" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold rounded-xl h-11 shadow-md shadow-indigo-500/20">{{ t('events.createAccount') }}</Button>
                             </DialogFooter>
                         </form>
                     </DialogContent>
@@ -214,11 +217,11 @@ const displayRole = (role: string) => {
                     <table class="w-full text-sm text-left">
                         <thead class="text-[11px] text-gray-400 dark:text-gray-500 uppercase tracking-[0.1em] bg-gray-50/50 dark:bg-neutral-800/30 border-b border-gray-100 dark:border-neutral-800">
                             <tr>
-                                <th class="px-6 py-4 font-bold">User</th>
-                                <th class="px-6 py-4 font-bold">Contact</th>
-                                <th class="px-6 py-4 font-bold">Role</th>
-                                <th class="px-6 py-4 font-bold">Joined</th>
-                                <th class="px-6 py-4 font-bold text-right">Actions</th>
+                                <th class="px-6 py-4 font-bold">{{ t('events.user') }}</th>
+                                <th class="px-6 py-4 font-bold">{{ t('events.contactInfo') }}</th>
+                                <th class="px-6 py-4 font-bold">{{ t('events.roleLabel') }}</th>
+                                <th class="px-6 py-4 font-bold">{{ t('events.joined') }}</th>
+                                <th class="px-6 py-4 font-bold text-right">{{ t('common.actions') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50 dark:divide-neutral-800/50">
@@ -282,44 +285,44 @@ const displayRole = (role: string) => {
         <Dialog v-model:open="isEditModalOpen">
             <DialogContent class="sm:max-w-106.25 dark:bg-neutral-900 dark:border-neutral-800">
                 <DialogHeader>
-                    <DialogTitle class="dark:text-white">Edit User</DialogTitle>
+                    <DialogTitle class="dark:text-white">{{ t('events.editUser') }}</DialogTitle>
                     <DialogDescription class="dark:text-gray-400">
-                        Adjust account details for this user.
+                        {{ t('events.editUserDesc') }}
                     </DialogDescription>
                 </DialogHeader>
                 <form @submit.prevent="submitEdit" class="space-y-4 py-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-2">
-                            <Label for="edit_first_name" class="dark:text-gray-300">First Name</Label>
+                            <Label for="edit_first_name" class="dark:text-gray-300">{{ t('events.firstName') }}</Label>
                             <Input id="edit_first_name" v-model="editForm.first_name" required class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" />
                         </div>
                         <div class="space-y-2">
-                            <Label for="edit_last_name" class="dark:text-gray-300">Last Name</Label>
+                            <Label for="edit_last_name" class="dark:text-gray-300">{{ t('events.lastName') }}</Label>
                             <Input id="edit_last_name" v-model="editForm.last_name" required class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" />
                         </div>
                     </div>
                     <div class="space-y-2">
-                        <Label for="edit_username" class="dark:text-gray-300">Username</Label>
+                        <Label for="edit_username" class="dark:text-gray-300">{{ t('events.username') }}</Label>
                         <Input id="edit_username" v-model="editForm.username" required class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" />
                     </div>
                     <div class="space-y-2">
-                        <Label for="edit_email" class="dark:text-gray-300">Email Address</Label>
+                        <Label for="edit_email" class="dark:text-gray-300">{{ t('events.emailAddress') }}</Label>
                         <Input id="edit_email" type="email" v-model="editForm.email" required class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" />
                     </div>
                     <div class="space-y-2">
-                        <Label for="edit_role" class="dark:text-gray-300">Role</Label>
+                        <Label for="edit_role" class="dark:text-gray-300">{{ t('events.roleLabel') }}</Label>
                         <select id="edit_role" v-model="editForm.role" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" required>
-                            <option value="participant">Participant</option>
-                            <option value="organisateur">Organizer</option>
-                            <option value="administrateur">Admin</option>
+                            <option value="participant">{{ t('events.roleParticipant') }}</option>
+                            <option value="organisateur">{{ t('events.roleOrganizer') }}</option>
+                            <option value="administrateur">{{ t('events.roleAdmin') }}</option>
                         </select>
                     </div>
                     <div class="space-y-2">
-                        <Label for="edit_password" class="dark:text-gray-300">New Password <span class="text-xs text-gray-500 font-normal">(Optional)</span></Label>
+                        <Label for="edit_password" class="dark:text-gray-300">{{ t('events.newPassword') }} <span class="text-xs text-gray-500 font-normal">({{ t('events.optional') }})</span></Label>
                         <Input id="edit_password" type="password" v-model="editForm.password" class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" />
                     </div>
                     <DialogFooter>
-                        <Button type="submit" :disabled="editForm.processing" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl">Save Changes</Button>
+                        <Button type="submit" :disabled="editForm.processing" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl">{{ t('common.save') }}</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
@@ -329,7 +332,7 @@ const displayRole = (role: string) => {
         <Dialog v-model:open="isShowModalOpen">
             <DialogContent class="sm:max-w-106.25 dark:bg-neutral-900 dark:border-neutral-800" v-if="selectedUser">
                 <DialogHeader>
-                    <DialogTitle class="dark:text-white">User Profile</DialogTitle>
+                    <DialogTitle class="dark:text-white">{{ t('events.userProfile') }}</DialogTitle>
                 </DialogHeader>
                 <div class="py-6 space-y-8">
                     <div class="flex items-center gap-5 bg-gray-50 dark:bg-neutral-800/50 p-4 rounded-2xl border border-gray-100 dark:border-neutral-800">
@@ -344,17 +347,17 @@ const displayRole = (role: string) => {
                     
                     <div class="grid grid-cols-2 gap-y-6 gap-x-4">
                         <div class="bg-gray-50 dark:bg-neutral-800/30 p-3 rounded-xl">
-                            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-bold mb-1">Email</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-bold mb-1">{{ t('events.emailAddress') }}</p>
                             <p class="text-sm font-bold text-gray-900 dark:text-gray-100 break-all">{{ selectedUser.email }}</p>
                         </div>
                         <div class="bg-gray-50 dark:bg-neutral-800/30 p-3 rounded-xl">
-                            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-bold mb-1">Role</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-bold mb-1">{{ t('events.roleLabel') }}</p>
                             <span :class="['px-2.5 py-1 text-xs font-bold rounded-md border', getRoleBadgeColor(selectedUser.role)]">
                                 {{ displayRole(selectedUser.role) }}
                             </span>
                         </div>
                         <div class="bg-gray-50 dark:bg-neutral-800/30 p-3 rounded-xl col-span-2">
-                            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-bold mb-1">Member Since</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-bold mb-1">{{ t('events.memberSince') }}</p>
                             <p class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                                 <CheckCircle class="w-4 h-4 text-emerald-500" />
                                 {{ new Date(selectedUser.created_at).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}
@@ -371,21 +374,21 @@ const displayRole = (role: string) => {
                 <DialogHeader>
                     <DialogTitle class="flex items-center gap-2 text-amber-600 dark:text-amber-500 text-xl font-bold">
                         <ShieldBan class="w-6 h-6" />
-                        Block User
+                        {{ t('events.blockUser') }}
                     </DialogTitle>
                     <DialogDescription class="dark:text-gray-400 text-base mt-2">
-                        Suspend access for <strong class="text-gray-900 dark:text-white">{{ selectedUser.username }}</strong>. Leave empty for permanent suspension.
+                        {{ t('events.suspendAccessFor') }} <strong class="text-gray-900 dark:text-white">{{ selectedUser.username }}</strong>. {{ t('events.leaveEmptyForPermanent') }}
                     </DialogDescription>
                 </DialogHeader>
                 <form @submit.prevent="submitBlock" class="space-y-6 py-4">
                     <div class="space-y-2">
-                        <Label for="block_days" class="dark:text-gray-300 font-bold">Duration (Days) <span class="text-xs text-gray-500 font-normal">(Optional)</span></Label>
-                        <Input id="block_days" type="number" min="1" v-model="blockForm.days" placeholder="e.g. 7" class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white h-12 text-lg" />
+                        <Label for="block_days" class="dark:text-gray-300 font-bold">{{ t('events.durationDays') }} <span class="text-xs text-gray-500 font-normal">({{ t('events.optional') }})</span></Label>
+                        <Input id="block_days" type="number" min="1" v-model="blockForm.days" :placeholder="t('events.eg7')" class="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white h-12 text-lg" />
                     </div>
                     <DialogFooter class="gap-3 sm:gap-2">
-                        <Button type="button" variant="outline" @click="isBlockModalOpen = false" class="w-full sm:w-auto dark:border-neutral-700 dark:text-gray-300 dark:hover:bg-neutral-800 rounded-xl">Cancel</Button>
+                        <Button type="button" variant="outline" @click="isBlockModalOpen = false" class="w-full sm:w-auto dark:border-neutral-700 dark:text-gray-300 dark:hover:bg-neutral-800 rounded-xl">{{ t('common.cancel') }}</Button>
                         <Button type="submit" class="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 focus:ring-amber-500 text-white font-bold rounded-xl" :disabled="blockForm.processing">
-                            Confirm Suspension
+                            {{ t('events.confirmSuspension') }}
                         </Button>
                     </DialogFooter>
                 </form>

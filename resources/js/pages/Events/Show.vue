@@ -25,6 +25,7 @@ import {
 } from 'lucide-vue-next';
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { toast } from 'vue-sonner';
+import { useI18n } from 'vue-i18n';
 import Reserver from '@/components/Reserver.vue';
 import { Badge } from '@/components/ui/badge/index';
 import { Button } from '@/components/ui/button/index';
@@ -112,6 +113,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const page = usePage();
+const { t } = useI18n();
 const auth = computed(() => page.props.auth as any);
 
 const isOwner = computed(() => {
@@ -124,7 +126,7 @@ const canManage = computed(() => isOwner.value || !!props.is_collaborator);
 const isReseller = computed(() => auth.value?.user?.role === 'revendeur');
 
 const breadcrumbs = [
-    { title: 'Discovery', href: '/discovery' },
+    { title: t('events.discovery'), href: '/discovery' },
     { title: props.event.titre, href: `/events/${props.event.id}` },
 ];
 
@@ -141,8 +143,8 @@ const eventTeam = computed(() => {
     // 1. Add Main Organizer
     team.push({
         id: props.event.organisateur.id,
-        name: props.event.organisateur.organisateur?.nom_organisation || props.event.organisateur.username || props.event.organisateur.name || 'Unknown Organizer',
-        role: 'Host / Owner',
+        name: props.event.organisateur.organisateur?.nom_organisation || props.event.organisateur.username || props.event.organisateur.name || t('events.unknownOrganizer'),
+        role: t('events.hostOwner'),
         isOwner: true,
         isYou: auth.value?.user?.id === props.event.organisateur.id
     });
@@ -153,8 +155,8 @@ const eventTeam = computed(() => {
         for (const collab of accepted) {
             team.push({
                 id: collab.organizer.id,
-                name: collab.organizer.organisateur?.nom_organisation || collab.organizer.username || collab.organizer.name || 'Unknown Organizer',
-                role: 'Co-Organizer',
+                name: collab.organizer.organisateur?.nom_organisation || collab.organizer.username || collab.organizer.name || t('events.unknownOrganizer'),
+                role: t('events.coOrganizer'),
                 isOwner: false,
                 isYou: auth.value?.user?.id === collab.organizer.id
             });
@@ -296,25 +298,25 @@ const isEventEnded = computed(() => {
 });
 
 const reserveButtonText = computed(() => {
-    if (!auth.value.user) return 'Login to Reserve';
+    if (!auth.value.user) return t('events.loginToBook');
     
     // Check if user is an organizer
-    if (auth.value.user.role === 'organisateur') return 'Organizers Cannot Reserve';
-    if (auth.value.user.role === 'admin') return 'Admins Cannot Reserve';
-    if (isReseller.value) return copied.value ? 'Link Copied!' : 'Copy Referral Link';
+    if (auth.value.user.role === 'organisateur') return t('events.organizersCannotReserve');
+    if (auth.value.user.role === 'admin') return t('events.adminsCannotReserve');
+    if (isReseller.value) return copied.value ? t('events.copied') : t('events.copyLink');
 
-    if (isEventEnded.value) return 'Event Ended';
+    if (isEventEnded.value) return t('events.eventEnded');
 
     if (!props.event.is_tournoi) {
-        if (isFullyBooked.value) return 'Fully Booked';
-        return 'Reserve Now';
+        if (isFullyBooked.value) return t('events.fullyBooked');
+        return t('events.bookNow');
     } else {
         if (selectedTicketType.value === 'participant') {
-            if ((props.stats.participant_remaining ?? 0) <= 0) return 'Participants Full';
-            return 'Reserve as Participant';
+            if ((props.stats.participant_remaining ?? 0) <= 0) return t('events.participantsFull');
+            return t('events.reserveAsParticipant');
         } else {
-            if ((props.stats.spectator_remaining ?? 0) <= 0) return 'Spectators Full';
-            return 'Reserve as Spectator';
+            if ((props.stats.spectator_remaining ?? 0) <= 0) return t('events.spectatorsFull');
+            return t('events.reserveAsSpectator');
         }
     }
 });
@@ -399,12 +401,12 @@ const handleReserveClick = () => {
     }
 
     if (isEventEnded.value) {
-        toast.error('This event has already ended.');
+        toast.error(t('events.errorEventEnded'));
         return;
     }
 
     if (auth.value.user.role !== 'participant') {
-        toast.error('Only participants can reserve events.');
+        toast.error(t('events.onlyParticipantsReserve'));
         return;
     }
 
@@ -440,13 +442,13 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                             <Users class="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <h3 class="font-bold text-white leading-tight">You've been invited to co-organize this event!</h3>
-                            <p class="text-sm text-blue-100">Accept this invitation to manage this event together with the owner.</p>
+                            <h3 class="font-bold text-white leading-tight">{{ t('events.collabInvited') }}</h3>
+                            <p class="text-sm text-blue-100">{{ t('events.collabInvitedDesc') }}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-3 shrink-0">
-                        <Button variant="outline" class="bg-transparent border-white text-white hover:bg-white hover:text-blue-600 border-2" @click="handleCollaboration('reject')">Decline</Button>
-                        <Button class="bg-white text-blue-600 hover:bg-zinc-100 font-bold px-6" @click="handleCollaboration('accept')">Accept Invitation</Button>
+                        <Button variant="outline" class="bg-transparent border-white text-white hover:bg-white hover:text-blue-600 border-2" @click="handleCollaboration('reject')">{{ t('common.decline') }}</Button>
+                        <Button class="bg-white text-blue-600 hover:bg-zinc-100 font-bold px-6" @click="handleCollaboration('accept')">{{ t('events.acceptInvitation') }}</Button>
                     </div>
                 </div>
             </div>
@@ -519,7 +521,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
 
                     <!-- Video badge -->
                     <div v-if="currentMedia?.type === 'video'" class="absolute top-5 right-5 z-20 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/20">
-                        <PlayCircle class="w-3.5 h-3.5" /> VIDEO
+                        <PlayCircle class="w-3.5 h-3.5" /> {{ t('common.video') }}
                     </div>
 
                     <!-- Media counter badge -->
@@ -534,7 +536,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                     <div class="space-y-4">
                         <span class="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md text-white border border-white/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
                             <component :is="props.event.is_tournoi ? Trophy : Star" class="w-3.5 h-3.5" />
-                            {{ props.event.is_tournoi ? 'Tournament' : (props.event.categorie === 'autre' && props.event.categorie_autre ? props.event.categorie_autre : props.event.categorie) }}
+                            {{ props.event.is_tournoi ? t('events.tournament') : (props.event.categorie === 'autre' && props.event.categorie_autre ? props.event.categorie_autre : props.event.categorie) }}
                         </span>
                         
                         <h1 class="text-3xl md:text-5xl font-bold text-white max-w-4xl leading-tight">
@@ -558,7 +560,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                         <Link :href="`/dashboard/events/${props.event.id}/edit`">
                             <Button class="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/30 font-bold">
                                 <Edit class="w-4 h-4 mr-2" />
-                                Edit Event
+                                {{ t('events.editEvent') }}
                             </Button>
                         </Link>
                     </div>
@@ -576,7 +578,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                         <div class="bg-card rounded-2xl shadow-sm p-8 border border-border">
                             <h2 class="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
                                 <span class="w-1.5 h-6 bg-blue-600 rounded-full"></span>
-                                About this Event
+                                {{ t('events.aboutEvent') }}
                             </h2>
                             <div class="prose prose-zinc dark:prose-invert max-w-none text-muted-foreground leading-relaxed whitespace-pre-line">
                                 {{ props.event.description }}
@@ -587,7 +589,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                         <div class="bg-card rounded-2xl shadow-sm p-8 border border-border">
                             <h2 class="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
                                 <span class="w-1.5 h-6 bg-blue-600 rounded-full"></span>
-                                Date & Time
+                                {{ t('events.dateAndTime') }}
                             </h2>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="flex items-start gap-4">
@@ -595,7 +597,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                         <Calendar class="w-5 h-5 text-blue-600" />
                                     </div>
                                     <div>
-                                        <div class="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-1">Start</div>
+                                        <div class="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-1">{{ t('events.start') }}</div>
                                         <div class="text-foreground font-semibold">{{ formatDate(props.event.date_debut) }}</div>
                                         <div class="text-muted-foreground text-sm">{{ formatTime(props.event.date_debut) }}</div>
                                     </div>
@@ -605,7 +607,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                         <Clock class="w-5 h-5 text-zinc-400" />
                                     </div>
                                     <div>
-                                        <div class="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-1">End</div>
+                                        <div class="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-1">{{ t('events.end') }}</div>
                                         <div class="text-foreground font-semibold">{{ formatDate(props.event.date_fin) }}</div>
                                         <div class="text-muted-foreground text-sm">{{ formatTime(props.event.date_fin) }}</div>
                                     </div>
@@ -617,7 +619,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                         <div class="bg-card rounded-2xl shadow-sm p-8 border border-border">
                             <h2 class="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
                                 <span class="w-1.5 h-6 bg-blue-600 rounded-full"></span>
-                                Location
+                                {{ t('events.location') }}
                             </h2>
                             <div class="space-y-6">
                                 <div class="flex items-center gap-3 text-zinc-700">
@@ -635,7 +637,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                         <div class="bg-card rounded-2xl shadow-sm p-8 border border-border">
                             <h2 class="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
                                 <span class="w-1.5 h-6 bg-blue-600 rounded-full"></span>
-                                Capacity
+                                {{ t('events.capacity') }}
                             </h2>
                             
                             <!-- Normal Event Capacity -->
@@ -643,7 +645,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                 <div class="flex justify-between items-end">
                                     <div class="flex items-center gap-2 text-foreground font-bold">
                                         <Users class="w-5 h-5 text-blue-600" />
-                                        Attendees
+                                        {{ t('events.attendees') }}
                                     </div>
                                     <div class="text-sm text-muted-foreground">
                                         <span class="font-bold text-foreground">{{ props.stats.total_reserved }}</span> / {{ props.event.capacite_spectateur }} spots
@@ -656,8 +658,8 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                     ></div>
                                 </div>
                                 <div class="flex justify-between text-xs font-bold uppercase tracking-wider text-zinc-400">
-                                    <span>{{ props.stats.total_reserved }} registered</span>
-                                    <span :class="(props.stats.remaining ?? 0) <= 5 ? 'text-red-500' : ''">{{ props.stats.remaining }} remaining</span>
+                                    <span>{{ t('events.registeredCount', { count: props.stats.total_reserved }) }}</span>
+                                    <span :class="(props.stats.remaining ?? 0) <= 5 ? 'text-red-500' : ''">{{ t('events.remainingCount', { count: props.stats.remaining }) }}</span>
                                 </div>
                             </div>
 
@@ -668,11 +670,11 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                     <div class="flex justify-between items-end">
                                         <div class="flex items-center gap-2 text-foreground font-bold">
                                             <Gamepad2 class="w-5 h-5 text-blue-600" />
-                                            Participants
+                                            {{ t('events.participants') }}
                                         </div>
                                         <div class="text-sm text-muted-foreground">
                                             <span class="font-bold text-foreground">{{ props.stats.participant_reserved }}</span> / 
-                                            {{ (props.event.type_tournoi === 'equipe' && props.event.tournoi) ? props.event.tournoi.nombre_equipes : props.event.capacite_participant }} slots
+                                            {{ (props.event.type_tournoi === 'equipe' && props.event.tournoi) ? props.event.tournoi.nombre_equipes : props.event.capacite_participant }} {{ t('events.slots') }}
                                         </div>
                                     </div>
                                     <div class="w-full bg-muted rounded-full h-3 overflow-hidden">
@@ -682,8 +684,8 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                         ></div>
                                     </div>
                                     <div class="flex justify-between text-xs font-bold uppercase tracking-wider text-zinc-400">
-                                        <span>{{ props.stats.participant_reserved }} players</span>
-                                        <span :class="(props.stats.participant_remaining ?? 0) <= 3 ? 'text-red-500' : ''">{{ props.stats.participant_remaining }} remaining</span>
+                                        <span>{{ t('events.playersCount', { count: props.stats.participant_reserved }) }}</span>
+                                        <span :class="(props.stats.participant_remaining ?? 0) <= 3 ? 'text-red-500' : ''">{{ t('events.remainingCount', { count: props.stats.participant_remaining }) }}</span>
                                     </div>
                                 </div>
 
@@ -692,10 +694,10 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                     <div class="flex justify-between items-end">
                                         <div class="flex items-center gap-2 text-foreground font-bold">
                                             <Eye class="w-5 h-5 text-orange-500" />
-                                            Spectators
+                                            {{ t('events.spectators') }}
                                         </div>
                                         <div class="text-sm text-muted-foreground">
-                                            <span class="font-bold text-foreground">{{ props.stats.spectator_reserved }}</span> / {{ props.event.capacite_spectateur }} spots
+                                            <span class="font-bold text-foreground">{{ props.stats.spectator_reserved }}</span> / {{ props.event.capacite_spectateur }} {{ t('events.spots') }}
                                         </div>
                                     </div>
                                     <div class="w-full bg-muted rounded-full h-3 overflow-hidden">
@@ -705,8 +707,8 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                         ></div>
                                     </div>
                                     <div class="flex justify-between text-xs font-bold uppercase tracking-wider text-zinc-400">
-                                        <span>{{ props.stats.spectator_reserved }} registered</span>
-                                        <span :class="(props.stats.spectator_remaining ?? 0) <= 10 ? 'text-red-500' : ''">{{ props.stats.spectator_remaining }} remaining</span>
+                                        <span>{{ t('events.registeredCount', { count: props.stats.spectator_reserved }) }}</span>
+                                        <span :class="(props.stats.spectator_remaining ?? 0) <= 10 ? 'text-red-500' : ''">{{ t('events.remainingCount', { count: props.stats.spectator_remaining }) }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -724,11 +726,11 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                 
                                 <!-- Owner View: Management Card -->
                                 <div v-if="isOwner" class="p-8">
-                                    <h3 class="text-lg font-bold text-foreground mb-6">Event Management</h3>
+                                    <h3 class="text-lg font-bold text-foreground mb-6">{{ t('events.eventManagement') }}</h3>
                                     
                                     <div class="space-y-6">
                                         <div class="flex items-center justify-between p-4 bg-muted/30 rounded-xl border border-border">
-                                            <div class="text-sm font-bold text-muted-foreground uppercase tracking-wider">Status</div>
+                                            <div class="text-sm font-bold text-muted-foreground uppercase tracking-wider">{{ t('events.status') }}</div>
                                             <Badge 
                                                 variant="outline" 
                                                 :class="[
@@ -748,13 +750,13 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
 
                                         <div class="grid grid-cols-2 gap-4">
                                             <div class="p-4 bg-muted/30 rounded-xl border border-border">
-                                                <div class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Total Revenue</div>
+                                                <div class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">{{ t('events.totalRevenue') }}</div>
                                                 <div class="text-lg font-black text-foreground">
                                                     {{ props.stats.total_revenue ?? 0 }} TND
                                                 </div>
                                             </div>
                                             <div class="p-4 bg-muted/30 rounded-xl border border-border">
-                                                <div class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Spots Reserved</div>
+                                                <div class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">{{ t('events.spotsReserved') }}</div>
                                                 <div class="text-lg font-black text-foreground">
                                                     {{ (props.stats.total_reserved ?? 0) + (props.stats.participant_reserved ?? 0) + (props.stats.spectator_reserved ?? 0) }}
                                                 </div>
@@ -764,7 +766,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                         <Link :href="`/dashboard/events/${props.event.id}/edit`" class="block w-full">
                                             <Button class="w-full py-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold flex items-center justify-center gap-2">
                                                 <Edit class="w-4 h-4" />
-                                                Edit Specifications
+                                                {{ t('events.editSpecifications') }}
                                             </Button>
                                         </Link>
 
@@ -776,28 +778,28 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
 
                                 <!-- Co-Organizer View: Lightweight Management Card -->
                                 <div v-else-if="props.is_collaborator" class="p-8">
-                                    <h3 class="text-lg font-bold text-foreground mb-2">Co-Organizer Panel</h3>
-                                    <p class="text-sm text-muted-foreground mb-6">You are a co-organizer of this event. You can edit event details.</p>
+                                    <h3 class="text-lg font-bold text-foreground mb-2">{{ t('events.coOrganizerPanel') }}</h3>
+                                    <p class="text-sm text-muted-foreground mb-6">{{ t('events.coOrganizerDesc') }}</p>
                                     <Link :href="`/dashboard/events/${props.event.id}/edit`" class="block w-full">
                                         <Button class="w-full py-5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold flex items-center justify-center gap-2">
                                             <Edit class="w-4 h-4" />
-                                            Edit Event
+                                            {{ t('events.editEvent') }}
                                         </Button>
                                     </Link>
                                     <Link href="/dashboard/collaborations" class="block mt-3">
                                         <Button variant="outline" class="w-full">
-                                            My Collaborations
+                                            {{ t('events.myCollaborations') }}
                                         </Button>
                                     </Link>
                                 </div>
 
                                 <!-- Participant View: Ticket Card -->
                                 <div v-else class="p-8">
-                                    <h3 v-if="props.event.is_tournoi" class="text-lg font-bold text-foreground mb-6">Choose your ticket</h3>
+                                    <h3 v-if="props.event.is_tournoi" class="text-lg font-bold text-foreground mb-6">{{ t('events.chooseYourTicket') }}</h3>
                                     
                                     <!-- Normal Event Pricing -->
                                     <div v-if="!props.event.is_tournoi" class="mb-8">
-                                        <div class="text-3xl font-black text-foreground">{{ props.event.prix_spectateur }} TND <span class="text-sm font-semibold text-muted-foreground">/ ticket</span></div>
+                                        <div class="text-3xl font-black text-foreground">{{ props.event.prix_spectateur > 0 ? props.event.prix_spectateur : t('common.free') }} <span v-if="props.event.prix_spectateur > 0" class="text-sm font-semibold text-muted-foreground">{{ t('events.perTicket') }}</span></div>
                                         <div class="mt-2 flex items-center gap-2 text-sm text-muted-foreground font-medium">
                                             <Users class="w-4 h-4" />
                                             {{ props.stats.remaining }} spots remaining
@@ -819,13 +821,13 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                                     <div :class="['w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors', selectedTicketType === 'participant' ? 'border-blue-600 bg-blue-600' : 'border-zinc-300']">
                                                         <div class="w-1.5 h-1.5 rounded-full bg-white" v-if="selectedTicketType === 'participant'"></div>
                                                     </div>
-                                                    🎮 Participant
+                                                    🎮 {{ t('events.participant') }}
                                                 </div>
                                                 <span class="font-bold text-blue-600">{{ props.event.prix_participant }} TND</span>
                                             </div>
-                                            <p class="text-xs text-zinc-500 ml-6">Play in the tournament</p>
+                                            <p class="text-xs text-zinc-500 ml-6">{{ t('events.playInTournament') }}</p>
                                             <div class="text-[10px] uppercase tracking-wider font-bold mt-2 ml-6 text-zinc-400 group-hover:text-zinc-600">
-                                                {{ props.stats.participant_remaining }} slots left
+                                                {{ t('events.slotsLeft', { count: props.stats.participant_remaining }) }}
                                             </div>
                                         </label>
 
@@ -842,13 +844,13 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                                     <div :class="['w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors', selectedTicketType === 'spectator' ? 'border-blue-600 bg-blue-600' : 'border-zinc-300']">
                                                         <div class="w-1.5 h-1.5 rounded-full bg-white" v-if="selectedTicketType === 'spectator'"></div>
                                                     </div>
-                                                    👁️ Spectator
+                                                    👁️ {{ t('events.spectator') }}
                                                 </div>
                                                 <span class="font-bold text-zinc-900">{{ props.event.prix_spectateur }} TND</span>
                                             </div>
-                                            <p class="text-xs text-zinc-500 ml-6">Watch the tournament</p>
+                                            <p class="text-xs text-zinc-500 ml-6">{{ t('events.watchTournament') }}</p>
                                             <div class="text-[10px] uppercase tracking-wider font-bold mt-2 ml-6 text-zinc-400 group-hover:text-zinc-600">
-                                                {{ props.stats.spectator_remaining }} spots left
+                                                {{ t('events.spotsLeft', { count: props.stats.spectator_remaining }) }}
                                             </div>
                                         </label>
                                     </div>
@@ -882,9 +884,9 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                     </Dialog>
 
                                     <div class="flex items-center justify-center gap-4 text-xs font-semibold text-zinc-400 uppercase tracking-widest">
-                                        <span class="flex items-center gap-1"><Share2 class="w-3.5 h-3.5" /> Share</span>
+                                        <span class="flex items-center gap-1"><Share2 class="w-3.5 h-3.5" /> {{ t('events.share') }}</span>
                                         <span class="w-1 h-1 bg-zinc-200 rounded-full"></span>
-                                        <span>Report Event</span>
+                                        <span>{{ t('events.reportEvent') }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -894,7 +896,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                 <div class="bg-muted/30 px-6 py-4 border-b border-border">
                                     <h3 class="font-bold flex items-center gap-2">
                                         <Users class="w-4 h-4 text-blue-600" />
-                                        Hosted By
+                                        {{ t('events.hostedBy') }}
                                     </h3>
                                 </div>
                                 <div class="p-4 space-y-2">
@@ -904,7 +906,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                         </div>
                                         <div class="flex-1 text-left">
                                             <h4 class="font-bold text-sm text-foreground leading-tight">
-                                                <template v-if="member.isYou">You</template>
+                                                <template v-if="member.isYou">{{ t('events.you') }}</template>
                                                 <Link v-else :href="`/organizer/${member.id}`" class="hover:text-blue-600 transition-colors duration-200">
                                                     {{ member.name }}
                                                 </Link>
@@ -931,9 +933,9 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
             <!-- 3. BOTTOM SECTION: Similar Events -->
             <div v-if="props.similar_events && props.similar_events.length > 0" class="max-w-7xl mx-auto px-4 md:px-12 mt-20">
                 <div class="flex items-center justify-between mb-8">
-                    <h2 class="text-2xl font-bold text-foreground">Similar Events</h2>
+                    <h2 class="text-2xl font-bold text-foreground">{{ t('events.similarEvents') }}</h2>
                     <Link href="/dashboard/events" class="text-sm font-bold text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors group">
-                        See all <ChevronRight class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        {{ t('common.seeAll') }} <ChevronRight class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </Link>
                 </div>
 
@@ -983,7 +985,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                     </div>
                                 </div>
                                 <div class="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest text-center group-hover:bg-blue-600 transition-all duration-300 shadow-lg shadow-primary/10 group-hover:shadow-blue-600/20">
-                                    View Details
+                                    {{ t('events.viewDetails') }}
                                 </div>
                             </div>
                         </div>

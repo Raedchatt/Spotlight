@@ -2,6 +2,7 @@
 import { usePage, Link, router } from '@inertiajs/vue3';
 import { BookOpen, Folder, LayoutGrid, Search, Calendar, MessageSquare, Bell, Users, Wallet, LogOut, User, TrendingUp, Ticket } from 'lucide-vue-next';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -20,6 +21,7 @@ import { dashboard, logout } from '@/routes';
 import { type NavItem } from '@/types';
 import AppLogo from './AppLogo.vue';
 
+const { t } = useI18n();
 const page = usePage();
 const auth = computed(() => page.props.auth as any);
 const counts = computed(() => page.props.sidebar_counts as Record<string, number> || {});
@@ -28,19 +30,19 @@ const { unreadMessagesCount, unreadNotificationsCount } = useUnreadCounts();
 // ... existing code for mainNavItems and footerNavItems ...
 const mainNavItems = computed<NavItem[]>(() => [
     {
-        title: 'Dashboard',
+        title: t('nav.dashboard'),
         href: dashboard(),
         icon: LayoutGrid,
     },
     ...(auth.value.user?.role === 'participant'
         ? [
             {
-                title: 'Discovery',
+                title: t('nav.discovery'),
                 href: '/discovery',
                 icon: Search,
             },
             {
-                title: 'My Reservations',
+                title: t('nav.myReservations'),
                 href: '/dashboard/reservations',
                 icon: Calendar,
             },
@@ -48,29 +50,29 @@ const mainNavItems = computed<NavItem[]>(() => [
         : (auth.value.user?.role === 'administrateur'
             ? [
                 {
-                    title: 'User Management',
+                    title: t('nav.userManagement'),
                     href: '/admin/users',
                     icon: Users,
                 },
                 {
-                    title: 'Event Validation',
+                    title: t('nav.eventValidation'),
                     href: '/admin/events',
                     icon: Calendar,
                     count: counts.value.event_validation,
                 },
                 {
-                    title: 'All Events',
+                    title: t('nav.allEvents'),
                     href: '/admin/events/all',
                     icon: Search,
                 },
                 {
-                    title: 'Financials',
+                    title: t('nav.financials'),
                     href: '/admin/financials',
                     icon: Wallet,
                     count: counts.value.financials,
                 },
                 {
-                    title: 'Reservations',
+                    title: t('nav.reservations'),
                     href: '/admin/reservations',
                     icon: Ticket,
                 },
@@ -78,20 +80,20 @@ const mainNavItems = computed<NavItem[]>(() => [
             : (auth.value.user?.role === 'revendeur'
                 ? [
                     {
-                        title: 'Affiliate Dashboard',
+                        title: t('nav.affiliateDashboard'),
                         href: '/affiliate/dashboard',
                         icon: TrendingUp,
                     },
                 ]
                 : [
                     {
-                        title: 'My Hosted Events',
+                        title: t('nav.myHostedEvents'),
                         href: '/dashboard/events',
                         icon: Folder,
                     },
                     ...(auth.value.has_collaborations 
                         ? [{
-                            title: 'My Collaborations',
+                            title: t('nav.myCollaborations'),
                             href: '/dashboard/collaborations',
                             icon: Users,
                         }] 
@@ -102,31 +104,31 @@ const mainNavItems = computed<NavItem[]>(() => [
         )
     ),
     {
-        title: 'Messages',
+        title: t('nav.messages'),
         href: '/messages',
         icon: MessageSquare,
         count: unreadMessagesCount.value > 0 ? unreadMessagesCount.value : undefined,
     },
     {
-        title: 'Notifications',
+        title: t('nav.notifications'),
         href: '/notifications',
         icon: Bell,
         count: unreadNotificationsCount.value > 0 ? unreadNotificationsCount.value : undefined,
     },
 ]);
 
-const footerNavItems: NavItem[] = [
+const footerNavItems = computed<NavItem[]>(() => [
     {
-        title: 'Github Repo',
+        title: t('nav.githubRepo'),
         href: 'https://github.com/laravel/vue-starter-kit',
         icon: Folder,
     },
     {
-        title: 'Documentation',
+        title: t('nav.documentation'),
         href: 'https://laravel.com/docs/starter-kits#vue',
         icon: BookOpen,
     },
-];
+]);
 
 const { state } = useSidebar();
 
@@ -164,7 +166,7 @@ const handleLogout = () => {
                     <SidebarMenuItem class="mt-auto mb-2">
                         <SidebarMenuButton 
                             @click="handleLogout" 
-                            :tooltip="state === 'collapsed' ? 'Logout' : undefined"
+                            :tooltip="state === 'collapsed' ? t('nav.logout') : undefined"
                             class="w-full h-12 flex items-center text-slate-600 dark:text-white/80 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-all rounded-xl px-3 group border border-transparent hover:border-slate-200 dark:hover:border-white/5 active:scale-[0.98]"
                             :class="[state === 'collapsed' ? 'justify-center !p-0' : 'justify-between']"
                         >

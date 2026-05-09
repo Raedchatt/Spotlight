@@ -14,15 +14,18 @@ import {
     Users
 } from 'lucide-vue-next';
 import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import EventManageModal from '@/components/organizer/EventManageModal.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { Evenement, StatutEvenement } from '@/types/event';
 
+const { t } = useI18n();
+
 const breadcrumbs = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Collaborations', href: '/dashboard/collaborations' },
+    { title: t('events.dashboard'), href: '/dashboard' },
+    { title: t('events.collaborations'), href: '/dashboard/collaborations' },
 ];
 
 const events = ref<Evenement[]>([]);
@@ -47,7 +50,7 @@ const fetchCollaborations = async () => {
         events.value = response.data.data;
     } catch (error) {
         console.error('Error fetching collaborations:', error);
-        toast.error('Failed to load collaborations. Please try again.');
+        toast.error(t('events.failedToLoadCollaborations'));
     } finally {
         loading.value = false;
     }
@@ -69,20 +72,20 @@ const getStatusVariant = (statut: StatutEvenement) => {
 };
 
 const getStatusLabel = (statut: StatutEvenement) => {
-    return statut.charAt(0).toUpperCase() + statut.slice(1).replace('_', ' ');
+    return t(`events.status_${statut}`);
 };
 
 </script>
 
 <template>
-    <Head title="My Collaborations" />
+    <Head :title="t('events.myCollaborations')" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6 space-y-6">
             <div class="flex justify-between items-center">
                 <div>
-                    <h1 class="text-3xl font-bold tracking-tight">My Collaborations</h1>
-                    <p class="text-muted-foreground">Events you are co-organizing.</p>
+                    <h1 class="text-3xl font-bold tracking-tight">{{ t('events.myCollaborations') }}</h1>
+                    <p class="text-muted-foreground">{{ t('events.myCollaborationsDesc') }}</p>
                 </div>
             </div>
 
@@ -96,8 +99,8 @@ const getStatusLabel = (statut: StatutEvenement) => {
                 <div class="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
                     <Users class="w-6 h-6 text-muted-foreground" />
                 </div>
-                <h3 class="text-lg font-medium">No collaborations yet</h3>
-                <p class="text-muted-foreground">When other organizers invite you to co-host an event and you accept, it will appear here.</p>
+                <h3 class="text-lg font-medium">{{ t('events.noCollaborationsYet') }}</h3>
+                <p class="text-muted-foreground">{{ t('events.noCollaborationsDesc') }}</p>
             </div>
 
             <div v-else class="space-y-8">
@@ -119,10 +122,10 @@ const getStatusLabel = (statut: StatutEvenement) => {
                                     {{ getStatusLabel(event.statut) }}
                                 </Badge>
                                 <Badge v-if="event.is_tournoi" variant="default" class="bg-amber-500 hover:bg-amber-600 shadow-sm w-fit border-0">
-                                    <Trophy class="w-3 h-3 mr-1" /> Tournament
+                                    <Trophy class="w-3 h-3 mr-1" /> {{ t('events.tournament') }}
                                 </Badge>
                                 <Badge variant="secondary" class="shadow-sm w-fit">
-                                    <Users class="w-3 h-3 mr-1" /> Co-Organizer
+                                    <Users class="w-3 h-3 mr-1" /> {{ t('events.coOrganizer') }}
                                 </Badge>
                             </div>
                             <div class="absolute bottom-4 right-4 flex gap-2">
@@ -159,17 +162,17 @@ const getStatusLabel = (statut: StatutEvenement) => {
                             <div class="pt-4 border-t space-y-4">
                                 <div class="flex justify-between items-center text-sm">
                                     <div class="font-medium text-blue-600">
-                                        {{ event.prix_spectateur > 0 ? `${event.prix_spectateur} TND` : 'Free' }}
+                                        {{ event.prix_spectateur > 0 ? `${event.prix_spectateur} TND` : t('common.free') }}
                                     </div>
                                     <div class="text-muted-foreground text-xs flex items-center gap-1">
-                                        <span>Hosted by:</span>
-                                        <span class="font-medium text-foreground">{{ event.organisateur?.username || 'Unknown' }}</span>
+                                        <span>{{ t('events.hostedByLabel') }}:</span>
+                                        <span class="font-medium text-foreground">{{ event.organisateur?.username || t('events.unknown') }}</span>
                                     </div>
                                 </div>
                                 
                                 <Link :href="`/events/${event.id}`" class="block w-full">
                                     <Button variant="outline" class="w-full border-zinc-200 hover:bg-zinc-50 font-bold text-xs uppercase tracking-widest transition-all duration-300 group-hover:bg-zinc-900 group-hover:text-white group-hover:border-zinc-900">
-                                        View Public Page
+                                        {{ t('events.viewPublicPage') }}
                                     </Button>
                                 </Link>
                             </div>

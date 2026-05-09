@@ -10,6 +10,7 @@ import {
     MoreHorizontal
 } from 'lucide-vue-next';
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import AppFooter from '@/components/AppFooter.vue';
 import AppHeader from '@/components/AppHeader.vue';
 import EventCard from '@/components/EventCard.vue';
@@ -19,9 +20,7 @@ import { useAuthModal } from '@/composables/useAuthModal';
 
 import type { Evenement } from '@/types/event';
 
-
-
-
+const { t } = useI18n();
 
 // Event data management
 
@@ -80,15 +79,15 @@ onMounted(() => {
                 <div class="relative z-20 mx-auto flex h-full max-w-7xl flex-col justify-center px-4 sm:px-6 lg:px-8">
                     <div class="max-w-2xl">
                         <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-5xl leading-tight mb-8">
-                            Manage Events. Sell Tickets.<br />
-                            Create Moments.
+                            {{ t('welcome.heroTitle') }}<br />
+                            {{ t('welcome.heroTitle2') }}
                         </h1>
                         <Button 
                             v-if="!$page.props.auth.user"
                             class="bg-[#1a56db] hover:bg-[#1a56db]/90 text-white rounded-full px-8 py-6 text-lg font-semibold flex items-center gap-2"
                             @click="openRegister()"
                         >
-                            Signup
+                            {{ t('welcome.signupBtn') }}
                         </Button>
                     </div>
                 </div>
@@ -99,8 +98,8 @@ onMounted(() => {
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div class="mb-12 flex items-end justify-between">
                         <div>
-                            <h2 class="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Fixtures Events</h2>
-                            <p class="mt-4 text-lg text-muted-foreground">Discover and join the most exciting events near you.</p>
+                            <h2 class="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{{ t('welcome.fixturesTitle') }}</h2>
+                            <p class="mt-4 text-lg text-muted-foreground">{{ t('welcome.fixturesSubtitle') }}</p>
                         </div>
                         <div class="flex gap-2">
                             <Button 
@@ -143,7 +142,7 @@ onMounted(() => {
                                 <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-400 text-white transition-colors group-hover:bg-slate-500">
                                     <MoreHorizontal class="h-8 w-8" stroke-width="3" />
                                 </div>
-                                <span class="text-lg font-bold text-slate-400 transition-colors group-hover:text-slate-500">Explore more</span>
+                                <span class="text-lg font-bold text-slate-400 transition-colors group-hover:text-slate-500">{{ t('welcome.exploreMore') }}</span>
                             </Link>
                         </div>
                         
@@ -163,7 +162,7 @@ onMounted(() => {
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div class="mb-16 text-center">
                         <h2 class="inline-block text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                            Our Services
+                            {{ t('welcome.servicesTitle') }}
                             <div class="mx-auto mt-2 h-1.5 w-12 rounded-full bg-foreground"></div>
                         </h2>
                     </div>
@@ -174,9 +173,9 @@ onMounted(() => {
                             <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#1a56db] bg-blue-50/50 dark:bg-blue-900/20 text-[#1a56db] dark:text-blue-400">
                                 <Calendar class="size-8" />
                             </div>
-                            <h3 class="text-xl font-bold text-foreground">Organize</h3>
+                            <h3 class="text-xl font-bold text-foreground">{{ t('welcome.organizeTitle') }}</h3>
                             <p class="mt-4 text-muted-foreground">
-                                Spotlight's organize service empowers event creators to build and manage their events effortlessly. Organizers can create events, set ticket types, define capacity, and track reservations — all from a dedicated dashboard giving them full control over their event from creation to completion.
+                                {{ t('welcome.organizeDesc') }}
                             </p>
                         </div>
 
@@ -185,9 +184,9 @@ onMounted(() => {
                             <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#1a56db] bg-blue-50/50 dark:bg-blue-900/20 text-[#1a56db] dark:text-blue-400">
                                 <Ticket class="size-8" />
                             </div>
-                            <h3 class="text-xl font-bold text-foreground">Booking</h3>
+                            <h3 class="text-xl font-bold text-foreground">{{ t('welcome.bookingTitle') }}</h3>
                             <p class="mt-4 text-muted-foreground">
-                                Spotlight's booking service lets users reserve their spot at any event in just a few clicks. Simply choose an event, select a ticket type, and confirm — your reservation is instantly saved to your account, with real-time availability updates to ensure no overbooking.
+                                {{ t('welcome.bookingDesc') }}
                             </p>
                         </div>
 
@@ -196,9 +195,9 @@ onMounted(() => {
                             <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#1a56db] bg-blue-50/50 dark:bg-blue-900/20 text-[#1a56db] dark:text-blue-400">
                                 <ShieldCheck class="size-8" />
                             </div>
-                            <h3 class="text-xl font-bold text-foreground">Payment</h3>
+                            <h3 class="text-xl font-bold text-foreground">{{ t('welcome.paymentTitle') }}</h3>
                             <p class="mt-4 text-muted-foreground">
-                                Spotlight's payment service provides a secure and seamless checkout experience. Users can complete their booking by paying online directly through the platform, with instant confirmation once the transaction is processed.
+                                {{ t('welcome.paymentDesc') }}
                             </p>
                         </div>
                     </div>

@@ -19,6 +19,7 @@ import {
     Trash2,
 } from 'lucide-vue-next';
 import { ref, onMounted, watch, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import CancelEventButton from '@/components/organizer/CancelEventButton.vue';
 import EventManageModal from '@/components/organizer/EventManageModal.vue';
 import { Badge } from '@/components/ui/badge';
@@ -29,9 +30,11 @@ import type { Evenement,StatutEvenement } from '@/types/event';
 
 
 
+const { t } = useI18n();
+
 const breadcrumbs = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Events', href: '/dashboard/events' },
+    { title: t('events.dashboard'), href: '/dashboard' },
+    { title: t('events.events'), href: '/dashboard/events' },
 ];
 
 const events = ref<Evenement[]>([]);
@@ -110,7 +113,7 @@ const fetchEvents = async () => {
         }
     } catch (error) {
         console.error('Error fetching events:', error);
-        toast.error('Failed to load events. Please try again.');
+        toast.error(t('events.failedToLoadEvents'));
     } finally {
         loading.value = false;
     }
@@ -123,15 +126,15 @@ const handlePageChange = (newPage: number) => {
 };
 
 const deleteEvent = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this event?')) return;
+    if (!confirm(t('events.confirmDelete'))) return;
     
     try {
         await axios.delete(`/web-api/events/${id}`);
         events.value = events.value.filter(e => e.id !== id);
-        toast.success('Event deleted successfully.');
+        toast.success(t('events.eventDeleted'));
     } catch (error: any) {
         console.error('Error deleting event:', error);
-        toast.error(error.response?.data?.message || 'Failed to delete event.');
+        toast.error(error.response?.data?.message || t('events.failedToDelete'));
     }
 };
 
@@ -174,25 +177,25 @@ const getStatusVariant = (statut: StatutEvenement) => {
 };
 
 const getStatusLabel = (statut: StatutEvenement) => {
-    return statut.charAt(0).toUpperCase() + statut.slice(1).replace('_', ' ');
+    return t(`events.status_${statut}`);
 };
 
 </script>
 
 <template>
-    <Head title="Events Management" />
+    <Head :title="t('events.eventsManagement')" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6 space-y-6">
             <div class="flex justify-between items-center">
                 <div>
-                    <h1 class="text-3xl font-bold tracking-tight">My Hosted Events</h1>
-                    <p class="text-muted-foreground">Manage and track your published events and their status.</p>
+                    <h1 class="text-3xl font-bold tracking-tight">{{ t('events.myHostedEvents') }}</h1>
+                    <p class="text-muted-foreground">{{ t('events.myHostedEventsDesc') }}</p>
                 </div>
                 <Link v-if="auth.user.role !== 'participant'" href="/dashboard/events/create">
                     <Button class="bg-blue-600 hover:bg-blue-700">
                         <Plus class="w-4 h-4 mr-2" />
-                        Create New Event
+                        {{ t('events.createNewEvent') }}
                     </Button>
                 </Link>
             </div>
@@ -200,29 +203,29 @@ const getStatusLabel = (statut: StatutEvenement) => {
             <!-- Filters Section -->
             <div class="bg-card border rounded-xl p-4 shadow-sm flex flex-wrap gap-4 items-end">
                 <div class="flex-1 min-w-[200px] space-y-1.5">
-                    <label class="text-sm font-medium">Search by title</label>
+                    <label class="text-sm font-medium">{{ t('events.searchByTitle') }}</label>
                     <div class="relative">
                         <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input v-model="filters.titre" placeholder="Event name..." class="pl-10" />
+                        <Input v-model="filters.titre" :placeholder="t('events.eventNamePlaceholder')" class="pl-10" />
                     </div>
                 </div>
 
                 <div class="w-48 space-y-1.5">
-                    <label class="text-sm font-medium">Category</label>
+                    <label class="text-sm font-medium">{{ t('events.category') }}</label>
                     <select v-model="filters.categorie" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                        <option value="all">All Categories</option>
+                        <option value="all">{{ t('events.allCategories') }}</option>
                         <option v-for="cat in categories" :key="cat.slug" :value="cat.slug">{{ cat.label }}</option>
                     </select>
                 </div>
 
                 <div class="w-48 space-y-1.5">
-                    <label class="text-sm font-medium">Date</label>
+                    <label class="text-sm font-medium">{{ t('events.date') }}</label>
                     <Input v-model="filters.date" type="date" />
                 </div>
 
                 <Button variant="outline" @click="resetFilters" class="h-10">
                     <X class="w-4 h-4 mr-2" />
-                    Reset
+                    {{ t('common.reset') }}
                 </Button>
             </div>
 
@@ -236,10 +239,10 @@ const getStatusLabel = (statut: StatutEvenement) => {
                 <div class="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
                     <Search class="w-6 h-6 text-muted-foreground" />
                 </div>
-                <h3 class="text-lg font-medium">No events found</h3>
-                <p class="text-muted-foreground">Try adjusting your filters or create a new event.</p>
+                <h3 class="text-lg font-medium">{{ t('events.noEventsFound') }}</h3>
+                <p class="text-muted-foreground">{{ t('events.tryAdjustingFilters') }}</p>
                 <Link v-if="auth.user.role !== 'participant'" href="/dashboard/events/create" class="mt-4 block">
-                    <Button variant="outline">Create your first event</Button>
+                    <Button variant="outline">{{ t('events.createFirstEvent') }}</Button>
                 </Link>
             </div>
 
@@ -276,10 +279,10 @@ const getStatusLabel = (statut: StatutEvenement) => {
                                     {{ getStatusLabel(event.statut) }}
                                 </Badge>
                                 <Badge v-if="event.is_tournoi" variant="default" class="bg-amber-500 hover:bg-amber-600 shadow-sm w-fit border-0">
-                                    <Trophy class="w-3 h-3 mr-1" /> Tournament
+                                    <Trophy class="w-3 h-3 mr-1" /> {{ t('events.tournament') }}
                                 </Badge>
                                 <Badge v-if="event.organisateur_id !== auth?.user?.id" variant="secondary" class="shadow-sm w-fit">
-                                    <Users class="w-3 h-3 mr-1" /> Co-Organizer
+                                    <Users class="w-3 h-3 mr-1" /> {{ t('events.coOrganizer') }}
                                 </Badge>
                             </div>
                                 <div class="absolute bottom-4 right-4 flex gap-2" v-if="event.organisateur_id === auth?.user?.id || true">
@@ -336,16 +339,16 @@ const getStatusLabel = (statut: StatutEvenement) => {
                             <div class="pt-4 border-t space-y-4">
                                 <div class="flex justify-between items-center text-sm">
                                     <div class="font-medium text-blue-600">
-                                        {{ event.prix_spectateur > 0 ? `${event.prix_spectateur} TND` : 'Free' }}
+                                        {{ event.prix_spectateur > 0 ? `${event.prix_spectateur} TND` : t('common.free') }}
                                     </div>
                                     <div class="text-muted-foreground">
-                                        {{ event.capacite_spectateur }} seats available
+                                        {{ event.capacite_spectateur }} {{ t('events.seatsAvailable') }}
                                     </div>
                                 </div>
                                 
                                 <Link :href="`/events/${event.id}`" class="block w-full">
                                     <Button variant="outline" class="w-full border-zinc-200 hover:bg-zinc-50 font-bold text-xs uppercase tracking-widest transition-all duration-300 group-hover:bg-zinc-900 group-hover:text-white group-hover:border-zinc-900">
-                                        View Public Page
+                                        {{ t('events.viewPublicPage') }}
                                     </Button>
                                 </Link>
                             </div>
@@ -361,7 +364,7 @@ const getStatusLabel = (statut: StatutEvenement) => {
                         :disabled="pagination.currentPage === 1"
                         @click="handlePageChange(pagination.currentPage - 1)"
                     >
-                        <ChevronLeft class="w-4 h-4 mr-2" /> Previous
+                        <ChevronLeft class="w-4 h-4 mr-2" /> {{ t('common.previous') }}
                     </Button>
                     
                     <div class="flex items-center gap-1">
@@ -383,7 +386,7 @@ const getStatusLabel = (statut: StatutEvenement) => {
                         :disabled="pagination.currentPage === pagination.lastPage"
                         @click="handlePageChange(pagination.currentPage + 1)"
                     >
-                        Next <ChevronRight class="w-4 h-4 ml-2" />
+                        {{ t('common.next') }} <ChevronRight class="w-4 h-4 ml-2" />
                     </Button>
                 </div>
             </div>

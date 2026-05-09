@@ -20,8 +20,8 @@ import { toast } from 'vue-sonner';
 // @ts-ignore
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-
 import InputError from '@/components/InputError.vue';
+import { useI18n } from 'vue-i18n';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -34,10 +34,12 @@ const props = defineProps<{
     id: string | number;
 }>();
 
+const { t } = useI18n();
+
 const breadcrumbs = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Events', href: '/dashboard/events' },
-    { title: 'Edit Event', href: `/dashboard/events/${props.id}/edit` },
+    { title: t('events.dashboard'), href: '/dashboard' },
+    { title: t('events.events'), href: '/dashboard/events' },
+    { title: t('events.editEvent'), href: `/dashboard/events/${props.id}/edit` },
 ];
 
 const form = ref({
@@ -120,10 +122,10 @@ const fetchEvent = async () => {
     } catch (error: any) {
         console.error('Error fetching event:', error);
         if (error.response?.status === 403) {
-            toast.error('Your collaboration status does not allow editing this event.');
+            toast.error(t('events.editPermissionDenied'));
             router.visit('/dashboard/collaborations');
         } else {
-            toast.error('Failed to load event data. Please try again.');
+            toast.error(t('events.failedToLoadData'));
         }
     } finally {
         fetching.value = false;
@@ -263,7 +265,7 @@ const clearSuggestions = () => {
 
 const pingLocation = () => {
     if (!navigator.geolocation) {
-        toast.error('Geolocation is not supported by your browser');
+        toast.error(t('events.geoNotSupported'));
         return;
     }
 
@@ -280,7 +282,7 @@ const pingLocation = () => {
             isSearchingLocation.value = false;
         },
         (error) => {
-            toast.error('Unable to retrieve your location');
+            toast.error(t('events.unableToRetrieveLocation'));
             isSearchingLocation.value = false;
         }
     );
@@ -312,7 +314,7 @@ const submit = async () => {
     
     try {
         if (!eventData.value?.can_edit) {
-            toast.error('You do not have permission to save changes to this event.');
+            toast.error(t('events.noPermissionToSave'));
             return;
         }
 
@@ -349,7 +351,7 @@ const submit = async () => {
              }
         });
         
-        toast.success('Event updated successfully!');
+        toast.success(t('events.eventUpdatedSuccess'));
         
         // Successful update, redirect to list using Inertia router
         router.visit('/dashboard/events', {
@@ -371,7 +373,7 @@ const submit = async () => {
             errors.value = error.response.data.errors;
         } else {
             // Fallback for non-validation errors
-            toast.error(error.response?.data?.message || 'An unexpected error occurred. Please try again.');
+            toast.error(error.response?.data?.message || t('events.unexpectedError'));
         }
     } finally {
         processing.value = false;
@@ -432,12 +434,12 @@ const inviteCollaborator = async () => {
         await axios.post(`/web-api/events/${props.id}/collaborators/invite`, {
             organizer_id: selectedOrganizer.value.id
         });
-        toast.success('Invitation sent successfully!');
+        toast.success(t('events.invitationSentSuccess'));
         selectedOrganizer.value = null;
         searchQuery.value = '';
         fetchCollaborators();
     } catch (error: any) {
-        toast.error(error.response?.data?.message || 'Failed to send invite.');
+        toast.error(error.response?.data?.message || t('events.failedToSendInvite'));
     } finally {
         isInviting.value = false;
     }
@@ -451,7 +453,7 @@ onMounted(async () => {
 </script>
 
 <template>
-    <Head title="Edit Event" />
+    <Head :title="t('events.editEvent')" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="max-w-4xl mx-auto p-6 space-y-8">
@@ -459,63 +461,63 @@ onMounted(async () => {
                 <div class="space-y-1">
                     <Link href="/dashboard/events" class="flex items-center text-sm text-muted-foreground hover:text-blue-600 transition-colors mb-2">
                         <ChevronLeft class="w-4 h-4 mr-1" />
-                        Back to events
+                        {{ t('events.backToEvents') }}
                     </Link>
-                    <h1 class="text-3xl font-bold tracking-tight">Edit Event</h1>
-                    <p class="text-muted-foreground">Modify the details of your event.</p>
+                    <h1 class="text-3xl font-bold tracking-tight">{{ t('events.editEvent') }}</h1>
+                    <p class="text-muted-foreground">{{ t('events.editEventDesc') }}</p>
                 </div>
                 <div class="flex items-center gap-3">
                     <Badge v-if="eventData && !eventData.can_edit" variant="outline" class="bg-amber-50 text-amber-600 border-amber-200 uppercase font-black tracking-widest text-[10px]">
-                        View-Only Access
+                        {{ t('events.viewOnlyAccess') }}
                     </Badge>
                     <Button variant="outline" as-child>
-                        <Link href="/dashboard/events">Cancel</Link>
+                        <Link href="/dashboard/events">{{ t('common.cancel') }}</Link>
                     </Button>
                     <Button @click="submit" :disabled="processing || fetching || (eventData && !eventData.can_edit) || dateError" class="bg-blue-600 hover:bg-blue-700">
                         <Save class="w-4 h-4 mr-2" />
-                        {{ processing ? 'Saving...' : 'Save Changes' }}
+                        {{ processing ? t('events.saving') : t('events.saveChanges') }}
                     </Button>
                 </div>
             </div>
 
             <div v-if="fetching" class="flex flex-col items-center justify-center py-24 space-y-4">
                 <Loader2 class="w-12 h-12 text-blue-600 animate-spin" />
-                <p class="text-muted-foreground animate-pulse">Loading event details...</p>
+                <p class="text-muted-foreground animate-pulse">{{ t('events.loadingEventDetails') }}</p>
             </div>
 
             <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="md:col-span-2 space-y-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Event Details</CardTitle>
+                            <CardTitle>{{ t('events.eventDetails') }}</CardTitle>
                         </CardHeader>
                         <CardContent class="space-y-4">
                             <div class="space-y-2">
-                                <label class="text-sm font-medium">Event Title *</label>
+                                <label class="text-sm font-medium">{{ t('events.eventTitle') }} *</label>
                                 <Input v-model="form.titre" />
                                 <InputError :message="errors.titre?.[0]" />
                             </div>
 
                             <div class="space-y-2">
-                                <label class="text-sm font-medium">Description *</label>
+                                <label class="text-sm font-medium">{{ t('events.description') }} *</label>
                                 <textarea v-model="form.description" class="flex min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"></textarea>
                                 <InputError :message="errors.description?.[0]" />
                             </div>
 
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="space-y-2">
-                                    <label class="text-sm font-medium">Category *</label>
+                                    <label class="text-sm font-medium">{{ t('events.category') }} *</label>
                                     <select v-model="form.categorie" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                                         <option v-for="cat in categories" :key="cat.slug" :value="cat.slug">{{ cat.label }}</option>
-                                        <option value="autre">Autre</option>
+                                        <option value="autre">{{ t('events.other') }}</option>
                                     </select>
                                     <InputError :message="errors.categorie?.[0]" />
                                 </div>
 
                                 <!-- Custom category when 'autre' is selected -->
                                 <div v-if="form.categorie === 'autre'" class="space-y-2">
-                                    <label class="text-sm font-medium">Custom Category *</label>
-                                    <Input v-model="form.categorie_autre" placeholder="Enter your custom category name..." />
+                                    <label class="text-sm font-medium">{{ t('events.customCategory') }} *</label>
+                                    <Input v-model="form.categorie_autre" :placeholder="t('events.customCategoryPlaceholder')" />
                                     <InputError :message="errors.categorie_autre?.[0]" />
                                 </div>
                             </div>
@@ -524,13 +526,13 @@ onMounted(async () => {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Media Management</CardTitle>
-                            <CardDescription>View existing media, set a main poster, or upload new files.</CardDescription>
+                            <CardTitle>{{ t('events.mediaManagement') }}</CardTitle>
+                            <CardDescription>{{ t('events.mediaManagementDesc') }}</CardDescription>
                         </CardHeader>
                         <CardContent class="space-y-6">
                             <!-- Existing Media -->
                             <div v-if="existingMedias.length > 0" class="space-y-3">
-                                <h4 class="text-sm font-medium">Existing Media</h4>
+                                <h4 class="text-sm font-medium">{{ t('events.existingMedia') }}</h4>
                                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                     <div v-for="media in existingMedias" :key="media.id" class="relative group aspect-video rounded-lg overflow-hidden border bg-muted">
                                         <img v-if="media.type === 'image'" :src="media.url" class="w-full h-full object-cover" />
@@ -546,7 +548,7 @@ onMounted(async () => {
                                                 class="h-8 w-8 rounded-full"
                                                 :class="{ 'bg-amber-500 text-white hover:bg-amber-600': form.poster_url === media.url }"
                                                 @click="setMainPoster(media.url)"
-                                                title="Set as Main Poster"
+                                                :title="t('events.setMainPoster')"
                                             >
                                                 <Star class="w-4 h-4" :class="{ 'fill-current': form.poster_url === media.url }" />
                                             </Button>
@@ -555,14 +557,14 @@ onMounted(async () => {
                                                 variant="destructive" 
                                                 class="h-8 w-8 rounded-full"
                                                 @click="removeExistingMedia(media.id)"
-                                                title="Delete Media"
+                                                :title="t('events.deleteMedia')"
                                             >
                                                 <Trash2 class="w-4 h-4" />
                                             </Button>
                                         </div>
 
                                         <div v-if="form.poster_url === media.url" class="absolute top-1 left-1">
-                                            <Badge class="bg-amber-500 hover:bg-amber-500 text-[8px] h-4 px-1">Main Poster</Badge>
+                                            <Badge class="bg-amber-500 hover:bg-amber-500 text-[8px] h-4 px-1">{{ t('events.mainPoster') }}</Badge>
                                         </div>
                                     </div>
                                 </div>
@@ -570,22 +572,22 @@ onMounted(async () => {
 
                             <!-- New Media Upload -->
                             <div class="space-y-4 pt-4 border-t">
-                                <h4 class="text-sm font-medium">Add New Media</h4>
+                                <h4 class="text-sm font-medium">{{ t('events.addNewMedia') }}</h4>
                                 <div class="flex items-center justify-center w-full">
                                     <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-slate-700">
                                         <div class="flex flex-col items-center justify-center pt-5 pb-6">
                                             <svg class="w-8 h-8 mb-3 text-muted-foreground" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
                                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
                                             </svg>
-                                            <p class="mb-2 text-sm text-muted-foreground"><span class="font-bold text-foreground">Click to upload</span> or drag and drop</p>
-                                            <p class="text-xs text-muted-foreground">PNG, JPG, MP4 or MOV (MAX. 20MB)</p>
+                                            <p class="mb-2 text-sm text-muted-foreground"><span class="font-bold text-foreground">{{ t('events.clickToUpload') }}</span> {{ t('events.orDragAndDrop') }}</p>
+                                            <p class="text-xs text-muted-foreground">{{ t('events.supportedFormats') }}</p>
                                         </div>
                                         <input id="dropzone-file" type="file" multiple accept="image/*,video/*" class="hidden" @change="handleFileChange" />
                                     </label>
                                 </div>
                                 
                                 <div v-if="form.medias.length > 0" class="space-y-2">
-                                    <h5 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">New files to add:</h5>
+                                    <h5 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{{ t('events.newFilesToAdd') }}:</h5>
                                     <div class="space-y-1">
                                         <div v-for="(file, index) in form.medias" :key="index" class="flex items-center justify-between p-2 rounded-md bg-muted/50 text-sm border border-dashed">
                                             <div class="flex items-center gap-2 overflow-hidden">
@@ -608,11 +610,11 @@ onMounted(async () => {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Location & Time</CardTitle>
+                            <CardTitle>{{ t('events.locationTime') }}</CardTitle>
                         </CardHeader>
                         <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="md:col-span-2 space-y-2">
-                                <label class="text-sm font-medium">Venue / Location *</label>
+                                <label class="text-sm font-medium">{{ t('events.venueLocation') }} *</label>
                                                                 <div class="relative">
                                     <MapPin class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                                     <Input 
@@ -645,18 +647,18 @@ onMounted(async () => {
                             </div>
 
                             <div class="space-y-2">
-                                <label class="text-sm font-medium">Start Date & Time *</label>
+                                <label class="text-sm font-medium">{{ t('events.startDate') }} *</label>
                                 <Input v-model="form.date_debut" type="datetime-local" />
                                 <InputError :message="errors.date_debut?.[0]" />
                             </div>
 
                             <div class="space-y-2">
-                                <label class="text-sm font-medium">End Date & Time *</label>
+                                <label class="text-sm font-medium">{{ t('events.endDate') }} *</label>
                                 <Input v-model="form.date_fin" type="datetime-local" :class="{ 'border-red-500': dateError }" />
                                 <InputError :message="errors.date_fin?.[0]" />
                                 <p v-if="dateError" class="text-xs text-red-500 font-medium flex items-center gap-1">
                                     <AlertCircle class="w-3 h-3" />
-                                    End date must be after start date
+                                    {{ t('events.endDateError') }}
                                 </p>
                             </div>
                         </CardContent>
@@ -664,11 +666,11 @@ onMounted(async () => {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Capacity & Pricing</CardTitle>
+                            <CardTitle>{{ t('events.capacityPricing') }}</CardTitle>
                         </CardHeader>
                         <CardContent class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="space-y-2">
-                                <label class="text-sm font-medium">Maximum Capacity *</label>
+                                <label class="text-sm font-medium">{{ t('events.maxCapacity') }} *</label>
                                 <div class="relative">
                                     <Users class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                                     <Input v-model.number="form.capacite_spectateur" type="number" min="0" class="pl-10" />
@@ -677,7 +679,7 @@ onMounted(async () => {
                             </div>
 
                             <div class="space-y-2">
-                                <label class="text-sm font-medium">Ticket Price (TND) *</label>
+                                <label class="text-sm font-medium">{{ t('events.ticketPrice') }} *</label>
                                 <div class="relative">
                                     <CircleDollarSign class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                                     <Input v-model.number="form.prix_spectateur" type="number" min="0" step="0.01" class="pl-10" />
@@ -689,22 +691,22 @@ onMounted(async () => {
                             <div class="md:col-span-2 space-y-4 mt-2 p-4 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-900/50">
                                 <label class="flex items-center space-x-2 text-sm font-medium cursor-pointer">
                                     <input type="checkbox" v-model="form.is_tournoi" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" />
-                                    <span>Is a Tournament?</span>
+                                    <span>{{ t('events.isTournament') }}</span>
                                 </label>
                                 
                                 <div v-if="form.is_tournoi" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
                                     <div class="md:col-span-2 space-y-2">
-                                        <label class="text-sm font-medium">Tournament Type *</label>
+                                        <label class="text-sm font-medium">{{ t('events.tournamentType') }} *</label>
                                         <select v-model="form.type_tournoi" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                            <option value="" disabled>Select type</option>
-                                            <option value="equipe">Équipe</option>
-                                            <option value="individuel">Individuel</option>
+                                            <option value="" disabled>{{ t('events.selectType') }}</option>
+                                            <option value="equipe">{{ t('events.teamType') }}</option>
+                                            <option value="individuel">{{ t('events.individualType') }}</option>
                                         </select>
                                         <InputError :message="errors.type_tournoi?.[0]" />
                                     </div>
                                     
                                     <div class="space-y-2">
-                                        <label class="text-sm font-medium">Participant Price (TND) *</label>
+                                        <label class="text-sm font-medium">{{ t('events.participantPrice') }} *</label>
                                         <div class="relative">
                                             <CircleDollarSign class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                                             <Input v-model.number="form.prix_participant" type="number" min="0" step="0.01" class="pl-10" />
@@ -714,7 +716,7 @@ onMounted(async () => {
                                     
                                     <div class="space-y-2">
                                         <label class="text-sm font-medium">
-                                            {{ form.type_tournoi === 'equipe' ? 'Number participant in equipe *' : 'Participant Seats *' }}
+                                            {{ form.type_tournoi === 'equipe' ? t('events.numParticipantsInTeam') : t('events.participantSeats') }} *
                                         </label>
                                         <div class="relative">
                                             <Users class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
@@ -724,7 +726,7 @@ onMounted(async () => {
                                     </div>
 
                                     <div v-if="form.type_tournoi === 'equipe'" class="space-y-2">
-                                        <label class="text-sm font-medium">Equipe Number *</label>
+                                        <label class="text-sm font-medium">{{ t('events.equipeNumber') }} *</label>
                                         <div class="relative">
                                             <Users class="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                                             <Input v-model.number="form.nombre_equipes" type="number" class="pl-10" />
@@ -744,7 +746,7 @@ onMounted(async () => {
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-2 text-blue-600">
                                     <MapPin class="w-4 h-4" />
-                                    <CardTitle class="text-sm font-semibold">Event Location</CardTitle>
+                                    <CardTitle class="text-sm font-semibold">{{ t('events.eventLocation') }}</CardTitle>
                                 </div>
                                 <Button 
                                     variant="outline" 
@@ -754,7 +756,7 @@ onMounted(async () => {
                                     :disabled="isSearchingLocation"
                                 >
                                     <Sparkles class="w-3.5 h-3.5" :class="{ 'animate-spin': isSearchingLocation }" />
-                                    {{ isSearchingLocation ? 'Locating...' : 'Ping My Location' }}
+                                    {{ isSearchingLocation ? t('events.locating') : t('events.pingLocation') }}
                                 </Button>
                             </div>
                         </CardHeader>
@@ -763,7 +765,7 @@ onMounted(async () => {
                             <div class="p-3 bg-blue-50/30 border-t border-blue-50">
                                 <p class="text-[11px] text-blue-700/70 flex items-center gap-1.5">
                                     <Info class="w-3 h-3" />
-                                    Tip: Drag the marker or click on the map to refine the location.
+                                    {{ t('events.mapTip') }}
                                 </p>
                             </div>
                         </CardContent>
@@ -773,12 +775,11 @@ onMounted(async () => {
                         <CardHeader>
                             <CardTitle class="text-sm text-blue-800 flex items-center gap-2">
                                 <Info class="w-4 h-4" />
-                                Note
+                                {{ t('events.note') }}
                             </CardTitle>
                         </CardHeader>
                         <CardContent class="text-xs text-blue-700 leading-relaxed">
-                            Changing the event status to 'Annulé' will notify all registered participants automatically. 
-                            If you change the dates, please double check the venue availability.
+                            {{ t('events.statusCancelNote') }}
                         </CardContent>
                     </Card>
 
@@ -787,19 +788,19 @@ onMounted(async () => {
                         <CardHeader>
                             <CardTitle class="flex items-center gap-2">
                                 <Users class="w-5 h-5 text-blue-600" />
-                                Manage Co-Organizers
+                                {{ t('events.manageCoOrganizers') }}
                             </CardTitle>
-                            <CardDescription>{{ eventData?.is_owner ? 'Invite other organizers to help manage your event.' : 'List of team members managing this event.' }}</CardDescription>
+                            <CardDescription>{{ eventData?.is_owner ? t('events.inviteOrganizersDesc') : t('events.listTeamMembersDesc') }}</CardDescription>
                         </CardHeader>
                         <CardContent class="space-y-6">
                             <!-- Invite New Collaborator (Owner Only) -->
                             <div class="space-y-3 font-semibold" v-if="eventData?.is_owner">
-                                <label class="text-sm font-medium">Invite by Name or Email</label>
+                                <label class="text-sm font-medium">{{ t('events.inviteByNameEmail') }}</label>
                                 <div class="flex gap-2">
                                     <div class="relative flex-1">
                                         <Input 
                                             v-model="searchQuery" 
-                                            placeholder="Search organizers..." 
+                                            :placeholder="t('events.searchOrganizersPlaceholder')" 
                                             @input="searchOrganizers"
                                         />
                                         <!-- Search Results Dropdown -->
@@ -820,18 +821,18 @@ onMounted(async () => {
                                         :disabled="!selectedOrganizer || isInviting"
                                         class="bg-blue-600 hover:bg-blue-700"
                                     >
-                                        {{ isInviting ? 'Sending...' : 'Send Invite' }}
+                                        {{ isInviting ? t('events.sending') : t('events.sendInvite') }}
                                     </Button>
                                 </div>
                                 <div v-if="selectedOrganizer" class="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-md text-sm">
-                                    <span>Selected: <strong>{{ selectedOrganizer.username }}</strong></span>
+                                    <span>{{ t('events.selected') }}: <strong>{{ selectedOrganizer.username }}</strong></span>
                                     <button @click="selectedOrganizer = null; searchQuery = ''" class="hover:text-blue-900"><X class="w-4 h-4"/></button>
                                 </div>
                             </div>
 
                             <!-- List Current Collaborators -->
                             <div v-if="collaborators.length > 0" class="pt-4 border-t space-y-3">
-                                <h4 class="text-sm font-medium text-muted-foreground">Current & Pending Co-Organizers</h4>
+                                <h4 class="text-sm font-medium text-muted-foreground">{{ t('events.currentPendingCoOrganizers') }}</h4>
                                 <div class="space-y-2">
                                     <div v-for="collab in collaborators" :key="collab.id" class="flex items-center justify-between p-3 border rounded-lg bg-card transition-all hover:border-slate-300 dark:hover:border-slate-700">
                                         <div class="flex flex-col">
@@ -839,9 +840,9 @@ onMounted(async () => {
                                             <span class="text-xs text-muted-foreground">{{ collab.organizer.email }}</span>
                                         </div>
                                         <div>
-                                            <Badge v-if="collab.statut === 'accepted'" class="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-emerald-200 uppercase tracking-tighter text-[9px] font-black">Accepted</Badge>
-                                            <Badge v-else-if="collab.statut === 'pending'" class="bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 border-amber-200 uppercase tracking-tighter text-[9px] font-black">Pending</Badge>
-                                            <Badge v-else class="bg-red-500/10 text-red-600 hover:bg-red-500/20 border-red-200 uppercase tracking-tighter text-[9px] font-black">Declined</Badge>
+                                            <Badge v-if="collab.statut === 'accepted'" class="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-emerald-200 uppercase tracking-tighter text-[9px] font-black">{{ t('events.status_accepted') }}</Badge>
+                                            <Badge v-else-if="collab.statut === 'pending'" class="bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 border-amber-200 uppercase tracking-tighter text-[9px] font-black">{{ t('events.status_pending') }}</Badge>
+                                            <Badge v-else class="bg-red-500/10 text-red-600 hover:bg-red-500/20 border-red-200 uppercase tracking-tighter text-[9px] font-black">{{ t('events.status_declined') }}</Badge>
                                         </div>
                                     </div>
                                 </div>

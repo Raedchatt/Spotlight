@@ -8,7 +8,7 @@
       
       <!-- Price per ticket -->
       <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100 dark:border-gray-700">
-        <span class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Price per ticket</span>
+        <span class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ t('reservation.pricePerTicket') }}</span>
         <span class="text-lg font-bold text-blue-600 dark:text-blue-400">
           {{ formatPrice(unitPrice) }}
         </span>
@@ -17,7 +17,7 @@
       <!-- Ticket Type Selection (Tournaments Only) -->
       <div v-if="event.is_tournoi" class="mb-6">
         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-          Reserve as
+          {{ t('reservation.reserveAs') }}
         </label>
         <div class="grid grid-cols-2 gap-3">
           <button 
@@ -30,7 +30,7 @@
                 : 'border-gray-100 bg-gray-50 text-gray-500 dark:bg-gray-700 dark:border-gray-600'
             ]"
           >
-            Spectator
+            {{ t('reservation.spectator') }}
           </button>
           <button 
             type="button"
@@ -42,7 +42,7 @@
                 : 'border-gray-100 bg-gray-50 text-gray-500 dark:bg-gray-700 dark:border-gray-600'
             ]"
           >
-            Participant
+            {{ t('reservation.participant') }}
           </button>
         </div>
       </div>
@@ -50,7 +50,7 @@
       <!-- Quantity Selector -->
       <div class="mb-6">
         <label for="quantity" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-          {{ isQuantityLocked ? 'Players per Team (fixed)' : 'Ticket Quantity' }}
+          {{ isQuantityLocked ? t('reservation.playersPerTeam') : t('reservation.ticketQuantity') }}
         </label>
         
         <div class="flex items-center space-x-4">
@@ -87,14 +87,14 @@
         <!-- Max Capacity Warning -->
         <p v-if="quantity >= maxCapacity" class="text-xs text-amber-500 dark:text-amber-400 mt-2 font-medium flex items-center">
           <svg class="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-          Max capacity reached
+          {{ t('reservation.maxCapacity') }}
         </p>
       </div>
 
       <!-- Total Calculation Card -->
       <div class="bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-700/50 dark:to-gray-800/50 rounded-2xl p-5 mb-6 border border-gray-200/50 dark:border-gray-600/50">
         <div class="flex justify-between items-center">
-          <span class="text-sm font-semibold text-gray-600 dark:text-gray-300">Total Price</span>
+          <span class="text-sm font-semibold text-gray-600 dark:text-gray-300">{{ t('reservation.totalPrice') }}</span>
           <span class="text-3xl font-black text-blue-600 dark:text-blue-400">
             {{ formatPrice(totalPrice) }}
           </span>
@@ -136,7 +136,7 @@
           </svg>
         </span>
         <span :class="{'opacity-90 pl-6': isSubmitting}">
-          {{ isSubmitting ? 'Processing...' : (isReseller ? 'Resellers Cannot Book' : 'Confirm Reservation') }}
+          {{ isSubmitting ? t('reservation.processing') : (isReseller ? t('reservation.resellersCannotBook') : t('reservation.confirmReservation')) }}
         </span>
       </button>
     </div>
@@ -148,6 +148,7 @@ import { ref, computed, watch } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 import { toast } from 'vue-sonner'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
   event: {
@@ -159,6 +160,7 @@ const props = defineProps({
 const emit = defineEmits(['reservation-success'])
 
 const page = usePage()
+const { t } = useI18n()
 const isReseller = computed(() => page.props.auth?.user?.role === 'revendeur')
 
 const quantity = ref(1)
@@ -261,13 +263,13 @@ const submitReservation = async () => {
       return
     }
 
-    successMessage.value = 'Reservation confirmed successfully!'
-    toast.success('Reservation confirmed successfully!')
+    successMessage.value = t('reservation.reservationSuccess')
+    toast.success(t('reservation.reservationSuccess'))
     quantity.value = 1 
     
     emit('reservation-success', response.data)
   } catch (error) {
-    errorMessage.value = error.response?.data?.message || 'An error occurred during reservation. Please try again.'
+    errorMessage.value = error.response?.data?.message || t('reservation.reservationError')
     toast.error(errorMessage.value)
   } finally {
     isSubmitting.value = false

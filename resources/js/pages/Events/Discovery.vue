@@ -12,6 +12,7 @@ import {
     ChevronRight
 } from 'lucide-vue-next';
 import { ref, onMounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import EventCard from '@/components/EventCard.vue';
 import Reserver from '@/components/Reserver.vue';
 import { Badge } from '@/components/ui/badge';
@@ -22,8 +23,10 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import type { Evenement } from '@/types/event';
 
 
+const { t } = useI18n();
+
 const breadcrumbs = [
-    { title: 'Discovery', href: '/discovery' },
+    { title: t('events.discovery'), href: '/discovery' },
 ];
 
 const events = ref<Evenement[]>([]);
@@ -144,41 +147,41 @@ const resetFilters = () => {
         <div class="p-6 space-y-6">
             <div class="flex justify-between items-center">
                 <div>
-                    <h1 class="text-3xl font-bold tracking-tight">Discovery</h1>
-                    <p class="text-muted-foreground">Find and book your next amazing experience.</p>
+                    <h1 class="text-3xl font-bold tracking-tight">{{ t('events.discovery') }}</h1>
+                    <p class="text-muted-foreground">{{ t('events.discoveryDesc') }}</p>
                 </div>
                 <Badge variant="secondary" class="h-8 px-3 flex items-center gap-2">
                     <Calendar class="w-4 h-4" />
-                    <span>{{ pagination.total }} Events Available</span>
+                    <span>{{ t('events.eventsAvailable', { count: pagination.total }) }}</span>
                 </Badge>
             </div>
 
             <!-- Filters Section -->
             <div class="bg-card border rounded-xl p-4 shadow-sm flex flex-wrap gap-4 items-end">
                 <div class="flex-1 min-w-[200px] space-y-1.5">
-                    <label class="text-sm font-medium">Search by title</label>
+                    <label class="text-sm font-medium">{{ t('events.searchByTitle') }}</label>
                     <div class="relative">
                         <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input v-model="filters.titre" placeholder="Event name..." class="pl-10" />
+                        <Input v-model="filters.titre" :placeholder="t('events.eventNamePlaceholder')" class="pl-10" />
                     </div>
                 </div>
 
                 <div class="w-48 space-y-1.5">
-                    <label class="text-sm font-medium">Category</label>
+                    <label class="text-sm font-medium">{{ t('events.category') }}</label>
                     <select v-model="filters.categorie" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                        <option value="all">All Categories</option>
+                        <option value="all">{{ t('events.allCategories') }}</option>
                         <option v-for="cat in categories" :key="cat.slug" :value="cat.slug">{{ cat.label }}</option>
                     </select>
                 </div>
 
                 <div class="w-48 space-y-1.5">
-                    <label class="text-sm font-medium">Starting from</label>
+                    <label class="text-sm font-medium">{{ t('events.startingFrom') }}</label>
                     <Input v-model="filters.date" type="date" />
                 </div>
 
                 <Button variant="outline" @click="resetFilters" class="h-10">
                     <X class="w-4 h-4 mr-2" />
-                    Reset
+                    {{ t('common.reset') }}
                 </Button>
             </div>
 
@@ -192,8 +195,8 @@ const resetFilters = () => {
                 <div class="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
                     <Search class="w-6 h-6 text-muted-foreground" />
                 </div>
-                <h3 class="text-lg font-medium">No open events found</h3>
-                <p class="text-muted-foreground">Try adjusting your filters.</p>
+                <h3 class="text-lg font-medium">{{ t('events.noEventsFound') }}</h3>
+                <p class="text-muted-foreground">{{ t('events.adjustFilters') }}</p>
             </div>
 
             <div v-else class="space-y-8">
@@ -214,7 +217,7 @@ const resetFilters = () => {
                         :disabled="pagination.currentPage === 1"
                         @click="handlePageChange(pagination.currentPage - 1)"
                     >
-                        <ChevronLeft class="w-4 h-4 mr-2" /> Previous
+                        <ChevronLeft class="w-4 h-4 mr-2" /> {{ t('common.previous') }}
                     </Button>
                     
                     <div class="flex items-center gap-1">
@@ -236,7 +239,7 @@ const resetFilters = () => {
                         :disabled="pagination.currentPage === pagination.lastPage"
                         @click="handlePageChange(pagination.currentPage + 1)"
                     >
-                        Next <ChevronRight class="w-4 h-4 ml-2" />
+                        {{ t('common.next') }} <ChevronRight class="w-4 h-4 ml-2" />
                     </Button>
                 </div>
             </div>

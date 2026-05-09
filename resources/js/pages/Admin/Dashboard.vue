@@ -10,6 +10,7 @@ import {
     Search
 } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import AppLayout from '@/layouts/AppLayout.vue';
 const props = defineProps<{
     stats: {
@@ -40,13 +41,15 @@ const filteredEvents = computed(() => {
     );
 });
 
+const { t } = useI18n();
+
 const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-TN', { style: 'currency', currency: 'TND' }).format(amount);
 };
 </script>
 
 <template>
-    <Head title="Admin Dashboard" />
+    <Head :title="t('events.adminDashboard')" />
 
     <AppLayout>
         <div class="px-4 py-8 md:px-8 space-y-8 max-w-[1600px] mx-auto">
@@ -54,8 +57,8 @@ const formatCurrency = (amount: number) => {
             <!-- Welcome Header -->
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">Admin Overview</h1>
-                    <p class="text-gray-500 dark:text-gray-400 mt-1">Global platform performance and management.</p>
+                    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">{{ t('events.adminOverview') }}</h1>
+                    <p class="text-gray-500 dark:text-gray-400 mt-1">{{ t('events.adminOverviewDesc') }}</p>
                 </div>
                 
             </div>
@@ -74,11 +77,11 @@ const formatCurrency = (amount: number) => {
                         </span>
                     </div>
                     <div>
-                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Users</p>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">{{ t('events.totalUsers') }}</p>
                         <h3 class="text-2xl font-black text-gray-900 dark:text-white mt-1">{{ stats.total_users }}</h3>
                         <p class="text-xs text-gray-500 mt-2">
-                           <span class="font-bold text-indigo-500">{{ stats.total_organizers }}</span> Org / 
-                           <span class="font-bold text-purple-500">{{ stats.total_participants }}</span> Part
+                           <span class="font-bold text-indigo-500">{{ stats.total_organizers }}</span> {{ t('events.orgsLabel') }} / 
+                           <span class="font-bold text-purple-500">{{ stats.total_participants }}</span> {{ t('events.partsLabel') }}
                         </p>
                     </div>
                 </div>
@@ -94,9 +97,9 @@ const formatCurrency = (amount: number) => {
                         </span>
                     </div>
                     <div>
-                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Events</p>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">{{ t('events.totalEvents') }}</p>
                         <h3 class="text-2xl font-black text-gray-900 dark:text-white mt-1">{{ stats.total_events }}</h3>
-                        <p class="text-xs text-gray-500 mt-2 font-medium">{{ stats.total_reservations }} total reservations</p>
+                        <p class="text-xs text-gray-500 mt-2 font-medium">{{ stats.total_reservations }} {{ t('events.totalReservations') }}</p>
                     </div>
                 </div>
 
@@ -111,9 +114,9 @@ const formatCurrency = (amount: number) => {
                         </span>
                     </div>
                     <div>
-                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Revenue</p>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">{{ t('events.totalRevenue') }}</p>
                         <h3 class="text-2xl font-black text-gray-900 dark:text-white mt-1">{{ formatCurrency(stats.total_revenue) }}</h3>
-                        <p class="text-xs text-gray-500 mt-2 font-medium">Gross platform volume</p>
+                        <p class="text-xs text-gray-500 mt-2 font-medium">{{ t('events.grossPlatformVolume') }}</p>
                     </div>
                 </div>
 
@@ -123,12 +126,12 @@ const formatCurrency = (amount: number) => {
                         <div class="p-3 rounded-2xl bg-white/20 text-white">
                             <TrendingUp class="w-6 h-6" />
                         </div>
-                        <span class="text-xs font-extrabold bg-white/20 px-2 py-1 rounded-full">20% FEE</span>
+                        <span class="text-xs font-extrabold bg-white/20 px-2 py-1 rounded-full">{{ t('events.feeBadge') }}</span>
                     </div>
                     <div>
-                        <p class="text-xs font-bold text-indigo-100 uppercase tracking-widest">Platform Commission</p>
+                        <p class="text-xs font-bold text-indigo-100 uppercase tracking-widest">{{ t('events.platformCommission') }}</p>
                         <h3 class="text-2xl font-black mt-1">{{ formatCurrency(stats.total_commission) }}</h3>
-                        <p class="text-xs text-indigo-100 mt-2 font-medium italic">Net revenue from fees</p>
+                        <p class="text-xs text-indigo-100 mt-2 font-medium italic">{{ t('events.netRevenueFromFees') }}</p>
                     </div>
                 </div>
 
@@ -137,13 +140,13 @@ const formatCurrency = (amount: number) => {
             <!-- ── Events Performance Table ─────────────────────────────────── -->
             <div class="bg-white dark:bg-neutral-900 rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-sm overflow-hidden">
                 <div class="px-6 py-5 border-b border-gray-100 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Recent Events Performance</h3>
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ t('events.recentEventsPerformance') }}</h3>
                     <div class="relative max-w-sm w-full">
                         <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <input 
                             v-model="searchQuery"
                             type="text" 
-                            placeholder="Search events or organizers..." 
+                            :placeholder="t('events.searchEventsOrOrgs')" 
                             class="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-neutral-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500"
                         />
                     </div>
@@ -153,12 +156,12 @@ const formatCurrency = (amount: number) => {
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="text-gray-400 dark:text-gray-500 text-xs uppercase tracking-widest font-bold">
-                                <th class="px-6 py-4 text-left">Event</th>
-                                <th class="px-6 py-4 text-left">Organizer</th>
-                                <th class="px-6 py-4 text-center">Reservations</th>
-                                <th class="px-6 py-4 text-right">Revenue</th>
-                                <th class="px-6 py-4 text-right">Commission</th>
-                                <th class="px-6 py-4 text-center">Action</th>
+                                <th class="px-6 py-4 text-left">{{ t('events.event') }}</th>
+                                <th class="px-6 py-4 text-left">{{ t('events.organizer') }}</th>
+                                <th class="px-6 py-4 text-center">{{ t('events.reservationsCount') }}</th>
+                                <th class="px-6 py-4 text-right">{{ t('events.revenueCol') }}</th>
+                                <th class="px-6 py-4 text-right">{{ t('events.commissionCol') }}</th>
+                                <th class="px-6 py-4 text-center">{{ t('common.action') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50 dark:divide-neutral-800">
@@ -168,7 +171,7 @@ const formatCurrency = (amount: number) => {
                                         <span class="font-bold text-gray-900 dark:text-gray-100 text-base">{{ event.titre }}</span>
                                         <span class="text-xs text-gray-500 flex items-center gap-1">
                                             <span class="w-2 h-2 rounded-full" :class="event.statut === 'ouvert' ? 'bg-emerald-500' : 'bg-amber-500'"></span>
-                                            {{ event.statut }}
+                                            {{ t(`events.status_${event.statut}`) }}
                                         </span>
                                     </div>
                                 </td>

@@ -8,6 +8,7 @@ import AppWrapper from './AppWrapper';
 import 'vue-sonner/style.css';
 import '../css/app.css';
 import { initializeTheme } from './composables/useAppearance';
+import i18n, { RTL_LOCALES, type SupportedLocale } from './i18n';
 import './echo';
 
 window.axios = axios;
@@ -26,6 +27,7 @@ createInertiaApp({
     setup({ el, App, props, plugin }) {
         createApp({ render: () => h(AppWrapper, () => h(App, props)) })
             .use(plugin)
+            .use(i18n)
             .mount(el);
     },
     progress: {
@@ -35,3 +37,8 @@ createInertiaApp({
 
 // This will set light / dark mode on page load...
 initializeTheme();
+
+// Initialize locale direction (RTL/LTR) on page load
+const savedLocale = (localStorage.getItem('spotlight-locale') || 'en') as SupportedLocale;
+document.documentElement.setAttribute('lang', savedLocale);
+document.documentElement.setAttribute('dir', RTL_LOCALES.includes(savedLocale) ? 'rtl' : 'ltr');

@@ -16,6 +16,17 @@
                         document.documentElement.classList.add('dark');
                     }
                 }
+                
+                // i18n RTL and Lang setup
+                try {
+                    const savedLocale = localStorage.getItem('spotlight-locale') || 'en';
+                    document.documentElement.setAttribute('lang', savedLocale);
+                    if (savedLocale === 'ar') {
+                        document.documentElement.setAttribute('dir', 'rtl');
+                    } else {
+                        document.documentElement.setAttribute('dir', 'ltr');
+                    }
+                } catch (e) {}
             })();
         </script>
 
