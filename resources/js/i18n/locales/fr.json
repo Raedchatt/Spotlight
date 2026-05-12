@@ -138,7 +138,15 @@
     "updatePasswordBtn": "Mettre à jour",
     "backToHome": "Retour à la page d'accueil",
     "resetSuccess": "Mot de passe réinitialisé avec succès ! Vous pouvez maintenant vous connecter.",
-    "twoFactorTitle": "Vérification à deux facteurs"
+    "twoFactorTitle": "Vérification à deux facteurs",
+    "verify_email": {
+      "title": "Vérifiez votre email",
+      "description": "Entrez le code à 6 chiffres que nous avons envoyé à votre email.",
+      "verify_button": "Vérifier le code",
+      "no_code": "Vous n'avez pas reçu de code ?",
+      "resend": "Renvoyer"
+    }
+
   },
 
   "events": {

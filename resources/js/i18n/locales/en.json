@@ -138,7 +138,15 @@
     "updatePasswordBtn": "Update Password",
     "backToHome": "Return to home page",
     "resetSuccess": "Password reset successfully! You can now log in.",
-    "twoFactorTitle": "Two-Factor Challenge"
+    "twoFactorTitle": "Two-Factor Challenge",
+    "verify_email": {
+      "title": "Verify your email",
+      "description": "Enter the 6-digit code we sent to your email.",
+      "verify_button": "Verify Code",
+      "no_code": "Didn't receive a code?",
+      "resend": "Resend"
+    }
+
   },
 
   "events": {

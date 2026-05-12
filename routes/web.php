@@ -62,6 +62,13 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// Email Verification
+Route::get('/verify-email', function () {
+    return Inertia::render('auth/VerifyEmail');
+})->name('verification.notice');
+
+Route::post('/verify-email', [AuthController::class, 'verify'])->name('verification.verify');
+
 // Google Auth Routes
 Route::get('/auth/google', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
