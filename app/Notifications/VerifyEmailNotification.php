@@ -40,7 +40,8 @@ class VerifyEmailNotification extends Notification
             ->line('Your verification code is:')
             ->line($this->code)
             ->line('Please enter this code on the verification page to complete your registration.')
-            ->line('If you did not create an account, no further action is required.');
+            ->line('If you did not create an account, no further action is required.')
+            ->salutation(' ');
     }
 
     /**
