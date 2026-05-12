@@ -132,6 +132,12 @@
     "verifyEmail": "Verify Email",
     "confirmPasswordTitle": "Confirm Password",
     "resetPasswordTitle": "Reset Password",
+    "resetPasswordDesc": "Choose a strong password to secure your account.",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "updatePasswordBtn": "Update Password",
+    "backToHome": "Return to home page",
+    "resetSuccess": "Password reset successfully! You can now log in.",
     "twoFactorTitle": "Two-Factor Challenge"
   },
 
@@ -218,5 +224,11 @@
     "en": "English",
     "fr": "Français",
     "ar": "العربية"
+  },
+  "passwords": {
+    "sent": "We have emailed your password reset link!",
+    "user": "We can't find a user with that email address.",
+    "token": "This password reset token is invalid.",
+    "throttled": "Please wait before retrying."
   }
 }

@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\EvenementController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\MediaUploadController;
@@ -36,6 +38,24 @@ Route::get('/login', function () {
 Route::get('/register', function () {
     return Inertia::render('auth/Register');
 })->name('register');
+
+// ─── Password Reset ───────────────────────────────────────────────────────────
+Route::get('/forgot-password', [ForgotPasswordController::class, 'create'])
+    ->middleware('guest')
+    ->name('password.request');
+
+Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])
+    ->middleware('guest')
+    ->name('password.email');
+
+Route::get('/reset-password/{token}', [ResetPasswordController::class, 'create'])
+    ->middleware('guest')
+    ->name('password.reset');
+
+Route::post('/reset-password', [ResetPasswordController::class, 'store'])
+    ->middleware('guest')
+    ->name('password.store');
+// ─────────────────────────────────────────────────────────────────────────────
 
 // Auth Routes (moved from api.php for session support)
 Route::post('/login', [AuthController::class, 'login']);
