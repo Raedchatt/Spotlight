@@ -2,6 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { ref, onMounted, nextTick, computed } from 'vue';
 import { Head, usePage, Link } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
 import { show } from '@/routes/messages';
 import axios from 'axios';
 import { toast } from 'vue-sonner';
@@ -19,8 +20,10 @@ const showOriginal = ref({}); // Track which message IDs show original content
 const contenu = ref('');
 const isSending = ref(false);
 
+const { t } = useI18n();
+
 const otherUserName = computed(() => {
-    return props.otherUser?.username || 'User';
+    return props.otherUser?.username || t('common.user');
 });
 
 const isAdmin = computed(() => page.props.auth?.user?.role === 'administrateur');
@@ -64,7 +67,7 @@ const sendMessage = async () => {
         }
     } catch (error) {
         console.error('Error sending message:', error);
-        toast.error('Failed to send message: ' + (error.response?.data?.message || error.message));
+        toast.error(t('messages.failedToSend') + ': ' + (error.response?.data?.message || error.message));
     } finally {
         isSending.value = false;
     }
@@ -80,7 +83,7 @@ const formatTime = (dateString) => {
 </script>
 
 <template>
-    <Head :title="'Chat with ' + otherUserName" />
+    <Head :title="t('messages.chatWith', { name: otherUserName })" />
 
     <AppLayout v-if="otherUser">
         <div class="max-w-[1800px] mx-auto h-[calc(100vh-4rem)] py-4 px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row gap-4 lg:gap-6 overflow-hidden">
@@ -89,7 +92,7 @@ const formatTime = (dateString) => {
             <div class="w-full md:w-[30%] h-full flex flex-col bg-card border border-border shadow-sm rounded-3xl overflow-hidden min-h-0">
                 <div class="p-5 border-b border-border bg-background/50 backdrop-blur-sm z-10 flex-shrink-0">
                     <h3 class="text-xl font-extrabold text-foreground flex items-center justify-between">
-                        Conversations
+                        {{ t('messages.conversations') }}
                         <span class="bg-blue-100 dark:bg-blue-900/40 text-[#1a56db] dark:text-blue-400 text-xs py-0.5 px-3 rounded-full font-bold">
                             {{ conversations.length }}
                         </span>
@@ -148,7 +151,7 @@ const formatTime = (dateString) => {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                             </svg>
                         </div>
-                        <p class="text-sm font-medium text-muted-foreground">No conversations yet.</p>
+                        <p class="text-sm font-medium text-muted-foreground">{{ t('messages.noConversations') }}</p>
                     </div>
                 </div>
             </div>
@@ -169,7 +172,7 @@ const formatTime = (dateString) => {
                                 <h2 class="text-base font-bold text-foreground">{{ otherUserName }}</h2>
                             </div>
                             <span class="text-[11px] text-green-500 font-medium flex items-center gap-1.5 mt-0.5">
-                                <span class="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span> Online
+                                <span class="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span> {{ t('messages.online') }}
                             </span>
                         </div>
                     </div>
@@ -206,7 +209,7 @@ const formatTime = (dateString) => {
                                         <svg v-if="!showOriginal[message.id]" class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                                         </svg>
-                                        {{ showOriginal[message.id] ? 'Show AI Final' : 'AI Reformulated' }}
+                                        {{ showOriginal[message.id] ? t('messages.showAiFinal') : t('messages.aiReformulated') }}
                                     </button>
                                 </div>
                             </div>
@@ -228,7 +231,7 @@ const formatTime = (dateString) => {
                         <div class="relative flex-grow group">
                             <textarea 
                                 v-model="contenu"
-                                placeholder="Type professional messages..." 
+                                :placeholder="t('messages.typeProfessional')" 
                                 class="w-full bg-muted/30 border border-border text-foreground rounded-2xl px-5 py-3.5 pr-28 focus:ring-2 focus:ring-[#1a56db]/50 focus:bg-background focus:border-[#1a56db] transition-all placeholder-muted-foreground/60 outline-none resize-none min-h-[56px] max-h-32 scrollbar-hide"
                                 :disabled="isSending"
                                 rows="1"
@@ -257,13 +260,13 @@ const formatTime = (dateString) => {
                         </button>
                     </form>
                     <p class="text-[10px] text-center text-muted-foreground mt-3 font-medium uppercase tracking-tighter">
-                        Messages are automatically reformulated for professional clarity
+                        {{ t('messages.aiReformulationNotice') }}
                     </p>
                 </div>
                 <div v-else class="flex-shrink-0 p-5 bg-background/50 backdrop-blur-md border-t border-border flex justify-center items-center">
                     <p class="text-sm text-yellow-600 dark:text-yellow-500 font-bold bg-yellow-50 dark:bg-yellow-900/20 px-6 py-3 rounded-full border border-yellow-200 dark:border-yellow-800">
                         <svg class="h-5 w-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                        Admin Observation Mode (Read-Only)
+                        {{ t('messages.adminObservationMode') }}
                     </p>
                 </div>
             </div>

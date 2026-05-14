@@ -16,12 +16,14 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from '@/components/ui/sidebar';
+import { useLocale } from '@/composables/useLocale';
 import { useUnreadCounts } from '@/composables/useUnreadCounts';
 import { dashboard, logout } from '@/routes';
 import { type NavItem } from '@/types';
 import AppLogo from './AppLogo.vue';
 
 const { t } = useI18n();
+const { isRtl } = useLocale();
 const page = usePage();
 const auth = computed(() => page.props.auth as any);
 const counts = computed(() => page.props.sidebar_counts as Record<string, number> || {});
@@ -138,7 +140,7 @@ const handleLogout = () => {
 </script>
 
 <template>
-    <Sidebar collapsible="icon" variant="inset">
+    <Sidebar collapsible="icon" variant="inset" :side="isRtl() ? 'right' : 'left'">
         <SidebarHeader>
             <SidebarMenu>
                 <SidebarMenuItem>

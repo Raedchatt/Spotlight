@@ -1,6 +1,7 @@
 <script setup>
 import { Link, Head } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { discovery } from '@/routes';
 import { show } from '@/routes/messages';
@@ -8,6 +9,8 @@ import { show } from '@/routes/messages';
 const props = defineProps({
     conversations: Array
 });
+
+const { t } = useI18n();
 
 const search = ref('');
 
@@ -20,12 +23,12 @@ const filteredConversations = computed(() => {
 </script>
 
 <template>
-    <Head title="Messages" />
+    <Head :title="t('messages.title')" />
 
     <AppLayout>
         <div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center mb-8">
-                <h1 class="text-3xl font-extrabold text-foreground tracking-tight">Messages</h1>
+                <h1 class="text-3xl font-extrabold text-foreground tracking-tight">{{ t('messages.title') }}</h1>
             </div>
 
             <!-- Search Area -->
@@ -38,7 +41,7 @@ const filteredConversations = computed(() => {
                 <input 
                     v-model="search"
                     type="text" 
-                    placeholder="Search conversations..." 
+                    :placeholder="t('messages.searchPlaceholder')" 
                     class="block w-full pl-10 pr-3 py-3 border border-border bg-muted/30 text-foreground placeholder-muted-foreground rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#1a56db] focus:border-[#1a56db] focus:bg-background sm:text-sm transition-all duration-200"
                 >
             </div>
@@ -98,16 +101,17 @@ const filteredConversations = computed(() => {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                     </svg>
                 </div>
-                <h3 class="text-xl font-medium text-foreground">No messages yet</h3>
-                <p class="mt-2 text-muted-foreground max-w-sm mx-auto">Start a conversation to see them here.</p>
+                <h3 class="text-xl font-medium text-foreground">{{ t('messages.noMessages') }}</h3>
+                <p class="mt-2 text-muted-foreground max-w-sm mx-auto">{{ t('messages.noMessagesDesc') }}</p>
                 <Link 
                     v-if="$page.props.auth.user.role === 'participant'"
                     :href="discovery().url" 
                     class="mt-6 inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-2xl text-white bg-[#1a56db] hover:bg-[#1a56db]/90 transition-colors"
                 >
-                    Explore Events
+                    {{ t('messages.exploreEvents') }}
                 </Link>
             </div>
+
         </div>
     </AppLayout>
 </template>

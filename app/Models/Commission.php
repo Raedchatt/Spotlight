@@ -22,6 +22,7 @@ class Commission extends Model
         'commission_admin',
         'commission_revendeur',
         'status',
+        'stripe_transfer_id',
     ];
 
     /**

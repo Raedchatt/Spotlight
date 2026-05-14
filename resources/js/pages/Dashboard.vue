@@ -5,10 +5,10 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Eye, RefreshCw, TrendingUp, Clock, Wallet } from 'lucide-vue-next';
 
-const breadcrumbs = [{ title: 'Dashboard', href: '/dashboard' }];
+const { t } = useI18n();
+const breadcrumbs = computed(() => [{ title: t('nav.dashboard'), href: '/dashboard' }]);
 
 const page = usePage();
-const { t } = useI18n();
 const auth = computed(() => page.props.auth as any);
 const dashboardData = computed(() => (page.props as any).dashboardData as DashboardData | null);
 
@@ -87,8 +87,8 @@ const initials = (name: string) =>
 </script>
 
 <template>
-    <Head title="Dashboard" />
-    <AppLayout>
+    <Head :title="t('nav.dashboard')" />
+    <AppLayout :breadcrumbs="breadcrumbs">
 
         <!-- ── Organizer Dashboard ─────────────────────────────────────────── -->
         <div v-if="dashboardData" class="w-full px-4 py-8 md:px-8 space-y-8 max-w-[1600px] mx-auto">
@@ -121,7 +121,7 @@ const initials = (name: string) =>
                                 <Wallet class="w-8 h-8 transition-transform group-hover:scale-110 duration-300" />
                             </div>
                             <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
-                                <TrendingUp class="w-3.5 h-3.5" /> All Time
+                                <TrendingUp class="w-3.5 h-3.5" /> {{ t('common.allTime') }}
                             </span>
                         </div>
                         <div class="relative z-10">
@@ -144,7 +144,7 @@ const initials = (name: string) =>
                                 <Clock class="w-8 h-8 transition-transform group-hover:-rotate-12 duration-300" />
                             </div>
                             <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-xs font-semibold">
-                                Pending
+                                {{ t('common.pending') }}
                             </span>
                         </div>
                         <div class="relative z-10">
@@ -200,7 +200,7 @@ const initials = (name: string) =>
                                 >
                                     <div class="flex items-center gap-3">
                                         <span class="w-3 h-3 rounded-full shadow-sm" :style="{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }"></span>
-                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-200 capitalize w-24 truncate">{{ cat.category }}</span>
+                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-200 capitalize w-24 truncate">{{ t('categories.' + cat.category.toLowerCase()) }}</span>
                                     </div>
                                     <span class="text-xs font-bold bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-md">{{ cat.percent }}%</span>
                                 </div>
@@ -247,7 +247,7 @@ const initials = (name: string) =>
                                         : 'bg-gray-50 dark:bg-neutral-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700'
                                 ]"
                             >
-                                {{ cat }}
+                                {{ cat === 'all' ? t('categories.all') : t('categories.' + cat) }}
                             </button>
                             <Link href="/dashboard" class="ml-auto sm:ml-2 shrink-0">
                                 <button class="w-8 h-8 rounded-full bg-gray-50 dark:bg-neutral-800 flex items-center justify-center hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600 transition-all hover:rotate-180 duration-500">
@@ -294,7 +294,7 @@ const initials = (name: string) =>
                                     </td>
                                     <td class="px-6 py-4">
                                         <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold capitalize bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-300">
-                                            {{ event.categorie === 'autre' && event.categorie_autre ? event.categorie_autre : event.categorie }}
+                                            {{ event.categorie === 'autre' ? (event.categorie_autre || t('categories.autre')) : t('categories.' + event.categorie) }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4">

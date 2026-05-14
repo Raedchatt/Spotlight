@@ -18,10 +18,10 @@ const props = defineProps<{
 
 const processingId = ref<number | null>(null);
 const currentTab = ref('organizers');
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fr-TN', { style: 'currency', currency: 'TND' }).format(amount);
+    return new Intl.NumberFormat(locale.value, { style: 'currency', currency: 'TND' }).format(amount);
 };
 
 const handleOrganizerPayout = (id: number, stripeAccountId: string | null) => {
@@ -175,6 +175,9 @@ const handleAffiliatePayout = (id: number) => {
                                 {{ t('events.forEvent') }}: <span class="font-bold text-gray-700 dark:text-gray-300">{{ item.event_title }}</span>
                             </div>
                             <div class="text-xs text-gray-400">{{ t('events.eventEnded') }}: {{ item.date_fin }}</div>
+                            <div v-if="!item.stripe_account_id" class="px-3 py-1 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-lg inline-flex items-center gap-2 text-xs font-semibold">
+                                <AlertCircle class="w-4 h-4" /> {{ t('events.affiliateNoStripeAccount') }}
+                            </div>
                         </div>
 
                         <div class="flex flex-col md:items-end gap-3 px-4 py-3 bg-gray-50 dark:bg-neutral-800/50 rounded-2xl border border-gray-100 dark:border-neutral-700 min-w-[200px]">
@@ -184,11 +187,12 @@ const handleAffiliatePayout = (id: number) => {
                             </div>
                             <button
                                 @click="handleAffiliatePayout(item.id)"
-                                :disabled="processingId === item.id"
-                                class="w-full mt-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition text-sm"
+                                :disabled="processingId === item.id || !item.stripe_account_id"
+                                class="w-full mt-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition text-sm"
                             >
-                                <Check v-if="processingId !== item.id" class="w-4 h-4" />
-                                {{ processingId === item.id ? t('events.processing') : t('events.approveAndPayout') }}
+                                <RefreshCw v-if="processingId === item.id" class="w-4 h-4 animate-spin" />
+                                <ExternalLink v-else class="w-4 h-4" />
+                                {{ processingId === item.id ? t('events.processing') : t('events.payViaStripe') }}
                             </button>
                         </div>
                     </div>

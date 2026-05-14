@@ -3,8 +3,9 @@ import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Trash2, Loader2 } from 'lucide-vue-next';
 import axios from 'axios';
-import { toast } from 'vue-sonner';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const props = defineProps<{
   eventId: number | string;
   eventTitle: string;
@@ -14,7 +15,7 @@ const emit = defineEmits(['cancelled']);
 const isSubmitting = ref(false);
 
 const handleCancel = async () => {
-  const confirmed = window.confirm(`Are you sure you want to cancel the event "${props.eventTitle}"?\n\nThis action is irreversible and all participants will be refunded.`);
+  const confirmed = window.confirm(t('events.confirmCancel', { title: props.eventTitle }));
   
   if (!confirmed) return;
 
@@ -22,11 +23,11 @@ const handleCancel = async () => {
     isSubmitting.value = true;
     const response = await axios.post(`/web-api/events/${props.eventId}/cancel`);
     
-    toast.success(`Success: ${response.data.refunded_count} refunds processed.`);
+    toast.success(t('events.cancelSuccess', { count: response.data.refunded_count }));
     emit('cancelled', props.eventId);
   } catch (error: any) {
     console.error('Error:', error);
-    toast.error(error.response?.data?.message || 'Error cancelling the event.');
+    toast.error(error.response?.data?.message || t('events.cancelError'));
   } finally {
     isSubmitting.value = false;
   }
@@ -43,6 +44,6 @@ const handleCancel = async () => {
   >
     <Loader2 v-if="isSubmitting" class="h-4 w-4 animate-spin" />
     <Trash2 v-else class="h-4 w-4" />
-    {{ isSubmitting ? 'Cancelling...' : 'Cancel' }}
+    {{ isSubmitting ? t('events.cancelling') : t('events.cancel') }}
   </Button>
 </template>

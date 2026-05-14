@@ -64,6 +64,8 @@ class AdminFinancialController extends Controller
                 return [
                     'id' => $comm->id,
                     'reseller_name' => $comm->revendeur->user->username ?? 'Unknown',
+                    'reseller_email' => $comm->revendeur->user->email ?? '',
+                    'stripe_account_id' => $comm->revendeur->stripe_account_id ?? null,
                     'event_title' => $comm->evenement->titre,
                     'amount' => $comm->commission_revendeur,
                     'date_fin' => $comm->evenement->date_fin->format('Y-m-d H:i'),
@@ -112,12 +114,59 @@ class AdminFinancialController extends Controller
     }
 
     /**
-     * Approve an affiliate commission (Payout).
+     * Approve an affiliate commission and execute a real Stripe Transfer
+     * to the reseller's connected Stripe account.
      */
     public function approveAffiliate(Commission $commission)
     {
-        $commission->update(['status' => StatutCommission::Approved]);
-        return back()->with('success', 'Affiliate payout marked as completed.');
+        // 1. Guard: already approved
+        if ($commission->status === StatutCommission::Approved) {
+            return back()->with('error', 'This commission has already been paid out.');
+        }
+
+        // 2. Guard: reseller must have a connected Stripe account
+        $revendeur = $commission->revendeur;
+        if (!$revendeur || !$revendeur->stripe_account_id) {
+            return back()->with('error', 'Reseller does not have a connected Stripe account.');
+        }
+
+        // 3. Calculate amount in cents
+        $amount = $commission->commission_revendeur;
+        if ($amount <= 0) {
+            return back()->with('error', 'No commission amount to transfer.');
+        }
+        $transferAmount = (int) round($amount * 100);
+
+        try {
+            Stripe::setApiKey(config('services.stripe.secret'));
+
+            // 4. Execute real Stripe Transfer
+            $transfer = Transfer::create([
+                'amount' => $transferAmount,
+                'currency' => 'eur',
+                'destination' => $revendeur->stripe_account_id,
+                'metadata' => [
+                    'commission_id' => $commission->id,
+                    'evenement_id' => $commission->evenement_id,
+                    'reseller_id' => $revendeur->id,
+                ],
+            ]);
+
+            // 5. Update commission with transfer proof and approved status
+            $commission->update([
+                'status' => StatutCommission::Approved,
+                'stripe_transfer_id' => $transfer->id,
+            ]);
+
+            // Note: The Commission model's booted() observer will
+            // automatically increment the reseller's balance.
+
+            return back()->with('success', 'Affiliate payout transferred successfully via Stripe.');
+
+        } catch (\Stripe\Exception\ApiErrorException $e) {
+            \Illuminate\Support\Facades\Log::error('Stripe affiliate transfer failed: ' . $e->getMessage());
+            return back()->with('error', 'Stripe Transfer failed: ' . $e->getMessage());
+        }
     }
 
     /**

@@ -40,14 +40,7 @@ const getStatusVariant = (statut: StatutEvenement) => {
 };
 
 const getStatusLabel = (statut: StatutEvenement) => {
-    switch (statut) {
-        case 'ouvert': return t('common.open') || 'Ouvert';
-        case 'valide': return t('common.valid') || 'Valide';
-        case 'encours': return t('common.inProgress') || 'En cours';
-        case 'ferme': return t('common.closed') || 'Fermé';
-        case 'annule': return t('common.cancelled') || 'Annulé';
-        default: return statut.charAt(0).toUpperCase() + statut.slice(1).replace('_', ' ');
-    }
+    return t(`events.status_${statut}`);
 };
 
 const page = usePage();
@@ -183,7 +176,7 @@ const bannerImage = computed(() => {
             <div class="space-y-1">
                 <h2 class="text-xl font-bold line-clamp-1 capitalize">{{ event.titre }}</h2>
                 <Badge variant="outline" class="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                    {{ event.categorie === 'autre' && event.categorie_autre ? event.categorie_autre : event.categorie }}
+                    {{ event.categorie === 'autre' && event.categorie_autre ? event.categorie_autre : t(`categories.${event.categorie}`) }}
                 </Badge>
             </div>
 
@@ -209,9 +202,15 @@ const bannerImage = computed(() => {
                             {{ event.prix_spectateur > 0 ? `${event.prix_spectateur} TND` : t('common.free') }}
                         </template>
                     </span>
-                    <span class="text-[10px] text-muted-foreground">
-                        {{ t('events.seatsLeft', { count: event.capacite_spectateur - (Number(event.total_tickets_reserved) || 0) }) }}
-                    </span>
+                    <div class="flex flex-col text-[10px] text-muted-foreground leading-tight">
+                        <template v-if="event.is_tournoi">
+                            <span>{{ t('events.spectatorSeatsLeft', { count: Math.max(0, event.capacite_spectateur - (Number(event.spectator_tickets_reserved) || 0)) }) }}</span>
+                            <span>{{ t('events.participantSeatsLeft', { count: Math.max(0, (event.capacite_participant || event.tournoi?.capacite_participant || 0) - (Number(event.participant_tickets_reserved) || 0)) }) }}</span>
+                        </template>
+                        <template v-else>
+                            <span>{{ t('events.seatsLeft', { count: Math.max(0, event.capacite_spectateur - (Number(event.total_tickets_reserved) || 0)) }) }}</span>
+                        </template>
+                    </div>
                 </div>
                 
                 <Button 

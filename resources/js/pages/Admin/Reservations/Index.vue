@@ -60,7 +60,13 @@ const props = defineProps<{
 const search = ref(props.filters?.search || '');
 const eventFilter = ref(props.filters?.event || '');
 const statusFilter = ref(props.filters?.status || '');
-const { t } = useI18n();
+const { t, locale } = useI18n();
+
+const translatePagination = (label: string) => {
+    if (label.toLowerCase().includes('previous')) return t('common.previous');
+    if (label.toLowerCase().includes('next')) return t('common.next');
+    return label;
+};
 
 let filterTimeout: ReturnType<typeof setTimeout> | null = null;
 const applyFilters = () => {
@@ -112,7 +118,7 @@ const ticketTypeColor = (type: string | null) => {
 };
 
 const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return new Date(dateString).toLocaleDateString(locale.value, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 
 // ── Create Reservation Modal ──
@@ -273,14 +279,14 @@ const cancelReservation = (reservation: ReservationData) => {
         <div class="px-4 py-8 md:px-8 space-y-8 max-w-[1400px] mx-auto">
 
             <!-- Page Header -->
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">{{ t('events.reservations') }}</h1>
-                    <p class="text-gray-500 dark:text-gray-400 mt-1">{{ t('events.reservationsDesc') }}</p>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                <div class="space-y-1">
+                    <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">{{ t('events.reservations') }}</h1>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('events.reservationsDesc') }}</p>
                 </div>
                 <button
                     @click="openCreateModal"
-                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-2xl shadow-lg shadow-indigo-500/20 transition-all active:scale-95"
+                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-2xl shadow-lg shadow-indigo-500/20 transition-all active:scale-95"
                 >
                     <Plus class="w-5 h-5" />
                     {{ t('events.addReservation') }}
@@ -288,70 +294,80 @@ const cancelReservation = (reservation: ReservationData) => {
             </div>
 
             <!-- Filters -->
-            <div class="relative z-20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-sm p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-neutral-800 flex flex-col md:flex-row gap-4 items-center">
-                <div class="flex-1 relative w-full">
-                    <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                        v-model="search"
-                        type="text"
-                        :placeholder="t('events.searchParticipant')"
-                        class="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm"
-                    >
+            <div class="relative z-20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-sm p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-neutral-800 grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                <div class="md:col-span-4 relative w-full space-y-1.5">
+                    <label class="text-[10px] uppercase font-bold text-gray-400 ps-1">{{ t('events.participant') }}</label>
+                    <div class="relative">
+                        <Search class="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                            v-model="search"
+                            type="text"
+                            :placeholder="t('events.searchParticipant')"
+                            class="w-full ps-9 pe-4 py-2.5 bg-gray-50/50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm"
+                        >
+                    </div>
                 </div>
-                <div class="flex-1 relative w-full">
-                    <Ticket class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                        v-model="eventFilter"
-                        type="text"
-                        :placeholder="t('events.filterByEventTitle')"
-                        class="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm"
-                    >
+                <div class="md:col-span-4 relative w-full space-y-1.5">
+                    <label class="text-[10px] uppercase font-bold text-gray-400 ps-1">{{ t('events.event') }}</label>
+                    <div class="relative">
+                        <Ticket class="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                            v-model="eventFilter"
+                            type="text"
+                            :placeholder="t('events.filterByEventTitle')"
+                            class="w-full ps-9 pe-4 py-2.5 bg-gray-50/50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm"
+                        >
+                    </div>
                 </div>
-                <select
-                    v-model="statusFilter"
-                    class="w-full md:w-48 px-4 py-2.5 bg-gray-50/50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm"
-                >
-                    <option value="">{{ t('events.allStatuses') }}</option>
-                    <option value="confirmed">{{ t('events.statusConfirmed') }}</option>
-                    <option value="pending">{{ t('events.statusPending') }}</option>
-                    <option value="cancelled">{{ t('events.statusCancelled') }}</option>
-                </select>
-                <button v-if="hasActiveFilters" @click="resetFilters" class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors whitespace-nowrap">
-                    <FilterX class="w-4 h-4" />
-                    {{ t('common.clear') }}
-                </button>
+                <div class="md:col-span-3 space-y-1.5">
+                    <label class="text-[10px] uppercase font-bold text-gray-400 ps-1">{{ t('events.status') }}</label>
+                    <select
+                        v-model="statusFilter"
+                        class="w-full px-4 py-2.5 bg-gray-50/50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm"
+                    >
+                        <option value="">{{ t('events.allStatuses') }}</option>
+                        <option value="confirmed">{{ t('events.statusConfirmed') }}</option>
+                        <option value="pending">{{ t('events.statusPending') }}</option>
+                        <option value="cancelled">{{ t('events.statusCancelled') }}</option>
+                    </select>
+                </div>
+                <div class="md:col-span-1 flex items-center justify-end">
+                    <button v-if="hasActiveFilters" @click="resetFilters" class="p-2.5 text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors" :title="t('common.clear')">
+                        <FilterX class="w-5 h-5" />
+                    </button>
+                </div>
             </div>
 
             <!-- Stats Summary -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="bg-white dark:bg-neutral-900 border border-gray-100 dark:border-neutral-800 rounded-2xl p-5 shadow-sm">
-                    <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">{{ t('events.totalReservations') }}</p>
-                    <p class="text-2xl font-extrabold text-gray-900 dark:text-white">{{ reservations?.total || 0 }}</p>
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-white dark:bg-neutral-900 border border-gray-100 dark:border-neutral-800 rounded-2xl p-4 md:p-5 shadow-sm">
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">{{ t('events.totalReservations') }}</p>
+                    <p class="text-xl md:text-2xl font-extrabold text-gray-900 dark:text-white">{{ reservations?.total || 0 }}</p>
                 </div>
-                <div class="bg-white dark:bg-neutral-900 border border-gray-100 dark:border-neutral-800 rounded-2xl p-5 shadow-sm">
-                    <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">{{ t('events.onThisPage') }}</p>
-                    <p class="text-2xl font-extrabold text-gray-900 dark:text-white">{{ reservations?.data?.length || 0 }}</p>
+                <div class="bg-white dark:bg-neutral-900 border border-gray-100 dark:border-neutral-800 rounded-2xl p-4 md:p-5 shadow-sm">
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">{{ t('events.onThisPage') }}</p>
+                    <p class="text-xl md:text-2xl font-extrabold text-gray-900 dark:text-white">{{ reservations?.data?.length || 0 }}</p>
                 </div>
-                <div class="bg-white dark:bg-neutral-900 border border-gray-100 dark:border-neutral-800 rounded-2xl p-5 shadow-sm">
-                    <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">{{ t('events.activeFilters') }}</p>
+                <div class="hidden lg:block bg-white dark:bg-neutral-900 border border-gray-100 dark:border-neutral-800 rounded-2xl p-5 shadow-sm">
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">{{ t('events.activeFilters') }}</p>
                     <p class="text-2xl font-extrabold text-gray-900 dark:text-white">{{ [search, eventFilter, statusFilter].filter(Boolean).length }}</p>
                 </div>
             </div>
 
             <!-- Reservations Table -->
             <div class="bg-white dark:bg-neutral-900 border border-gray-100 dark:border-neutral-800 rounded-3xl shadow-sm overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full">
+                <div class="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-neutral-800">
+                    <table class="w-full min-w-[1000px]">
                         <thead>
-                            <tr class="bg-gray-50/80 dark:bg-neutral-800/50">
-                                <th class="text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">{{ t('events.id') }}</th>
-                                <th class="text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">{{ t('events.participant') }}</th>
-                                <th class="text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">{{ t('events.event') }}</th>
-                                <th class="text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">{{ t('events.type') }}</th>
-                                <th class="text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">{{ t('events.ticketsLabel') }}</th>
-                                <th class="text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">{{ t('events.status') }}</th>
-                                <th class="text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">{{ t('events.date') }}</th>
-                                <th class="text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-6 py-4">{{ t('common.actions') }}</th>
+                            <tr class="bg-gray-50/80 dark:bg-neutral-800/50 border-b border-gray-100 dark:border-neutral-800">
+                                <th class="text-start text-[11px] font-bold text-gray-400 uppercase tracking-widest px-6 py-4">{{ t('events.id') }}</th>
+                                <th class="text-start text-[11px] font-bold text-gray-400 uppercase tracking-widest px-6 py-4">{{ t('events.participant') }}</th>
+                                <th class="text-start text-[11px] font-bold text-gray-400 uppercase tracking-widest px-6 py-4">{{ t('events.event') }}</th>
+                                <th class="text-start text-[11px] font-bold text-gray-400 uppercase tracking-widest px-6 py-4">{{ t('events.type') }}</th>
+                                <th class="text-center text-[11px] font-bold text-gray-400 uppercase tracking-widest px-6 py-4">{{ t('events.ticketsLabel') }}</th>
+                                <th class="text-center text-[11px] font-bold text-gray-400 uppercase tracking-widest px-6 py-4">{{ t('events.status') }}</th>
+                                <th class="text-start text-[11px] font-bold text-gray-400 uppercase tracking-widest px-6 py-4">{{ t('events.date') }}</th>
+                                <th class="text-center text-[11px] font-bold text-gray-400 uppercase tracking-widest px-6 py-4">{{ t('common.actions') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-neutral-800">
@@ -423,8 +439,8 @@ const cancelReservation = (reservation: ReservationData) => {
             <div v-if="reservations?.links && reservations.links.length > 3" class="flex justify-center mt-6 pb-20">
                 <div class="flex gap-2">
                     <template v-for="(link, p) in reservations.links" :key="p">
-                        <div v-if="link.url === null" class="px-4 py-2 border border-gray-200 dark:border-neutral-700 rounded-xl text-sm font-medium opacity-50 cursor-not-allowed bg-gray-50 dark:bg-neutral-800 text-gray-500 dark:text-gray-400" v-html="link.label"></div>
-                        <Link v-else :href="link.url" class="px-4 py-2 border rounded-xl text-sm font-medium transition" :class="[link.active ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-700']" v-html="link.label"></Link>
+                        <div v-if="link.url === null" class="px-4 py-2 border border-gray-200 dark:border-neutral-700 rounded-xl text-sm font-medium opacity-50 cursor-not-allowed bg-gray-50 dark:bg-neutral-800 text-gray-500 dark:text-gray-400" v-html="translatePagination(link.label)"></div>
+                        <Link v-else :href="link.url" class="px-4 py-2 border rounded-xl text-sm font-medium transition" :class="[link.active ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-700']" v-html="translatePagination(link.label)"></Link>
                     </template>
                 </div>
             </div>
@@ -468,16 +484,16 @@ const cancelReservation = (reservation: ReservationData) => {
                                         <X class="w-4 h-4" />
                                     </button>
                                 </div>
-                                <div v-else class="relative">
-                                    <Users class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <div class="relative">
+                                    <Users class="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                     <input
                                         v-model="userSearchQuery"
                                         type="text"
                                         :placeholder="t('events.searchByUsernameOrEmail')"
                                         @input="searchUsersForCreate"
-                                        class="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm"
+                                        class="w-full ps-10 pe-4 py-2.5 bg-gray-50/50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm"
                                     >
-                                    <div v-if="isSearchingUsers" class="absolute right-3 top-1/2 -translate-y-1/2">
+                                    <div v-if="isSearchingUsers" class="absolute end-3 top-1/2 -translate-y-1/2">
                                         <Loader2 class="w-4 h-4 text-gray-400 animate-spin" />
                                     </div>
                                     <div v-if="userSearchResults.length > 0" class="absolute z-50 w-full mt-1 bg-white dark:bg-neutral-800 border border-gray-100 dark:border-neutral-700 rounded-2xl shadow-xl max-h-48 overflow-y-auto">
@@ -520,16 +536,16 @@ const cancelReservation = (reservation: ReservationData) => {
                                         <X class="w-4 h-4" />
                                     </button>
                                 </div>
-                                <div v-else class="relative">
-                                    <Calendar class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <div class="relative">
+                                    <Calendar class="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                     <input
                                         v-model="eventSearchQuery"
                                         type="text"
                                         :placeholder="t('events.searchByEventTitle')"
                                         @input="searchEventsForCreate"
-                                        class="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm"
+                                        class="w-full ps-10 pe-4 py-2.5 bg-gray-50/50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm"
                                     >
-                                    <div v-if="isSearchingEvents" class="absolute right-3 top-1/2 -translate-y-1/2">
+                                    <div v-if="isSearchingEvents" class="absolute end-3 top-1/2 -translate-y-1/2">
                                         <Loader2 class="w-4 h-4 text-gray-400 animate-spin" />
                                     </div>
                                     <div v-if="eventSearchResults.length > 0" class="absolute z-50 w-full mt-1 bg-white dark:bg-neutral-800 border border-gray-100 dark:border-neutral-700 rounded-2xl shadow-xl max-h-48 overflow-y-auto">

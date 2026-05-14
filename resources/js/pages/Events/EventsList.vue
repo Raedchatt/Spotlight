@@ -214,7 +214,7 @@ const getStatusLabel = (statut: StatutEvenement) => {
                     <label class="text-sm font-medium">{{ t('events.category') }}</label>
                     <select v-model="filters.categorie" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                         <option value="all">{{ t('events.allCategories') }}</option>
-                        <option v-for="cat in categories" :key="cat.slug" :value="cat.slug">{{ cat.label }}</option>
+                        <option v-for="cat in categories" :key="cat.slug" :value="cat.slug">{{ t(`categories.${cat.slug}`) }}</option>
                     </select>
                 </div>
 
@@ -321,7 +321,7 @@ const getStatusLabel = (statut: StatutEvenement) => {
                             <div class="space-y-1">
                                 <h2 class="text-xl font-bold line-clamp-1 capitalize">{{ event.titre }}</h2>
                                 <Badge variant="outline" class="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                                    {{ event.categorie === 'autre' && event.categorie_autre ? event.categorie_autre : event.categorie }}
+                                    {{ event.categorie === 'autre' && event.categorie_autre ? event.categorie_autre : t(`categories.${event.categorie}`) }}
                                 </Badge>
                             </div>
 

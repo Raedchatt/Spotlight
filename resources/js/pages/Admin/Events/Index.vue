@@ -15,12 +15,18 @@ const props = defineProps({
     events: Object,
 });
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const processingEventId = ref<number | null>(null);
 
 const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fr-TN', { style: 'currency', currency: 'TND' }).format(amount);
+    return new Intl.NumberFormat(locale.value, { style: 'currency', currency: 'TND' }).format(amount);
+};
+
+const translatePagination = (label: string) => {
+    if (label.toLowerCase().includes('previous')) return t('common.previous');
+    if (label.toLowerCase().includes('next')) return t('common.next');
+    return label;
 };
 
 // Handle approve functionality
@@ -92,7 +98,7 @@ const handleReject = (id: number) => {
                             <div class="flex items-center gap-2">
                                 <Tag class="w-4 h-4 text-indigo-500" />
                                 <span class="capitalize">
-                                    {{ event.categorie === 'autre' && event.categorie_autre ? event.categorie_autre : event.categorie }}
+                                    {{ event.categorie === 'autre' && event.categorie_autre ? event.categorie_autre : t(`categories.${event.categorie.toLowerCase()}`) }}
                                 </span>
                             </div>
                             <div class="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold">
@@ -129,16 +135,16 @@ const handleReject = (id: number) => {
                 <div v-if="events.links && events.links.length > 3" class="flex justify-center mt-6">
                     <div class="flex gap-2">
                         <template v-for="(link, prevKey) in events.links" :key="prevKey">
-                            <component
-                                :is="link.url ? 'a' : 'span'"
-                                :href="link.url"
-                                class="px-4 py-2 border rounded-xl text-sm font-medium transition"
-                                :class="[
-                                    link.active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-700',
-                                    !link.url ? 'opacity-50 cursor-not-allowed hidden md:inline-block' : ''
-                                ]"
-                                
-                            />
+                                <component
+                                    :is="link.url ? 'a' : 'span'"
+                                    :href="link.url"
+                                    class="px-4 py-2 border rounded-xl text-sm font-medium transition"
+                                    :class="[
+                                        link.active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-700',
+                                        !link.url ? 'opacity-50 cursor-not-allowed hidden md:inline-block' : ''
+                                    ]"
+                                    v-html="translatePagination(link.label)"
+                                />
                         </template>
                     </div>
                 </div>

@@ -7,7 +7,6 @@ use App\Models\EventCollaborator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\StatutEvenement;
-use App\Enums\CategorieEvenement;
 use Illuminate\Validation\Rules\Enum;
 use App\Enums\TypeMedia;
 use App\Enums\TypeNotification;
@@ -260,7 +259,7 @@ class EvenementController extends Controller
             'lieu' => 'required|string',
             'prix_spectateur' => 'required|numeric',
             'capacite_spectateur' => 'required|integer',
-            'categorie' => ['required', new Enum(CategorieEvenement::class)],
+            'categorie' => 'required|string|max:255',
             'categorie_autre' => 'required_if:categorie,autre|nullable|string|max:255',
         ];
 
@@ -429,7 +428,7 @@ class EvenementController extends Controller
                 'lieu' => 'required|string',
                 'prix_spectateur' => 'required|numeric',
                 'capacite_spectateur' => 'required|integer',
-                'categorie' => ['required', new Enum(CategorieEvenement::class)],
+                'categorie' => 'required|string|max:255',
                 'categorie_autre' => 'required_if:categorie,autre|nullable|string|max:255',
                 'statut' => ['required', new Enum(StatutEvenement::class)],
                 'is_tournoi' => 'sometimes|boolean',
@@ -613,10 +612,16 @@ class EvenementController extends Controller
     // Search events
     public function search(Request $request)
     {
-        $query = Evenement::with('medias')
+        $query = Evenement::with(['medias', 'tournoi'])
             ->withCount('reservations')
             ->withSum(['reservations as total_tickets_reserved' => function($q) {
                 $q->whereIn('statut', ['confirmed', 'pending']);
+            }], 'nombre_tickets')
+            ->withSum(['reservations as spectator_tickets_reserved' => function($q) {
+                $q->whereIn('statut', ['confirmed', 'pending'])->where('ticket_type', 'spectator');
+            }], 'nombre_tickets')
+            ->withSum(['reservations as participant_tickets_reserved' => function($q) {
+                $q->whereIn('statut', ['confirmed', 'pending'])->where('ticket_type', 'participant');
             }], 'nombre_tickets');
 
         if ($request->has('organisateur_id')) {

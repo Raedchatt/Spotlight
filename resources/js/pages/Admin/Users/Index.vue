@@ -28,7 +28,7 @@ const isShowModalOpen = ref(false);
 const isBlockModalOpen = ref(false);
 const selectedUser = ref<any>(null);
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 // Form for Blocking
 const blockForm = useForm({
@@ -132,6 +132,7 @@ const getRoleBadgeColor = (role: string) => {
     switch (role) {
         case 'administrateur': return 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800/50';
         case 'organisateur': return 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800/50';
+        case 'revendeur': return 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800/50';
         default: return 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800/50';
     }
 };
@@ -140,13 +141,20 @@ const displayRole = (role: string) => {
     switch (role) {
         case 'administrateur': return t('events.roleAdmin');
         case 'organisateur': return t('events.roleOrganizer');
+        case 'revendeur': return t('events.roleRevendeur');
         default: return t('events.roleParticipant');
     }
+};
+
+const translatePagination = (label: string) => {
+    if (label.toLowerCase().includes('previous')) return t('common.previous');
+    if (label.toLowerCase().includes('next')) return t('common.next');
+    return label;
 };
 </script>
 
 <template>
-    <Head :title="t('events.userManagement')" />
+    <Head :title="t('events.manageUsers')" />
 
     <AppLayout>
         <div class="px-4 py-8 md:px-8 space-y-8 max-w-[1400px] mx-auto">
@@ -154,8 +162,8 @@ const displayRole = (role: string) => {
             <!-- Page Header -->
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">{{ t('events.userManagement') }}</h1>
-                    <p class="text-gray-500 dark:text-gray-400 mt-1">{{ t('events.userManagementDesc') }}</p>
+                    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">{{ t('events.manageUsers') }}</h1>
+                    <p class="text-gray-500 dark:text-gray-400 mt-1">{{ t('events.manageUsersDesc') }}</p>
                 </div>
                 
                 <Dialog v-model:open="isAddModalOpen">
@@ -196,6 +204,7 @@ const displayRole = (role: string) => {
                                 <select id="role" v-model="form.role" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" required>
                                     <option value="participant">{{ t('events.roleParticipant') }}</option>
                                     <option value="organisateur">{{ t('events.roleOrganizer') }}</option>
+                                    <option value="revendeur">{{ t('events.roleRevendeur') }}</option>
                                     <option value="administrateur">{{ t('events.roleAdmin') }}</option>
                                 </select>
                             </div>
@@ -214,14 +223,14 @@ const displayRole = (role: string) => {
             <!-- Users List Table -->
             <div class="bg-white/70 dark:bg-neutral-900/70 backdrop-blur-sm rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md hover:border-gray-200 dark:hover:border-neutral-700">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
+                    <table class="w-full text-sm text-start">
                         <thead class="text-[11px] text-gray-400 dark:text-gray-500 uppercase tracking-[0.1em] bg-gray-50/50 dark:bg-neutral-800/30 border-b border-gray-100 dark:border-neutral-800">
                             <tr>
-                                <th class="px-6 py-4 font-bold">{{ t('events.user') }}</th>
-                                <th class="px-6 py-4 font-bold">{{ t('events.contactInfo') }}</th>
-                                <th class="px-6 py-4 font-bold">{{ t('events.roleLabel') }}</th>
-                                <th class="px-6 py-4 font-bold">{{ t('events.joined') }}</th>
-                                <th class="px-6 py-4 font-bold text-right">{{ t('common.actions') }}</th>
+                                <th class="px-6 py-4 font-bold text-start">{{ t('events.user') }}</th>
+                                <th class="px-6 py-4 font-bold text-start">{{ t('events.contactInfo') }}</th>
+                                <th class="px-6 py-4 font-bold text-start">{{ t('events.roleLabel') }}</th>
+                                <th class="px-6 py-4 font-bold text-start">{{ t('events.joined') }}</th>
+                                <th class="px-6 py-4 font-bold text-end">{{ t('common.actions') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50 dark:divide-neutral-800/50">
@@ -246,20 +255,20 @@ const displayRole = (role: string) => {
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-gray-500 dark:text-gray-400 text-sm">
-                                    {{ new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) }}
+                                    {{ new Date(user.created_at).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' }) }}
                                 </td>
-                                <td class="px-6 py-4 text-right">
+                                <td class="px-6 py-4 text-end">
                                     <div class="flex items-center justify-end gap-1">
-                                        <button @click="openShowModal(user)" class="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="View Details">
+                                        <button @click="openShowModal(user)" class="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 rounded-lg transition-colors" :title="t('common.view')">
                                             <Eye class="w-4 h-4" />
                                         </button>
-                                        <button @click="openEditModal(user)" class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-neutral-700/50 rounded-lg transition-colors" title="Edit User">
+                                        <button @click="openEditModal(user)" class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-neutral-700/50 rounded-lg transition-colors" :title="t('common.edit')">
                                             <Edit class="w-4 h-4" />
                                         </button>
-                                        <button @click="openBlockModal(user)" class="p-2 text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20 rounded-lg transition-colors" title="Block User">
+                                        <button @click="openBlockModal(user)" class="p-2 text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20 rounded-lg transition-colors" :title="t('events.blockUser')">
                                             <ShieldBan class="w-4 h-4" />
                                         </button>
-                                        <button @click="confirmDelete(user)" class="p-2 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-900/20 rounded-lg transition-colors" title="Delete User">
+                                        <button @click="confirmDelete(user)" class="p-2 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-900/20 rounded-lg transition-colors" :title="t('events.deleteUser')">
                                             <Trash2 class="w-4 h-4" />
                                         </button>
                                     </div>
@@ -274,8 +283,8 @@ const displayRole = (role: string) => {
             <div v-if="users?.links && users?.links.length > 3" class="flex justify-center mt-6">
                 <div class="flex gap-2">
                     <template v-for="(link, p) in users.links" :key="p">
-                        <div v-if="link.url === null" class="px-4 py-2 border border-gray-200 dark:border-neutral-700 rounded-xl text-sm font-medium opacity-50 cursor-not-allowed bg-gray-50 dark:bg-neutral-800 text-gray-500 dark:text-gray-400" v-html="link.label"></div>
-                        <Link v-else :href="link.url" class="px-4 py-2 border rounded-xl text-sm font-medium transition" :class="[link.active ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-700']" v-html="link.label"></Link>
+                        <div v-if="link.url === null" class="px-4 py-2 border border-gray-200 dark:border-neutral-700 rounded-xl text-sm font-medium opacity-50 cursor-not-allowed bg-gray-50 dark:bg-neutral-800 text-gray-500 dark:text-gray-400" v-html="translatePagination(link.label)"></div>
+                        <Link v-else :href="link.url" class="px-4 py-2 border rounded-xl text-sm font-medium transition" :class="[link.active ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-700']" v-html="translatePagination(link.label)"></Link>
                     </template>
                 </div>
             </div>
@@ -314,6 +323,7 @@ const displayRole = (role: string) => {
                         <select id="edit_role" v-model="editForm.role" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white" required>
                             <option value="participant">{{ t('events.roleParticipant') }}</option>
                             <option value="organisateur">{{ t('events.roleOrganizer') }}</option>
+                            <option value="revendeur">{{ t('events.roleRevendeur') }}</option>
                             <option value="administrateur">{{ t('events.roleAdmin') }}</option>
                         </select>
                     </div>
@@ -360,7 +370,7 @@ const displayRole = (role: string) => {
                             <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-bold mb-1">{{ t('events.memberSince') }}</p>
                             <p class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                                 <CheckCircle class="w-4 h-4 text-emerald-500" />
-                                {{ new Date(selectedUser.created_at).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}
+                                {{ new Date(selectedUser.created_at).toLocaleDateString(locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}
                             </p>
                         </div>
                     </div>

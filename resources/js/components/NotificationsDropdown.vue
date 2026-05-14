@@ -4,6 +4,7 @@ import axios from 'axios';
 import { toast } from 'vue-sonner';
 import { Bell, CalendarPlus, CalendarX, Pencil, Trash2, Users, UserCheck, UserX, Check, CheckCheck, Ticket } from 'lucide-vue-next';
 import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Badge from '@/components/ui/badge/Badge.vue';
 import {
     DropdownMenu,
@@ -33,6 +34,7 @@ const props = defineProps<{
 const notifications = ref<Notification[]>([]);
 const loading = ref(true);
 const unreadNotificationsCount = ref(0);
+const { t } = useI18n();
 
 const unreadCount = computed(() => unreadNotificationsCount.value);
 
@@ -61,10 +63,10 @@ const timeAgo = (dateStr: string) => {
     const diffHour = Math.floor(diffMin / 60);
     const diffDay = Math.floor(diffHour / 24);
 
-    if (diffSec < 60) return 'Just now';
-    if (diffMin < 60) return `${diffMin}m ago`;
-    if (diffHour < 24) return `${diffHour}h ago`;
-    if (diffDay < 7) return `${diffDay}d ago`;
+    if (diffSec < 60) return t('notifications.justNow');
+    if (diffMin < 60) return t('notifications.minutesAgo', { n: diffMin });
+    if (diffHour < 24) return t('notifications.hoursAgo', { n: diffHour });
+    if (diffDay < 7) return t('notifications.daysAgo', { n: diffDay });
     return date.toLocaleDateString();
 };
 
@@ -75,7 +77,7 @@ const fetchNotifications = async () => {
         unreadNotificationsCount.value = notifications.value.filter(n => !n.lu).length;
     } catch (error) {
         console.error('Error fetching notifications:', error);
-        toast.error('Failed to load notifications.');
+        toast.error(t('notifications.failedToLoad'));
     } finally {
         loading.value = false;
     }
@@ -91,7 +93,7 @@ const markAsRead = async (notification: Notification) => {
         }
     } catch (error) {
         console.error('Error marking notification as read:', error);
-        toast.error('Failed to mark notification as read.');
+        toast.error(t('notifications.failedToMarkRead'));
     }
 };
 
@@ -102,7 +104,7 @@ const markAllAsRead = async () => {
         unreadNotificationsCount.value = 0;
     } catch (error) {
         console.error('Error marking all as read:', error);
-        toast.error('Failed to mark all as read.');
+        toast.error(t('notifications.failedToMarkAllRead'));
     }
 };
 
@@ -137,7 +139,7 @@ onMounted(() => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" class="w-96 p-0 overflow-hidden rounded-2xl shadow-2xl border-neutral-200 dark:border-neutral-800">
             <DropdownMenuLabel class="p-4 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-900/50">
-                <span class="text-base font-bold">Notifications</span>
+                <span class="text-base font-bold">{{ t('notifications.title') }}</span>
                 <div class="flex items-center gap-3">
                     <button 
                         v-if="unreadCount > 0"
@@ -145,13 +147,13 @@ onMounted(() => {
                         class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium flex items-center gap-1 transition-colors"
                     >
                         <CheckCheck class="h-3.5 w-3.5" />
-                        Mark all read
+                        {{ t('notifications.markAllRead') }}
                     </button>
                     <Link 
                         href="/notifications" 
                         class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
                     >
-                        See all
+                        {{ t('notifications.seeAll') }}
                     </Link>
                 </div>
             </DropdownMenuLabel>
@@ -225,8 +227,8 @@ onMounted(() => {
                     <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-neutral-400 mb-3">
                         <Bell class="w-7 h-7" />
                     </div>
-                    <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">No notifications yet</p>
-                    <p class="text-xs text-neutral-400 dark:text-neutral-600 mt-1">You're all caught up!</p>
+                    <p class="text-sm font-medium text-neutral-500 dark:text-neutral-400">{{ t('notifications.noNotificationsYet') }}</p>
+                    <p class="text-xs text-neutral-400 dark:text-neutral-600 mt-1">{{ t('notifications.allCaughtUp') }}</p>
                 </div>
             </div>
 
@@ -236,7 +238,7 @@ onMounted(() => {
                     href="/notifications" 
                     class="text-xs font-bold text-neutral-900 dark:text-white hover:underline uppercase tracking-wider"
                 >
-                    View All Notifications
+                    {{ t('notifications.viewAll') }}
                 </Link>
             </div>
         </DropdownMenuContent>

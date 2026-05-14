@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\CategorieEvenement;
 use App\Enums\StatutEvenement;
 use App\Models\EventCollaborator;
 use Illuminate\Database\Eloquent\Builder;
@@ -24,6 +23,7 @@ class Evenement extends Model
         'prix_spectateur',
         'capacite_spectateur',
         'statut',
+        'is_reminder_sent',
         'is_paid_out',
         'paid_out_at',
         'categorie',
@@ -52,9 +52,9 @@ class Evenement extends Model
             'prix_spectateur' => 'double',
             'capacite_spectateur' => 'integer',
             'statut' => StatutEvenement::class,
+            'is_reminder_sent' => 'boolean',
             'is_paid_out' => 'boolean',
             'paid_out_at' => 'datetime',
-            'categorie' => CategorieEvenement::class,
             'is_tournoi' => 'boolean',
             'type_tournoi' => 'string',
             'prix_participant' => 'decimal:2',
@@ -196,7 +196,7 @@ class Evenement extends Model
     /**
      * Scope: chercherEvenementParCategorie
      */
-    public function scopeParCategorie(Builder $query, CategorieEvenement|string $categorie): Builder
+    public function scopeParCategorie(Builder $query, string $categorie): Builder
     {
         return $query->where('categorie', $categorie);
     }

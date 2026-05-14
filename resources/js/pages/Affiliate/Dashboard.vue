@@ -2,6 +2,8 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { ref, watch } from 'vue';
+import axios from 'axios';
+import { toast } from 'vue-sonner';
 import { 
     Wallet, 
     TrendingUp, 
@@ -14,7 +16,11 @@ import {
     User,
     ChevronRight,
     ArrowUpRight,
-    Award
+    Award,
+    CreditCard,
+    AlertCircle,
+    Check,
+    ExternalLink
 } from 'lucide-vue-next';
 import { Input } from '@/components/ui/input';
 import AffiliateGuide from './AffiliateGuide.vue';
@@ -33,7 +39,25 @@ const props = defineProps<{
         name?: string;
         category?: string;
     };
+    stripe_account_id?: string | null;
 }>();
+
+const connectingStripe = ref(false);
+
+const connectStripe = async () => {
+    connectingStripe.value = true;
+    try {
+        const response = await axios.post('/web-api/stripe/connect');
+        if (response.data.url) {
+            window.location.href = response.data.url;
+        }
+    } catch (error: any) {
+        console.error('Stripe Connect error:', error);
+        toast.error(error.response?.data?.error || 'Failed to initialize Stripe connection.');
+    } finally {
+        connectingStripe.value = false;
+    }
+};
 
 const nameFilter = ref(props.filters.name || '');
 const categoryFilter = ref(props.filters.category || 'all');
@@ -97,6 +121,38 @@ const showGuideModal = ref(false);
                     </div>
                 </div>
             </div>
+            <!-- Stripe Connect Banner -->
+            <div v-if="!stripe_account_id" class="p-6 rounded-3xl bg-gradient-to-r from-rose-50 to-amber-50 dark:from-rose-900/20 dark:to-amber-900/20 border border-rose-200 dark:border-rose-800/50 shadow-sm">
+                <div class="flex flex-col md:flex-row items-start md:items-center gap-4">
+                    <div class="w-14 h-14 rounded-2xl bg-rose-100 dark:bg-rose-800/40 flex items-center justify-center shrink-0">
+                        <CreditCard class="w-7 h-7 text-rose-600 dark:text-rose-400" />
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-lg font-bold text-rose-900 dark:text-rose-200">Connect Your Stripe Account</h3>
+                        <p class="text-sm text-rose-700 dark:text-rose-300/70 mt-1">You must connect a Stripe account to receive your commission payouts. Without it, pending commissions cannot be transferred to you.</p>
+                    </div>
+                    <button
+                        @click="connectStripe"
+                        :disabled="connectingStripe"
+                        class="shrink-0 px-6 py-3 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold rounded-xl flex items-center gap-2 transition shadow-lg shadow-rose-500/20"
+                    >
+                        <ExternalLink v-if="!connectingStripe" class="w-4 h-4" />
+                        {{ connectingStripe ? 'Connecting...' : 'Connect Stripe Now' }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stripe Connected Success -->
+            <div v-else class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-800/50 flex items-center justify-center">
+                    <Check class="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div>
+                    <h4 class="font-bold text-emerald-900 dark:text-emerald-300 text-sm">Stripe Account Connected</h4>
+                    <p class="text-xs text-emerald-700 dark:text-emerald-400 font-mono">{{ stripe_account_id }}</p>
+                </div>
+            </div>
+
             <!-- Stats Row -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ">
                 <!-- Total Earnings -->

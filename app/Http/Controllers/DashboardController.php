@@ -70,7 +70,7 @@ class DashboardController extends Controller
 
         $categoryBreakdown = $categoryCounts->map(function($cat) use ($totalEventsCount) {
              return [
-                 'category' => $cat->categorie instanceof \App\Enums\CategorieEvenement ? $cat->categorie->value : $cat->categorie,
+                 'category' => $cat->categorie,
                  'count'    => $cat->count,
                  'percent'  => $totalEventsCount > 0 ? round(($cat->count / $totalEventsCount) * 100) : 0
              ];
@@ -92,7 +92,7 @@ class DashboardController extends Controller
                 return [
                     'id'        => $event->id,
                     'titre'     => $event->titre,
-                    'categorie' => $event->categorie instanceof \App\Enums\CategorieEvenement ? $event->categorie->value : $event->categorie,
+                    'categorie' => $event->categorie,
                     'lieu'      => $event->lieu,
                     'statut'    => $event->statut instanceof \App\Enums\StatutEvenement ? $event->statut->value : $event->statut,
                     'revenue'   => round($organizerCut, 2),

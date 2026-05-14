@@ -84,12 +84,13 @@ class AffiliateDashboardController extends Controller
             ];
         });
 
-        return Inertia::render('Affiliate/Dashboard', [
+        return Inertia::render('affiliate/Dashboard', [
             'stats' => $stats,
             'commissions' => $commissions,
             'referrals' => $referrals,
             'filters' => $request->only(['name', 'category']),
             'referral_code' => $revendeur->referral_code,
+            'stripe_account_id' => $revendeur->stripe_account_id,
         ]);
     }
 }

@@ -18,6 +18,7 @@ import {
     Ticket,
 } from 'lucide-vue-next';
 import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,10 +27,12 @@ import AppLayout from '@/layouts/AppLayout.vue';
 const page = usePage();
 const authUser = computed(() => page.props.auth?.user as any);
 
-const breadcrumbs = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Notifications', href: '/notifications' },
-];
+const { t, locale: currentLocale } = useI18n();
+
+const breadcrumbs = computed(() => [
+    { title: t('events.dashboard'), href: '/dashboard' },
+    { title: t('notifications.title'), href: '/notifications' },
+]);
 
 interface Notification {
     id: number;
@@ -53,19 +56,19 @@ const filteredNotifications = computed(() => {
     return notifications.value;
 });
 
-const typeConfig: Record<string, { icon: any; color: string; bg: string; label: string }> = {
-    evenement_cree: { icon: CalendarPlus, color: 'text-emerald-500', bg: 'bg-emerald-500/10', label: 'Event Created' },
-    evenement_modifie: { icon: Pencil, color: 'text-amber-500', bg: 'bg-amber-500/10', label: 'Event Modified' },
-    evenement_supprime: { icon: Trash2, color: 'text-red-500', bg: 'bg-red-500/10', label: 'Event Deleted' },
-    reservation_cree: { icon: Ticket, color: 'text-teal-500', bg: 'bg-teal-500/10', label: 'New Reservation' },
-    reservation_annulee: { icon: CalendarX, color: 'text-rose-500', bg: 'bg-rose-500/10', label: 'Reservation Cancelled' },
-    invitation_collaboration: { icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10', label: 'Collaboration Invite' },
-    collaboration_acceptee: { icon: UserCheck, color: 'text-violet-500', bg: 'bg-violet-500/10', label: 'Collaboration Accepted' },
-    collaboration_rejected: { icon: UserX, color: 'text-red-500', bg: 'bg-red-500/10', label: 'Collaboration Rejected' },
+const typeConfig: Record<string, { icon: any; color: string; bg: string; labelKey: string }> = {
+    evenement_cree: { icon: CalendarPlus, color: 'text-emerald-500', bg: 'bg-emerald-500/10', labelKey: 'notifications.type_evenement_cree' },
+    evenement_modifie: { icon: Pencil, color: 'text-amber-500', bg: 'bg-amber-500/10', labelKey: 'notifications.type_evenement_modifie' },
+    evenement_supprime: { icon: Trash2, color: 'text-red-500', bg: 'bg-red-500/10', labelKey: 'notifications.type_evenement_supprime' },
+    reservation_cree: { icon: Ticket, color: 'text-teal-500', bg: 'bg-teal-500/10', labelKey: 'notifications.type_reservation_cree' },
+    reservation_annulee: { icon: CalendarX, color: 'text-rose-500', bg: 'bg-rose-500/10', labelKey: 'notifications.type_reservation_annulee' },
+    invitation_collaboration: { icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10', labelKey: 'notifications.type_invitation_collaboration' },
+    collaboration_acceptee: { icon: UserCheck, color: 'text-violet-500', bg: 'bg-violet-500/10', labelKey: 'notifications.type_collaboration_acceptee' },
+    collaboration_rejected: { icon: UserX, color: 'text-red-500', bg: 'bg-red-500/10', labelKey: 'notifications.type_collaboration_rejected' },
 };
 
 const getTypeConfig = (type: string) => {
-    return typeConfig[type] || { icon: Bell, color: 'text-neutral-500', bg: 'bg-neutral-500/10', label: 'Notification' };
+    return typeConfig[type] || { icon: Bell, color: 'text-neutral-500', bg: 'bg-neutral-500/10', labelKey: 'notifications.type_default' };
 };
 
 const timeAgo = (dateStr: string) => {
@@ -78,16 +81,16 @@ const timeAgo = (dateStr: string) => {
     const diffHour = Math.floor(diffMin / 60);
     const diffDay = Math.floor(diffHour / 24);
 
-    if (diffSec < 60) return 'Just now';
-    if (diffMin < 60) return `${diffMin}m ago`;
-    if (diffHour < 24) return `${diffHour}h ago`;
-    if (diffDay < 7) return `${diffDay}d ago`;
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    if (diffSec < 60) return t('notifications.justNow');
+    if (diffMin < 60) return t('notifications.minutesAgo', { n: diffMin });
+    if (diffHour < 24) return t('notifications.hoursAgo', { n: diffHour });
+    if (diffDay < 7) return t('notifications.daysAgo', { n: diffDay });
+    return date.toLocaleDateString(currentLocale.value, { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
 const formatDate = (dateStr: string) => {
     if (!dateStr) return '';
-    return new Date(dateStr).toLocaleDateString('en-US', {
+    return new Date(dateStr).toLocaleDateString(currentLocale.value, {
         weekday: 'short',
         month: 'short',
         day: 'numeric',
@@ -103,7 +106,7 @@ const fetchNotifications = async () => {
         notifications.value = response.data;
     } catch (error) {
         console.error('Error fetching notifications:', error);
-        toast.error('Failed to load notifications.');
+        toast.error(t('notifications.failedToLoad'));
     } finally {
         loading.value = false;
     }
@@ -116,7 +119,7 @@ const markAsRead = async (notification: Notification) => {
         notification.lu = true;
     } catch (error) {
         console.error('Error marking notification as read:', error);
-        toast.error('Failed to mark notification as read.');
+        toast.error(t('notifications.failedToMarkRead'));
     }
 };
 
@@ -126,10 +129,10 @@ const markAllAsRead = async () => {
     try {
         await axios.patch('/web-api/notifications/read-all');
         notifications.value.forEach(n => n.lu = true);
-        toast.success('All notifications marked as read.');
+        toast.success(t('notifications.allMarkedRead'));
     } catch (error) {
         console.error('Error marking all as read:', error);
-        toast.error('Failed to mark all notifications as read.');
+        toast.error(t('notifications.failedToMarkAllRead'));
     }
 };
 
@@ -146,20 +149,20 @@ onMounted(() => {
 </script>
 
 <template>
-    <Head title="Notifications - Spotlight" />
+    <Head :title="t('notifications.title') + ' - Spotlight'" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6 space-y-6 max-w-4xl mx-auto w-full">
             <!-- Header -->
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <div>
-                    <h1 class="text-3xl font-bold tracking-tight">Notifications</h1>
-                    <p class="text-muted-foreground mt-1">Stay up to date with your events and reservations.</p>
+                    <h1 class="text-3xl font-bold tracking-tight">{{ t('notifications.title') }}</h1>
+                    <p class="text-muted-foreground mt-1">{{ t('notifications.subtitle') }}</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <Badge variant="secondary" class="h-8 px-3 flex items-center gap-2">
                         <Bell class="w-4 h-4" />
-                        <span>{{ unreadCount }} unread</span>
+                        <span>{{ unreadCount }} {{ t('notifications.unread') }}</span>
                     </Badge>
                     <Button
                         v-if="unreadCount > 0"
@@ -169,7 +172,7 @@ onMounted(() => {
                         class="flex items-center gap-1.5"
                     >
                         <CheckCheck class="w-4 h-4" />
-                        Mark all read
+                        {{ t('notifications.markAllRead') }}
                     </Button>
                 </div>
             </div>
@@ -185,7 +188,7 @@ onMounted(() => {
                         ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white shadow-sm'
                         : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'"
                 >
-                    {{ filter }}
+                    {{ t(`notifications.${filter === 'all' ? 'all' : filter === 'unread' ? 'unreadFilter' : 'readFilter'}`) }}
                     <span
                         v-if="filter === 'unread' && unreadCount > 0"
                         class="ml-1.5 inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 text-[10px] font-bold bg-blue-600 text-white rounded-full"
@@ -220,10 +223,10 @@ onMounted(() => {
                     <Inbox class="w-8 h-8 text-muted-foreground" />
                 </div>
                 <h3 class="text-lg font-semibold">
-                    {{ activeFilter === 'all' ? 'No notifications yet' : activeFilter === 'unread' ? 'All caught up!' : 'No read notifications' }}
+                    {{ activeFilter === 'all' ? t('notifications.noNotifications') : activeFilter === 'unread' ? t('notifications.allCaughtUp') : t('notifications.noReadNotifications') }}
                 </h3>
                 <p class="text-muted-foreground mt-1 text-sm">
-                    {{ activeFilter === 'all' ? "You'll be notified when something happens." : activeFilter === 'unread' ? "You've read all your notifications." : 'Notifications you read will appear here.' }}
+                    {{ activeFilter === 'all' ? t('notifications.noNotificationsDesc') : activeFilter === 'unread' ? t('notifications.allCaughtUpDesc') : t('notifications.noReadNotificationsDesc') }}
                 </p>
             </div>
 
@@ -254,7 +257,7 @@ onMounted(() => {
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 mb-1">
                             <Badge variant="outline" class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5">
-                                {{ getTypeConfig(notif.type).label }}
+                                {{ t(getTypeConfig(notif.type).labelKey) }}
                             </Badge>
                         </div>
                         <p
@@ -285,6 +288,7 @@ onMounted(() => {
                 </div>
 
             </div>
+
         </div>
     </AppLayout>
 </template>

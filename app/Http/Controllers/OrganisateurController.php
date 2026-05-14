@@ -8,12 +8,10 @@ use App\Models\Organisateur;
 use App\Models\Evenement;
 use App\Models\Reservation;
 use App\Enums\StatutEvenement;
-use App\Enums\CategorieEvenement;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rules\Enum;
 use Inertia\Inertia;
 use App\Services\NotificationService;
 // use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
@@ -191,7 +189,7 @@ class OrganisateurController extends Controller
             'lieu' => 'required|string',
             'prix_spectateur' => 'required|numeric|min:0',
             'capacite_spectateur' => 'required|integer|min:1',
-            'categorie' => ['required', new Enum(CategorieEvenement::class)],
+            'categorie' => 'required|string|max:255',
         ]);
 
         $event = Evenement::create([
@@ -240,7 +238,7 @@ class OrganisateurController extends Controller
             'lieu' => 'sometimes|required|string',
             'prix_spectateur' => 'sometimes|required|numeric|min:0',
             'capacite_spectateur' => 'sometimes|required|integer|min:1',
-            'categorie' => ['sometimes', 'required', new Enum(CategorieEvenement::class)],
+            'categorie' => 'sometimes|required|string|max:255',
         ]);
 
         $evenement->update($request->all());
@@ -358,7 +356,7 @@ class OrganisateurController extends Controller
 
         $categoryBreakdown = [];
         if ($totalEvents > 0) {
-            $grouped = $events->groupBy(fn($e) => $e->categorie instanceof CategorieEvenement ? $e->categorie->value : $e->categorie);
+            $grouped = $events->groupBy(fn($e) => $e->categorie);
             foreach ($grouped as $cat => $catEvents) {
                 $categoryBreakdown[] = [
                     'category' => $cat,
@@ -387,7 +385,7 @@ class OrganisateurController extends Controller
                 return [
                     'id'       => $event->id,
                     'titre'    => $event->titre,
-                    'categorie'=> $event->categorie instanceof CategorieEvenement ? $event->categorie->value : $event->categorie,
+                    'categorie'=> $event->categorie,
                     'lieu'     => $event->lieu,
                     'statut'   => $event->statut instanceof StatutEvenement ? $event->statut->value : $event->statut,
                     'revenue'  => round($eventRevenue, 2),

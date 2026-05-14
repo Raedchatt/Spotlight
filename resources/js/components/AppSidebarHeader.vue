@@ -5,6 +5,7 @@ import type { BreadcrumbItem } from '@/types';
 import { useUnreadCounts } from '@/composables/useUnreadCounts';
 import Badge from '@/components/ui/badge/Badge.vue';
 import AppearanceTabs from '@/components/AppearanceTabs.vue';
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 
 const { totalUnreadCount } = useUnreadCounts();
 
@@ -41,8 +42,10 @@ withDefaults(
             </template>
         </div>
 
-        <!-- Appearance Switcher -->
-        <div class="flex items-center gap-4">
+        <!-- Global Switchers -->
+        <div class="flex items-center gap-3">
+            <LanguageSwitcher />
+            <div class="h-4 w-[1px] bg-gray-200 dark:bg-neutral-800 mx-1"></div>
             <AppearanceTabs />
         </div>
     </header>

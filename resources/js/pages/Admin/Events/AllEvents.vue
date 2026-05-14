@@ -306,12 +306,12 @@ const submitCreateEvent = async () => {
             <!-- Filters -->
             <div class="relative z-20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-sm p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-neutral-800 flex flex-col md:flex-row gap-4 items-center">
                 <div class="flex-1 relative w-full">
-                    <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Search class="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input 
                         v-model="search" 
                         type="text" 
                         :placeholder="t('events.searchByTitle')"
-                        class="w-full pl-10 pr-4 py-2 bg-gray-50/50 dark:bg-neutral-800/50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white"
+                        class="w-full ps-10 pe-4 py-2 bg-gray-50/50 dark:bg-neutral-800/50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white"
                     >
                 </div>
                 
@@ -319,13 +319,13 @@ const submitCreateEvent = async () => {
                     <select v-model="category" class="w-full px-4 py-2 bg-gray-50/50 dark:bg-neutral-800/50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white appearance-none cursor-pointer">
                         <option value="">{{ t('events.categories') }}</option>
                         <option v-for="cat in (categories as CategoryItem[])" :key="cat.id" :value="cat.label.toLowerCase()">
-                            {{ cat.label }}
+                            {{ t(`categories.${cat.label.toLowerCase()}`) }}
                         </option>
                     </select>
                 </div>
                 
                 <div class="w-full md:w-72 relative">
-                    <Building class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Building class="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input 
                         v-model="organizer" 
                         type="text" 
@@ -333,12 +333,12 @@ const submitCreateEvent = async () => {
                         @input="searchOrganizers"
                         @focus="showSuggestions = organizerSuggestions.length > 0"
                         @blur="closeSuggestions"
-                        class="w-full pl-10 pr-10 py-2 bg-gray-50/50 dark:bg-neutral-800/50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white"
+                        class="w-full ps-10 pe-10 py-2 bg-gray-50/50 dark:bg-neutral-800/50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white"
                     >
-                    <div v-if="isSearchingOrganizers" class="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div v-if="isSearchingOrganizers" class="absolute end-3 top-1/2 -translate-y-1/2">
                         <Loader2 class="w-4 h-4 text-gray-400 animate-spin" />
                     </div>
-                    <button v-else-if="organizer" @click="organizer = ''; fetchEvents()" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    <button v-else-if="organizer" @click="organizer = ''; fetchEvents()" class="absolute end-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                         <X class="w-4 h-4" />
                     </button>
 
@@ -367,14 +367,14 @@ const submitCreateEvent = async () => {
             <!-- Table -->
             <div class="bg-white/70 dark:bg-neutral-900/70 backdrop-blur-sm rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-sm overflow-hidden min-h-[400px]">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
+                    <table class="w-full text-sm text-start">
                         <thead class="text-[11px] text-gray-400 dark:text-gray-500 uppercase tracking-widest bg-gray-50/50 dark:bg-neutral-800/30 border-b border-gray-100 dark:border-neutral-800">
                             <tr>
-                                <th class="px-6 py-4 font-black">{{ t('events.event') }}</th>
-                                <th class="px-6 py-4 font-black">{{ t('events.organizer') }}</th>
+                                <th class="px-6 py-4 font-black text-start">{{ t('events.event') }}</th>
+                                <th class="px-6 py-4 font-black text-start">{{ t('events.organizer') }}</th>
                                 <th class="px-6 py-4 font-black text-center">{{ t('events.category') }}</th>
                                 <th class="px-6 py-4 font-black text-center">{{ t('events.status') }}</th>
-                                <th class="px-6 py-4 font-black text-right">{{ t('common.actions') }}</th>
+                                <th class="px-6 py-4 font-black text-end">{{ t('common.actions') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50 dark:divide-neutral-800/30">
@@ -407,7 +407,7 @@ const submitCreateEvent = async () => {
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <span class="px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-lg bg-gray-50 dark:bg-neutral-800/50 text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-neutral-700">
-                                        {{ event.categorie === 'autre' ? event.categorie_autre : event.categorie }}
+                                        {{ event.categorie === 'autre' ? event.categorie_autre : t(`categories.${event.categorie.toLowerCase()}`) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
@@ -415,7 +415,7 @@ const submitCreateEvent = async () => {
                                         {{ t(`events.status_${event.statut}`).toUpperCase() }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-right">
+                                <td class="px-6 py-4 text-end">
                                     <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <Link :href="`/events/${event.id}`" target="_blank" class="p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="View Public Page">
                                             <Eye class="w-4 h-4" />
@@ -495,16 +495,16 @@ const submitCreateEvent = async () => {
                                         <X class="w-4 h-4" />
                                     </button>
                                 </div>
-                                <div v-else class="relative">
-                                    <Building class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <div class="relative">
+                                    <Building class="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                     <input 
                                         v-model="orgSearchQuery" 
                                         type="text" 
                                         :placeholder="t('events.searchOrganizersByName')"
                                         @input="searchOrgForCreate"
-                                        class="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm"
+                                        class="w-full ps-10 pe-4 py-2.5 bg-gray-50/50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm"
                                     >
-                                    <div v-if="isSearchingOrg" class="absolute right-3 top-1/2 -translate-y-1/2">
+                                    <div v-if="isSearchingOrg" class="absolute end-3 top-1/2 -translate-y-1/2">
                                         <Loader2 class="w-4 h-4 text-gray-400 animate-spin" />
                                     </div>
                                     <div v-if="orgSearchResults.length > 0" class="absolute z-50 w-full mt-1 bg-white dark:bg-neutral-800 border border-gray-100 dark:border-neutral-700 rounded-2xl shadow-xl max-h-48 overflow-y-auto">
@@ -554,8 +554,8 @@ const submitCreateEvent = async () => {
                                 <div class="space-y-1.5">
                                     <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('events.location') }} *</label>
                                     <div class="relative">
-                                        <MapPin class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                        <input v-model="newEvent.lieu" type="text" :placeholder="t('events.eventVenueAddress')" class="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
+                                        <MapPin class="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <input v-model="newEvent.lieu" type="text" :placeholder="t('events.eventVenueAddress')" class="w-full ps-10 pe-4 py-2.5 border border-gray-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500" />
                                     </div>
                                     <p v-if="createErrors.lieu" class="text-xs text-red-500">{{ createErrors.lieu[0] }}</p>
                                 </div>

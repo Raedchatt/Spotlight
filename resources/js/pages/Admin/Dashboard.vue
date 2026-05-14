@@ -41,10 +41,10 @@ const filteredEvents = computed(() => {
     );
 });
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fr-TN', { style: 'currency', currency: 'TND' }).format(amount);
+    return new Intl.NumberFormat(locale.value, { style: 'currency', currency: 'TND' }).format(amount);
 };
 </script>
 
@@ -142,12 +142,12 @@ const formatCurrency = (amount: number) => {
                 <div class="px-6 py-5 border-b border-gray-100 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ t('events.recentEventsPerformance') }}</h3>
                     <div class="relative max-w-sm w-full">
-                        <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Search class="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <input 
                             v-model="searchQuery"
                             type="text" 
                             :placeholder="t('events.searchEventsOrOrgs')" 
-                            class="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-neutral-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500"
+                            class="w-full ps-10 pe-4 py-2 bg-gray-50 dark:bg-neutral-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500"
                         />
                     </div>
                 </div>
@@ -156,12 +156,12 @@ const formatCurrency = (amount: number) => {
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="text-gray-400 dark:text-gray-500 text-xs uppercase tracking-widest font-bold">
-                                <th class="px-6 py-4 text-left">{{ t('events.event') }}</th>
-                                <th class="px-6 py-4 text-left">{{ t('events.organizer') }}</th>
+                                <th class="px-6 py-4 text-start">{{ t('events.event') }}</th>
+                                <th class="px-6 py-4 text-start">{{ t('events.organizer') }}</th>
                                 <th class="px-6 py-4 text-center">{{ t('events.reservationsCount') }}</th>
-                                <th class="px-6 py-4 text-right">{{ t('events.revenueCol') }}</th>
-                                <th class="px-6 py-4 text-right">{{ t('events.commissionCol') }}</th>
-                                <th class="px-6 py-4 text-center">{{ t('common.action') }}</th>
+                                <th class="px-6 py-4 text-end">{{ t('events.revenueCol') }}</th>
+                                <th class="px-6 py-4 text-end">{{ t('events.commissionCol') }}</th>
+                                <th class="px-6 py-4 text-center">{{ t('common.actions') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50 dark:divide-neutral-800">
@@ -188,10 +188,10 @@ const formatCurrency = (amount: number) => {
                                         {{ event.reservations_count }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-right font-bold text-gray-900 dark:text-white">
+                                <td class="px-6 py-4 text-end font-bold text-gray-900 dark:text-white">
                                     {{ formatCurrency(event.revenue) }}
                                 </td>
-                                <td class="px-6 py-4 text-right">
+                                <td class="px-6 py-4 text-end">
                                     <span class="text-indigo-600 dark:text-indigo-400 font-bold">
                                         {{ formatCurrency(event.commission) }}
                                     </span>

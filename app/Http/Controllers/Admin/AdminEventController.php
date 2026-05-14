@@ -101,7 +101,7 @@ class AdminEventController extends Controller
         ]);
 
         // If the organizer used a custom category, register it dynamically
-        if ($event->categorie->value === 'autre' && !empty($event->categorie_autre)) {
+        if ($event->categorie === 'autre' && !empty($event->categorie_autre)) {
             $slug = Str::slug($event->categorie_autre);
             Category::firstOrCreate(
                 ['slug' => $slug],

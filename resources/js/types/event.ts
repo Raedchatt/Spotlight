@@ -47,6 +47,8 @@ export interface Evenement {
     is_reserved?: boolean;
     reservations_count?: number;
     total_tickets_reserved?: number | string;
+    spectator_tickets_reserved?: number | string;
+    participant_tickets_reserved?: number | string;
     created_at: string;
     updated_at: string;
 }

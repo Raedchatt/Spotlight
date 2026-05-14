@@ -4,6 +4,7 @@ import axios from 'axios';
 import { toast } from 'vue-sonner';
 import { MessageCircle } from 'lucide-vue-next';
 import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Badge from '@/components/ui/badge/Badge.vue';
 import Button from '@/components/ui/button/Button.vue';
 import {
@@ -31,6 +32,7 @@ interface Conversation {
 const conversations = ref<Conversation[]>([]);
 const loading = ref(true);
 const unreadMessagesCount = ref(0);
+const { t } = useI18n();
 
 const totalUnread = computed(() => unreadMessagesCount.value);
 
@@ -43,7 +45,7 @@ const fetchRecentMessages = async () => {
         }
     } catch (error) {
         console.error('Error fetching recent messages:', error);
-        toast.error('Failed to load messages.');
+        toast.error(t('messages.failedToLoad'));
     } finally {
         loading.value = false;
     }
@@ -77,12 +79,12 @@ onMounted(() => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" class="w-80 p-0 overflow-hidden rounded-2xl shadow-2xl border-neutral-200 dark:border-neutral-800">
             <DropdownMenuLabel class="p-4 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-900/50">
-                <span class="text-base font-bold">Messages</span>
+                <span class="text-base font-bold">{{ t('messages.title') }}</span>
                 <Link 
                     href="/messages" 
                     class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
                 >
-                    See all
+                    {{ t('messages.seeAll') }}
                 </Link>
             </DropdownMenuLabel>
             <DropdownMenuSeparator class="m-0" />
@@ -137,15 +139,15 @@ onMounted(() => {
                     <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted text-muted-foreground mb-3">
                         <MessageCircle class="w-6 h-6" />
                     </div>
-                    <p class="text-sm text-foreground font-medium">No messages yet</p>
-                    <p class="text-xs text-muted-foreground mt-1 mb-4 capitalize">Start a chat to see it here</p>
+                    <p class="text-sm text-foreground font-medium">{{ t('messages.noMessagesYet') }}</p>
+                    <p class="text-xs text-muted-foreground mt-1 mb-4 capitalize">{{ t('messages.startChatDesc') }}</p>
                     
                     <Link 
                         v-if="$page.props.auth.user.role === 'participant'"
                         href="/discovery" 
                         class="inline-flex items-center px-4 py-2 bg-[#1a56db] text-white text-xs font-bold rounded-xl hover:bg-[#1a56db]/90 transition-all active:scale-95 shadow-sm"
                     >
-                        Explore Events
+                        {{ t('messages.exploreEvents') }}
                     </Link>
                 </div>
             </div>
@@ -156,7 +158,7 @@ onMounted(() => {
                     href="/messages" 
                     class="text-xs font-bold text-neutral-900 dark:text-white hover:underline uppercase tracking-wider"
                 >
-                    View All Messages
+                    {{ t('messages.viewAll') }}
                 </Link>
             </div>
         </DropdownMenuContent>

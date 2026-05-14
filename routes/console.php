@@ -10,4 +10,4 @@ Artisan::command('inspire', function () {
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('events:sync-status')->everyMinute();
-
+Schedule::command('events:send-reminders')->everyFifteenMinutes();
