@@ -5,7 +5,6 @@
             {{ config('app.name') }}
         </x-mail::header>
     </x-slot:header>
-
     {{-- Body --}}
     {{ $slot }}
 
@@ -17,7 +16,6 @@
             </x-mail::subcopy>
         </x-slot:subcopy>
     @endisset
-
     {{-- Footer --}}
     <x-slot:footer>
         <x-mail::footer>

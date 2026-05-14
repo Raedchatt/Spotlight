@@ -2,8 +2,9 @@
 import { Link, usePage, router } from '@inertiajs/vue3';
 import { Folder, LayoutGrid, Menu, Search, Calendar, User, LogOut, Users } from 'lucide-vue-next';
 import { MessageSquare, Bell } from 'lucide-vue-next';
-import { computed,onMounted } from 'vue';
+import { computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { toast } from 'vue-sonner';
 import AppLogo from '@/components/AppLogo.vue';
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 
@@ -128,6 +129,23 @@ const { unreadMessagesCount, unreadNotificationsCount, totalUnreadCount } = useU
 onMounted(() => {
     // Initialization is handled by watch in useUnreadCounts
 });
+
+// Watch for flash messages
+watch(
+    () => page.props.flash as any,
+    (flash) => {
+        if (flash?.success) {
+            toast.success(t(flash.success));
+        }
+        if (flash?.error) {
+            toast.error(t(flash.error));
+        }
+        if (flash?.status) {
+            toast.info(t(flash.status));
+        }
+    },
+    { deep: true, immediate: true }
+);
 
 defineExpose({
     openLogin,

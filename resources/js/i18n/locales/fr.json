@@ -134,7 +134,21 @@
     "verifyEmail": "Vérifier l'email",
     "confirmPasswordTitle": "Confirmer le mot de passe",
     "resetPasswordTitle": "Réinitialiser le mot de passe",
-    "twoFactorTitle": "Vérification à deux facteurs"
+    "resetPasswordDesc": "Choisissez un mot de passe fort pour sécuriser votre compte.",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "updatePasswordBtn": "Mettre à jour",
+    "backToHome": "Retour à la page d'accueil",
+    "resetSuccess": "Mot de passe réinitialisé avec succès ! Vous pouvez maintenant vous connecter.",
+    "twoFactorTitle": "Vérification à deux facteurs",
+    "verify_email": {
+      "title": "Vérifiez votre email",
+      "description": "Entrez le code à 6 chiffres que nous avons envoyé à votre email.",
+      "verify_button": "Vérifier le code",
+      "no_code": "Vous n'avez pas reçu de code ?",
+      "resend": "Renvoyer"
+    }
+
   },
 
   "events": {
@@ -581,5 +595,11 @@
     "light": "Clair",
     "dark": "Sombre",
     "system": "Système"
+  },
+  "passwords": {
+    "sent": "Nous vous avons envoyé par email le lien de réinitialisation !",
+    "user": "Aucun utilisateur trouvé avec cette adresse email.",
+    "token": "Ce jeton de réinitialisation est invalide.",
+    "throttled": "Veuillez patienter avant de réessayer."
   }
 }

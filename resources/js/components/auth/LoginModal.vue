@@ -79,8 +79,14 @@ const login = () => {
           <input v-model="password" type="password" :placeholder="t('auth.passwordPlaceholder')" class="w-full pl-11 p-3 rounded-full border border-border bg-background outline-none text-foreground" @keyup.enter="login" />
         </div>
 
-        <div class="text-right text-sm text-blue-500 cursor-pointer hover:underline">
-          {{ t('auth.forgotPassword') }}
+        <div class="text-right">
+          <a
+            href="/forgot-password"
+            @click.prevent="closeAll(); router.visit('/forgot-password')"
+            class="text-sm text-blue-500 hover:underline cursor-pointer"
+          >
+            {{ t('auth.forgotPassword') }}
+          </a>
         </div>
 
         <!-- LOGIN BUTTON -->
