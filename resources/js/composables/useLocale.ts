@@ -9,6 +9,7 @@ export function useLocale() {
     const changeLocale = (lang: SupportedLocale) => {
         locale.value = lang;
         localStorage.setItem('spotlight-locale', lang);
+        document.cookie = `locale=${lang}; path=/; max-age=31536000; SameSite=Lax`;
 
         // Update HTML dir and lang attributes for RTL support
         const html = document.documentElement;
@@ -26,6 +27,7 @@ export function useLocale() {
     // Initialize dir/lang on first call
     const initLocale = () => {
         const lang = locale.value as SupportedLocale;
+        document.cookie = `locale=${lang}; path=/; max-age=31536000; SameSite=Lax`;
         const html = document.documentElement;
         html.setAttribute('lang', lang);
         html.setAttribute('dir', RTL_LOCALES.includes(lang) ? 'rtl' : 'ltr');

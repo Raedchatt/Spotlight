@@ -27,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        \App\Models\Evenement::observe(\App\Observers\EvenementObserver::class);
     }
 
     /**

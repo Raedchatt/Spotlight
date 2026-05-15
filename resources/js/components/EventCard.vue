@@ -44,7 +44,7 @@ const getStatusLabel = (statut: StatutEvenement) => {
 };
 
 const page = usePage();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const auth = computed(() => page.props.auth as any);
 const { openLogin } = useAuthModal();
 
@@ -128,6 +128,22 @@ const bannerImage = computed(() => {
     const imageMedia = props.event.medias?.find((m: any) => m.type === 'image');
     return imageMedia?.url || 'https://picsum.photos/seed/fallback/800/600';
 });
+
+const displayCategory = computed(() => {
+    if (props.event.category) {
+        const label = props.event.category.label;
+        if (typeof label === 'object' && label !== null) {
+            return (label as any)[locale.value] || (label as any)['en'] || Object.values(label)[0];
+        }
+        return label;
+    }
+    
+    if (props.event.categorie === 'autre' && props.event.categorie_autre) {
+        return props.event.categorie_autre;
+    }
+    
+    return t(`categories.${String(props.event.categorie).toLowerCase()}`);
+});
 </script>
 
 <template>
@@ -176,7 +192,7 @@ const bannerImage = computed(() => {
             <div class="space-y-1">
                 <h2 class="text-xl font-bold line-clamp-1 capitalize">{{ event.titre }}</h2>
                 <Badge variant="outline" class="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                    {{ event.categorie === 'autre' && event.categorie_autre ? event.categorie_autre : t(`categories.${event.categorie}`) }}
+                    {{ displayCategory }}
                 </Badge>
             </div>
 

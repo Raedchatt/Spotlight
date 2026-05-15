@@ -1,6 +1,13 @@
 export type StatutEvenement = 'ouvert' | 'ferme' | 'encours' | 'en_attente' | 'annule' | 'valide';
 
-export type CategorieEvenement = 'sportifs' | 'culturels' | 'scientifiques' | 'musicaux' | 'commerciaux';
+export type CategorieEvenement = 'sportifs' | 'culturels' | 'scientifiques' | 'musicaux' | 'commerciaux' | 'autre';
+
+export interface Category {
+    id: number;
+    slug: string;
+    label: string; // This will be the localized string from spatie/translatable
+    is_default: boolean;
+}
 
 export interface User {
     id: number;
@@ -35,7 +42,10 @@ export interface Evenement {
     prix_spectateur: number;
     capacite_spectateur: number;
     statut: StatutEvenement;
-    categorie: CategorieEvenement;
+    categorie: string;
+    categorie_autre?: string;
+    category_id?: number;
+    category?: Category;
     is_tournoi?: boolean;
     type_tournoi?: string;
     prix_participant?: number;

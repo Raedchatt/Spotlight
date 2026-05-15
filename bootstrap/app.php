@@ -23,9 +23,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'stripe/webhook',
         ]);
 
-        $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
+        $middleware->encryptCookies(except: ['appearance', 'sidebar_state', 'locale']);
 
         $middleware->web(append: [
+            \App\Http\Middleware\SetLocale::class,
             \App\Http\Middleware\CheckBlocked::class,
             \App\Http\Middleware\ReferralMiddleware::class,
             HandleAppearance::class,
@@ -36,6 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Add CORS to all API routes so the mobile app can connect
         $middleware->api(prepend: [
             HandleCors::class,
+            \App\Http\Middleware\SetLocale::class,
         ]);
 
         $middleware->alias([

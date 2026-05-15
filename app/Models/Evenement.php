@@ -28,6 +28,7 @@ class Evenement extends Model
         'paid_out_at',
         'categorie',
         'categorie_autre',
+        'category_id',
         'is_tournoi',
         'type_tournoi',
         'prix_participant',
@@ -102,6 +103,14 @@ class Evenement extends Model
         return $this->hasOne(Tournoi::class, 'evenement_id');
     }
 
+    /**
+     * Relation with Category
+     */
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'category_id');
+    }
+
 
     // -------------------------------------------------------------------------
     // Business Logic
@@ -113,11 +122,35 @@ class Evenement extends Model
      */
     public function hasAvailableSpots(): bool
     {
-        $taken = (int) $this->reservations()
-            ->whereIn('statut', ['pending', 'confirmed'])
+        if (!$this->is_tournoi) {
+            $taken = (int) $this->reservations()
+                ->whereIn('statut', ['pending', 'confirmed'])
+                ->sum('nombre_tickets');
+
+            return $taken < $this->capacite_spectateur;
+        }
+
+        // For tournaments, check if either spectators OR participants have room
+        // (This is a generic check, specific controllers handle type-specific logic)
+        $spectatorReserved = (int) $this->reservations()
+            ->active()
+            ->where('ticket_type', 'spectator')
+            ->sum('nombre_tickets');
+        
+        if ($spectatorReserved < $this->capacite_spectateur) {
+            return true;
+        }
+
+        $participantReserved = (int) $this->reservations()
+            ->active()
+            ->where('ticket_type', 'participant')
             ->sum('nombre_tickets');
 
-        return $taken < $this->capacite_spectateur;
+        $participantCapacity = ($this->type_tournoi === 'equipe' && $this->tournoi)
+            ? ($this->tournoi->nombre_equipes * $this->tournoi->joueurs_par_equipe)
+            : $this->capacite_participant;
+
+        return $participantReserved < $participantCapacity;
     }
 
     /**

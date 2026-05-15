@@ -100,15 +100,6 @@ class AdminEventController extends Controller
             'statut' => StatutEvenement::Ouvert
         ]);
 
-        // If the organizer used a custom category, register it dynamically
-        if ($event->categorie === 'autre' && !empty($event->categorie_autre)) {
-            $slug = Str::slug($event->categorie_autre);
-            Category::firstOrCreate(
-                ['slug' => $slug],
-                ['label' => ucfirst(trim($event->categorie_autre)), 'is_default' => false]
-            );
-        }
-
         app(\App\Services\NotificationService::class)->notifieOrganisateurEvenementApprouve($event->organisateur_id, $event->titre);
 
         return back()->with('success', 'Event approved successfully.');

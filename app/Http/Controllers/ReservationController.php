@@ -88,8 +88,10 @@ class ReservationController extends Controller
                 ->where('ticket_type', 'participant')
                 ->sum('nombre_tickets');
             
-            $participantCapacity = ($evenement->type_tournoi === 'equipe' && $evenement->tournoi 
-                    && $evenement->tournoi->nombre_equipes > 0 && $evenement->tournoi->joueurs_par_equipe > 0) 
+            $isEquipe = ($evenement->type_tournoi === 'equipe' && $evenement->tournoi 
+                    && $evenement->tournoi->nombre_equipes > 0 && $evenement->tournoi->joueurs_par_equipe > 0);
+
+            $participantCapacity = $isEquipe 
                 ? ($evenement->tournoi->nombre_equipes * $evenement->tournoi->joueurs_par_equipe) 
                 : $evenement->capacite_participant;
 

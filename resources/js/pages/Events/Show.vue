@@ -95,6 +95,11 @@ interface Props {
         }>;
         statut: string;
         medias: EventMedia[];
+        category?: {
+            id: number;
+            slug: string;
+            label: string;
+        };
     };
     stats: {
         total_reserved?: number;
@@ -113,7 +118,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const page = usePage();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const auth = computed(() => page.props.auth as any);
 
 const isOwner = computed(() => {
@@ -129,6 +134,24 @@ const breadcrumbs = [
     { title: t('events.discovery'), href: '/discovery' },
     { title: props.event.titre, href: `/events/${props.event.id}` },
 ];
+
+const displayCategory = computed(() => {
+    if (props.event.category) {
+        const label = props.event.category.label;
+        if (typeof label === 'object' && label !== null) {
+            return (label as any)[locale.value] || (label as any)['en'] || Object.values(label)[0];
+        }
+        return label;
+    }
+    
+    if (props.event.is_tournoi) return t('events.tournament');
+
+    if (props.event.categorie === 'autre' && props.event.categorie_autre) {
+        return props.event.categorie_autre;
+    }
+    
+    return t(`categories.${String(props.event.categorie).toLowerCase()}`);
+});
 
 const selectedTicketType = ref(props.event.is_tournoi ? 'participant' : 'standard');
 
@@ -536,7 +559,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                     <div class="space-y-4">
                         <span class="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md text-white border border-white/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
                             <component :is="props.event.is_tournoi ? Trophy : Star" class="w-3.5 h-3.5" />
-                            {{ props.event.is_tournoi ? t('events.tournament') : (props.event.categorie === 'autre' && props.event.categorie_autre ? props.event.categorie_autre : props.event.categorie) }}
+                            {{ displayCategory }}
                         </span>
                         
                         <h1 class="text-3xl md:text-5xl font-bold text-white max-w-4xl leading-tight">
@@ -670,22 +693,27 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                     <div class="flex justify-between items-end">
                                         <div class="flex items-center gap-2 text-foreground font-bold">
                                             <Gamepad2 class="w-5 h-5 text-blue-600" />
-                                            {{ t('events.participants') }}
+                                            {{ props.stats.is_equipe ? t('events.teams') : t('events.participants') }}
                                         </div>
                                         <div class="text-sm text-muted-foreground">
-                                            <span class="font-bold text-foreground">{{ props.stats.participant_reserved }}</span> / 
-                                            {{ (props.event.type_tournoi === 'equipe' && props.event.tournoi) ? props.event.tournoi.nombre_equipes : props.event.capacite_participant }} {{ t('events.slots') }}
+                                            <span class="font-bold text-foreground">
+                                                {{ props.stats.is_equipe ? Math.floor((props.stats.participant_reserved || 0) / (props.event.tournoi.joueurs_par_equipe || 1)) : props.stats.participant_reserved }}
+                                            </span> / 
+                                            {{ (props.stats.is_equipe && props.event.tournoi) ? props.event.tournoi.nombre_equipes : props.event.capacite_participant }} 
+                                            {{ props.stats.is_equipe ? t('events.teams') : t('events.slots') }}
                                         </div>
                                     </div>
                                     <div class="w-full bg-muted rounded-full h-3 overflow-hidden">
                                         <div 
                                             class="bg-blue-600 h-full transition-all duration-1000" 
-                                            :style="{ width: progressPercentage(props.stats.participant_reserved ?? 0, (props.event.type_tournoi === 'equipe' && props.event.tournoi) ? (props.event.tournoi.nombre_equipes ?? 1) : (props.event.capacite_participant ?? 1)) + '%' }"
+                                            :style="{ width: progressPercentage(props.stats.participant_reserved ?? 0, props.stats.participant_capacity_raw ?? (props.event.capacite_participant ?? 1)) + '%' }"
                                         ></div>
                                     </div>
                                     <div class="flex justify-between text-xs font-bold uppercase tracking-wider text-zinc-400">
-                                        <span>{{ t('events.playersCount', { count: props.stats.participant_reserved }) }}</span>
-                                        <span :class="(props.stats.participant_remaining ?? 0) <= 3 ? 'text-red-500' : ''">{{ t('events.remainingCount', { count: props.stats.participant_remaining }) }}</span>
+                                        <span>{{ props.stats.is_equipe ? t('events.teamsJoinedCount', { count: Math.floor((props.stats.participant_reserved || 0) / (props.event.tournoi.joueurs_par_equipe || 1)) }) : t('events.playersCount', { count: props.stats.participant_reserved }) }}</span>
+                                        <span :class="(props.stats.participant_remaining ?? 0) <= (props.stats.is_equipe ? props.event.tournoi.joueurs_par_equipe : 3) ? 'text-red-500' : ''">
+                                            {{ props.stats.is_equipe ? t('events.teamsRemainingCount', { count: Math.floor((props.stats.participant_remaining || 0) / (props.event.tournoi.joueurs_par_equipe || 1)) }) : t('events.remainingCount', { count: props.stats.participant_remaining }) }}
+                                        </span>
                                     </div>
                                 </div>
 
@@ -771,7 +799,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                         </Link>
 
                                         <p class="text-[10px] text-center text-zinc-400 font-bold uppercase tracking-widest">
-                                            Last sync: Just now
+                                            {{ t('events.lastSync') }}: {{ t('events.justNow') }}
                                         </p>
                                     </div>
                                 </div>
@@ -802,7 +830,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                         <div class="text-3xl font-black text-foreground">{{ props.event.prix_spectateur > 0 ? props.event.prix_spectateur : t('common.free') }} <span v-if="props.event.prix_spectateur > 0" class="text-sm font-semibold text-muted-foreground">{{ t('events.perTicket') }}</span></div>
                                         <div class="mt-2 flex items-center gap-2 text-sm text-muted-foreground font-medium">
                                             <Users class="w-4 h-4" />
-                                            {{ props.stats.remaining }} spots remaining
+                                            {{ t('events.remainingSpotsCount', { count: props.stats.remaining }) }}
                                         </div>
                                     </div>
 
@@ -957,7 +985,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                             </div>
                             <div class="absolute top-4 left-4">
                                 <span class="bg-white/90 backdrop-blur-md text-zinc-900 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider shadow-sm">
-                                    {{ sim.categorie }}
+                                    {{ sim.category ? (typeof sim.category.label === 'object' ? (sim.category.label as any)[locale.value] || (sim.category.label as any)['en'] : sim.category.label) : t(`categories.${String(sim.categorie).toLowerCase()}`) }}
                                 </span>
                             </div>
                         </div>

@@ -35,7 +35,7 @@ class EvenementController extends Controller
     // List Events
     public function index()
     {
-        $events = Evenement::with('medias')
+        $events = Evenement::with(['medias', 'category'])
             ->where('statut', StatutEvenement::Ouvert)
             ->latest()
             ->get();
@@ -46,7 +46,7 @@ class EvenementController extends Controller
     // Show Event Details (Public)
     public function show(Request $request, $id)
     {
-        $event = Evenement::with(['organisateur.organisateur', 'medias', 'collaborateurs.organizer.organisateur', 'tournoi'])->findOrFail($id);
+        $event = Evenement::with(['organisateur.organisateur', 'medias', 'collaborateurs.organizer.organisateur', 'tournoi', 'category'])->findOrFail($id);
 
 
         // Stats calculation
@@ -71,8 +71,10 @@ class EvenementController extends Controller
                 ->whereIn('statut', ['confirmed', 'pending'])
                 ->sum('nombre_tickets');
 
-            $participantCapacity = ($event->type_tournoi === 'equipe' && $event->tournoi 
-                    && $event->tournoi->nombre_equipes > 0 && $event->tournoi->joueurs_par_equipe > 0) 
+            $isEquipe = ($event->type_tournoi === 'equipe' && $event->tournoi 
+                    && $event->tournoi->nombre_equipes > 0 && $event->tournoi->joueurs_par_equipe > 0);
+
+            $participantCapacity = $isEquipe 
                 ? ($event->tournoi->nombre_equipes * $event->tournoi->joueurs_par_equipe) 
                 : $event->capacite_participant;
 
@@ -82,6 +84,8 @@ class EvenementController extends Controller
                 'participant_remaining' => max(0, $participantCapacity - $participantReserved),
                 'spectator_remaining' => max(0, $event->capacite_spectateur - $spectatorReserved),
                 'total_revenue' => (float) (($participantReserved * ($event->prix_participant ?? 0) * 0.8) + ($spectatorReserved * $event->prix_spectateur * 0.8)),
+                'is_equipe' => $isEquipe,
+                'participant_capacity_raw' => $participantCapacity,
             ];
         }
 
@@ -203,8 +207,10 @@ class EvenementController extends Controller
             $participantRevenue = $participantRevenueAmount * 0.8;
             $spectatorRevenue = $spectatorRevenueAmount * 0.8;
 
-            $participantCapacity = ($event->type_tournoi === 'equipe' && $event->tournoi 
-                    && $event->tournoi->nombre_equipes > 0 && $event->tournoi->joueurs_par_equipe > 0) 
+            $isEquipe = ($event->type_tournoi === 'equipe' && $event->tournoi 
+                    && $event->tournoi->nombre_equipes > 0 && $event->tournoi->joueurs_par_equipe > 0);
+
+            $participantCapacity = $isEquipe 
                 ? ($event->tournoi->nombre_equipes * $event->tournoi->joueurs_par_equipe) 
                 : $event->capacite_participant;
 
@@ -215,7 +221,8 @@ class EvenementController extends Controller
                 'spectator_remaining' => max(0, $event->capacite_spectateur - $spectatorReserved),
                 'total_revenue' => (float) ($participantRevenue + $spectatorRevenue),
                 'participant_capacity' => $participantCapacity,
-                'spectator_capacity' => $event->capacite_spectateur
+                'spectator_capacity' => $event->capacite_spectateur,
+                'is_equipe' => $isEquipe
             ];
         }
 
@@ -612,7 +619,7 @@ class EvenementController extends Controller
     // Search events
     public function search(Request $request)
     {
-        $query = Evenement::with(['medias', 'tournoi'])
+        $query = Evenement::with(['medias', 'tournoi', 'category'])
             ->withCount('reservations')
             ->withSum(['reservations as total_tickets_reserved' => function($q) {
                 $q->whereIn('statut', ['confirmed', 'pending']);

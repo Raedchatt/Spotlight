@@ -187,7 +187,7 @@ const joueursParEquipe = computed(() => {
 const maxCapacity = computed(() => {
   if (props.event.is_tournoi && ticketType.value === 'participant') {
     if (props.event.type_tournoi === 'equipe') {
-      return props.event?.tournoi?.nombre_equipes || props.event?.capacite_participant || 0
+      return (props.event?.tournoi?.nombre_equipes * props.event?.tournoi?.joueurs_par_equipe) || props.event?.capacite_participant || 0
     }
     return props.event?.capacite_participant || 0
   }
