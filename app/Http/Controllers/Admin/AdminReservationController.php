@@ -46,9 +46,11 @@ class AdminReservationController extends Controller
         }
 
         $reservations = $query->latest()->paginate(20)->withQueryString();
+        $totalReservations = Reservation::count();
 
         return Inertia::render('Admin/Reservations/Index', [
             'reservations' => $reservations,
+            'totalReservations' => $totalReservations,
             'filters' => $request->only(['search', 'event', 'status']),
         ]);
     }

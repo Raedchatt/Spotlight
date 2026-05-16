@@ -177,7 +177,7 @@ const isEventEnded = (dateString: string) => {
                                         variant="default" 
                                         class="bg-blue-600 hover:bg-blue-700"
                                     >
-                                        <Ticket class="w-4 h-4 mr-1" /> {{ t('events.ticket') }}
+                                        <Ticket class="w-4 h-4 mr-1" /> {{ t('events.ticket') }}        
                                     </Button>
                                 </a>
                                 <Button

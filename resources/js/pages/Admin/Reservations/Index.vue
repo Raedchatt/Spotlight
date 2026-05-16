@@ -49,6 +49,7 @@ interface PaginatedReservations {
 
 const props = defineProps<{
     reservations?: PaginatedReservations;
+    totalReservations?: number;
     filters?: {
         search?: string;
         event?: string;
@@ -276,7 +277,7 @@ const cancelReservation = (reservation: ReservationData) => {
     <Head :title="t('events.reservationsManagement')" />
 
     <AppLayout>
-        <div class="px-4 py-8 md:px-8 space-y-8 max-w-[1400px] mx-auto">
+        <div class="px-4 py-8 md:px-8 space-y-8 max-w-[1400px] mx-auto w-full min-w-0">
 
             <!-- Page Header -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
@@ -294,8 +295,8 @@ const cancelReservation = (reservation: ReservationData) => {
             </div>
 
             <!-- Filters -->
-            <div class="relative z-20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-sm p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-neutral-800 grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                <div class="md:col-span-4 relative w-full space-y-1.5">
+            <div class="relative z-20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-sm p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-neutral-800 grid grid-cols-1 md:grid-cols-12 gap-4 items-end w-full">
+                <div class="md:col-span-4 relative w-full space-y-1.5 min-w-0">
                     <label class="text-[10px] uppercase font-bold text-gray-400 ps-1">{{ t('events.participant') }}</label>
                     <div class="relative">
                         <Search class="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -307,9 +308,9 @@ const cancelReservation = (reservation: ReservationData) => {
                         >
                     </div>
                 </div>
-                <div class="md:col-span-4 relative w-full space-y-1.5">
+                <div class="md:col-span-4 relative w-full space-y-1.5 min-w-0">
                     <label class="text-[10px] uppercase font-bold text-gray-400 ps-1">{{ t('events.event') }}</label>
-                    <div class="relative">
+                    <div class="relative w-full">
                         <Ticket class="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <input
                             v-model="eventFilter"
@@ -331,9 +332,10 @@ const cancelReservation = (reservation: ReservationData) => {
                         <option value="cancelled">{{ t('events.statusCancelled') }}</option>
                     </select>
                 </div>
-                <div class="md:col-span-1 flex items-center justify-end">
-                    <button v-if="hasActiveFilters" @click="resetFilters" class="p-2.5 text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors" :title="t('common.clear')">
-                        <FilterX class="w-5 h-5" />
+                <div class="md:col-span-1 flex items-center justify-start md:justify-end">
+                    <button v-if="hasActiveFilters" @click="resetFilters" class="w-full md:w-auto p-2.5 flex items-center justify-center text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors" :title="t('common.clear')">
+                        <FilterX class="w-5 h-5 mr-2 md:mr-0" />
+                        <span class="md:hidden font-bold text-sm">{{ t('common.clear') }}</span>
                     </button>
                 </div>
             </div>
@@ -342,7 +344,7 @@ const cancelReservation = (reservation: ReservationData) => {
             <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
                 <div class="bg-white dark:bg-neutral-900 border border-gray-100 dark:border-neutral-800 rounded-2xl p-4 md:p-5 shadow-sm">
                     <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">{{ t('events.totalReservations') }}</p>
-                    <p class="text-xl md:text-2xl font-extrabold text-gray-900 dark:text-white">{{ reservations?.total || 0 }}</p>
+                    <p class="text-xl md:text-2xl font-extrabold text-gray-900 dark:text-white">{{ totalReservations || 0 }}</p>
                 </div>
                 <div class="bg-white dark:bg-neutral-900 border border-gray-100 dark:border-neutral-800 rounded-2xl p-4 md:p-5 shadow-sm">
                     <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">{{ t('events.onThisPage') }}</p>
@@ -355,8 +357,8 @@ const cancelReservation = (reservation: ReservationData) => {
             </div>
 
             <!-- Reservations Table -->
-            <div class="bg-white dark:bg-neutral-900 border border-gray-100 dark:border-neutral-800 rounded-3xl shadow-sm overflow-hidden">
-                <div class="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-neutral-800">
+            <div class="bg-white dark:bg-neutral-900 border border-gray-100 dark:border-neutral-800 rounded-3xl shadow-sm overflow-hidden w-full">
+                <div class="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-neutral-800 w-full">
                     <table class="w-full min-w-[1000px]">
                         <thead>
                             <tr class="bg-gray-50/80 dark:bg-neutral-800/50 border-b border-gray-100 dark:border-neutral-800">
@@ -437,10 +439,10 @@ const cancelReservation = (reservation: ReservationData) => {
 
             <!-- Pagination -->
             <div v-if="reservations?.links && reservations.links.length > 3" class="flex justify-center mt-6 pb-20">
-                <div class="flex gap-2">
+                <div class="flex gap-2 flex-wrap justify-center">
                     <template v-for="(link, p) in reservations.links" :key="p">
-                        <div v-if="link.url === null" class="px-4 py-2 border border-gray-200 dark:border-neutral-700 rounded-xl text-sm font-medium opacity-50 cursor-not-allowed bg-gray-50 dark:bg-neutral-800 text-gray-500 dark:text-gray-400" v-html="translatePagination(link.label)"></div>
-                        <Link v-else :href="link.url" class="px-4 py-2 border rounded-xl text-sm font-medium transition" :class="[link.active ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-700']" v-html="translatePagination(link.label)"></Link>
+                        <div v-if="link.url === null" class="px-3 sm:px-4 py-2 border border-gray-200 dark:border-neutral-700 rounded-xl text-xs sm:text-sm font-medium opacity-50 cursor-not-allowed bg-gray-50 dark:bg-neutral-800 text-gray-500 dark:text-gray-400 whitespace-nowrap" v-html="translatePagination(link.label)"></div>
+                        <Link v-else :href="link.url" class="px-3 sm:px-4 py-2 border rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap" :class="[link.active ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-700']" v-html="translatePagination(link.label)"></Link>
                     </template>
                 </div>
             </div>
@@ -452,11 +454,11 @@ const cancelReservation = (reservation: ReservationData) => {
                 <div v-if="showCreateModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
                     <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="closeCreateModal"></div>
 
-                    <div class="relative bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl border border-gray-100 dark:border-neutral-800 w-full max-w-xl max-h-[90vh] overflow-y-auto">
+                    <div class="relative bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl border border-gray-100 dark:border-neutral-800 w-full max-w-xl max-h-[90vh] flex flex-col">
                         <!-- Header -->
-                        <div class="sticky top-0 z-10 flex items-center justify-between px-8 py-5 bg-white dark:bg-neutral-900 border-b border-gray-100 dark:border-neutral-800 rounded-t-3xl">
+                        <div class="flex-shrink-0 flex items-center justify-between px-6 sm:px-8 py-4 sm:py-5 bg-white dark:bg-neutral-900 border-b border-gray-100 dark:border-neutral-800 rounded-t-3xl">
                             <div>
-                                <h2 class="text-xl font-extrabold text-gray-900 dark:text-white">{{ t('events.addReservation') }}</h2>
+                                <h2 class="text-lg sm:text-xl font-extrabold text-gray-900 dark:text-white">{{ t('events.addReservation') }}</h2>
                                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('events.addReservationDesc') }}</p>
                             </div>
                             <button @click="closeCreateModal" class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
@@ -465,7 +467,7 @@ const cancelReservation = (reservation: ReservationData) => {
                         </div>
 
                         <!-- Body -->
-                        <div class="p-8 space-y-6">
+                        <div class="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6">
                             <!-- Select Participant -->
                             <div class="space-y-3">
                                 <label class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -475,12 +477,12 @@ const cancelReservation = (reservation: ReservationData) => {
                                 <div v-if="selectedUser" class="flex items-center justify-between p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-2xl">
                                     <div class="flex items-center gap-3">
                                         <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold">{{ selectedUser.username?.charAt(0)?.toUpperCase() }}</div>
-                                        <div>
-                                            <p class="font-bold text-gray-900 dark:text-white">{{ selectedUser.username }}</p>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ selectedUser.email }}</p>
+                                        <div class="overflow-hidden">
+                                            <p class="font-bold text-gray-900 dark:text-white truncate">{{ selectedUser.username }}</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ selectedUser.email }}</p>
                                         </div>
                                     </div>
-                                    <button @click="selectedUser = null" class="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 text-red-500 transition-colors">
+                                    <button @click="selectedUser = null" class="flex-shrink-0 p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 text-red-500 transition-colors">
                                         <X class="w-4 h-4" />
                                     </button>
                                 </div>
@@ -503,8 +505,8 @@ const cancelReservation = (reservation: ReservationData) => {
                                             @click="pickUser(u)"
                                             class="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer flex flex-col border-b border-gray-50 dark:border-neutral-700 last:border-0"
                                         >
-                                            <span class="font-bold text-gray-900 dark:text-white text-sm">{{ u.username }}</span>
-                                            <span class="text-xs text-gray-500 dark:text-gray-400">{{ u.email }}</span>
+                                            <span class="font-bold text-gray-900 dark:text-white text-sm truncate">{{ u.username }}</span>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ u.email }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -520,19 +522,19 @@ const cancelReservation = (reservation: ReservationData) => {
                                     {{ t('events.selectEventReq') }}
                                 </label>
                                 <div v-if="selectedEvent" class="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">
+                                    <div class="flex items-center gap-3 overflow-hidden">
+                                        <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">
                                             {{ selectedEvent.is_tournoi ? '🏆' : '🎪' }}
                                         </div>
-                                        <div>
-                                            <p class="font-bold text-gray-900 dark:text-white">{{ selectedEvent.titre }}</p>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                        <div class="overflow-hidden">
+                                            <p class="font-bold text-gray-900 dark:text-white truncate">{{ selectedEvent.titre }}</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
                                                 {{ selectedEvent.is_tournoi ? t('events.tournament') : t('events.event') }}
                                                 · {{ t('events.capacity') }}: {{ selectedEvent.capacite_spectateur }} {{ t('events.seats') }}
                                             </p>
                                         </div>
                                     </div>
-                                    <button @click="selectedEvent = null" class="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 text-red-500 transition-colors">
+                                    <button @click="selectedEvent = null" class="flex-shrink-0 p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 text-red-500 transition-colors">
                                         <X class="w-4 h-4" />
                                     </button>
                                 </div>
@@ -555,10 +557,10 @@ const cancelReservation = (reservation: ReservationData) => {
                                             @click="pickEvent(ev)"
                                             class="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 cursor-pointer flex items-center gap-3 border-b border-gray-50 dark:border-neutral-700 last:border-0"
                                         >
-                                            <span class="text-lg">{{ ev.is_tournoi ? '🏆' : '🎪' }}</span>
-                                            <div class="flex flex-col">
-                                                <span class="font-bold text-gray-900 dark:text-white text-sm">{{ ev.titre }}</span>
-                                                <span class="text-xs text-gray-500 dark:text-gray-400">
+                                            <span class="text-lg flex-shrink-0">{{ ev.is_tournoi ? '🏆' : '🎪' }}</span>
+                                            <div class="flex flex-col overflow-hidden">
+                                                <span class="font-bold text-gray-900 dark:text-white text-sm truncate">{{ ev.titre }}</span>
+                                                <span class="text-xs text-gray-500 dark:text-gray-400 truncate">
                                                     {{ ev.is_tournoi ? t('events.tournament') : t('events.event') }} · {{ ev.capacite_spectateur }} {{ t('events.seats') }}
                                                 </span>
                                             </div>
@@ -573,7 +575,7 @@ const cancelReservation = (reservation: ReservationData) => {
                             <!-- Ticket Type (if tournament) -->
                             <div v-if="selectedEvent?.is_tournoi" class="space-y-2">
                                 <label class="text-sm font-bold text-gray-900 dark:text-white">{{ t('events.ticketTypeReq') }}</label>
-                                <div class="grid grid-cols-2 gap-3">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <button
                                         type="button"
                                         @click="newReservation.ticket_type = 'spectator'"
@@ -626,7 +628,7 @@ const cancelReservation = (reservation: ReservationData) => {
                         </div>
 
                         <!-- Footer -->
-                        <div class="sticky bottom-0 z-10 flex items-center justify-end gap-3 px-8 py-5 bg-gray-50 dark:bg-neutral-800/50 border-t border-gray-100 dark:border-neutral-800 rounded-b-3xl">
+                        <div class="flex-shrink-0 flex items-center justify-end gap-3 px-6 sm:px-8 py-4 sm:py-5 bg-gray-50 dark:bg-neutral-800/50 border-t border-gray-100 dark:border-neutral-800 rounded-b-3xl">
                             <button @click="closeCreateModal" class="px-5 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
                                 {{ t('common.cancel') }}
                             </button>

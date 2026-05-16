@@ -485,6 +485,7 @@
     "status_pending": "قيد الانتظار",
     "status_cancelled": "ملغى",
     "noReservationsFound": "لم يتم العثور على حجوزات.",
+    "reservationsDesc": "إدارة جميع الحجوزات عبر المنصة.",
     "addReservationDesc": "إنشاء حجز جديد يدوياً لمشارك.",
     "selectParticipantReq": "اختر المشارك *",
     "searchByUsernameOrEmail": "البحث عن طريق اسم المستخدم أو البريد الإلكتروني...",
@@ -521,7 +522,8 @@
     "amount": "المبلغ",
     "noStripeAccountConnected": "لم يقم المنظم بربط حساب Stripe.",
     "affiliateNoStripeAccount": "لم يقم الموزع بربط حساب Stripe.",
-    "dashboard": "لوحة القيادة"
+    "dashboard": "لوحة القيادة",
+    "type": "النوع"
   },
 
   "messages": {

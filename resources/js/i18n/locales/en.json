@@ -485,6 +485,7 @@
     "status_pending": "Pending",
     "status_cancelled": "Cancelled",
     "noReservationsFound": "No reservations found.",
+    "reservationsDesc": "Manage all bookings across the platform.",
     "addReservationDesc": "Create a new reservation manually for a participant.",
     "selectParticipantReq": "Select Participant *",
     "searchByUsernameOrEmail": "Search by Username or Email...",
@@ -521,7 +522,8 @@
     "amount": "Amount",
     "noStripeAccountConnected": "Organizer has not connected a Stripe account.",
     "affiliateNoStripeAccount": "Reseller has not connected a Stripe account.",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "type": "Type"
   },
 
   "messages": {

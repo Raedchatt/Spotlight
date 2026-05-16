@@ -485,6 +485,7 @@
     "status_pending": "En Attente",
     "status_cancelled": "Annulé",
     "noReservationsFound": "Aucune réservation trouvée.",
+    "reservationsDesc": "Gérer toutes les réservations sur la plateforme.",
     "addReservationDesc": "Créer manuellement une nouvelle réservation pour un participant.",
     "selectParticipantReq": "Sélectionner Participant *",
     "searchByUsernameOrEmail": "Rechercher par Nom d'utilisateur ou Email...",
@@ -521,7 +522,8 @@
     "amount": "Montant",
     "noStripeAccountConnected": "L'organisateur n'a pas connecté de compte Stripe.",
     "affiliateNoStripeAccount": "Le revendeur n'a pas connecté de compte Stripe.",
-    "dashboard": "Tableau de bord"
+    "dashboard": "Tableau de bord",
+    "type": "Type"
   },
 
   "messages": {

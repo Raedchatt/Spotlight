@@ -9,7 +9,8 @@ import { useI18n } from 'vue-i18n';
 
 interface CategoryItem {
     id: number;
-    label: string;
+    slug: string;
+    label: any;
 }
 
 interface EventData {
@@ -48,7 +49,16 @@ const props = defineProps<{
     categories?: CategoryItem[];
 }>();
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
+
+const getCategoryLabel = (cat: CategoryItem) => {
+    if (!cat.label) return cat.slug;
+    if (typeof cat.label === 'string') return cat.label;
+    if (typeof cat.label === 'object') {
+        return cat.label[locale.value] || cat.label['en'] || Object.values(cat.label)[0] || cat.slug;
+    }
+    return cat.slug;
+};
 
 const search = ref(props.filters?.search || '');
 const category = ref(props.filters?.category || '');
@@ -318,8 +328,8 @@ const submitCreateEvent = async () => {
                 <div class="w-full md:w-48">
                     <select v-model="category" class="w-full px-4 py-2 bg-gray-50/50 dark:bg-neutral-800/50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white appearance-none cursor-pointer">
                         <option value="">{{ t('events.categories') }}</option>
-                        <option v-for="cat in (categories as CategoryItem[])" :key="cat.id" :value="cat.label.toLowerCase()">
-                            {{ t(`categories.${cat.label.toLowerCase()}`) }}
+                        <option v-for="cat in (categories as CategoryItem[])" :key="cat.id" :value="cat.slug">
+                            {{ getCategoryLabel(cat) }}
                         </option>
                     </select>
                 </div>
