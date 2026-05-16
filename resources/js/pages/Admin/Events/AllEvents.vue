@@ -296,7 +296,7 @@ const submitCreateEvent = async () => {
     <Head :title="t('events.allEvents')" />
 
     <AppLayout>
-        <div class="px-4 py-8 md:px-8 space-y-8 max-w-[1400px] mx-auto">
+        <div class="px-4 py-8 md:px-8 space-y-8 max-w-[1400px] mx-auto w-full min-w-0">
             
             <!-- Page Header -->
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -314,8 +314,8 @@ const submitCreateEvent = async () => {
             </div>
 
             <!-- Filters -->
-            <div class="relative z-20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-sm p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-neutral-800 flex flex-col md:flex-row gap-4 items-center">
-                <div class="flex-1 relative w-full">
+            <div class="relative z-20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-sm p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-neutral-800 flex flex-col md:flex-row gap-4 items-center w-full">
+                <div class="flex-1 relative w-full min-w-0">
                     <Search class="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input 
                         v-model="search" 
@@ -325,7 +325,7 @@ const submitCreateEvent = async () => {
                     >
                 </div>
                 
-                <div class="w-full md:w-48">
+                <div class="w-full md:w-48 flex-shrink-0">
                     <select v-model="category" class="w-full px-4 py-2 bg-gray-50/50 dark:bg-neutral-800/50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white appearance-none cursor-pointer">
                         <option value="">{{ t('events.categories') }}</option>
                         <option v-for="cat in (categories as CategoryItem[])" :key="cat.id" :value="cat.slug">
@@ -334,7 +334,7 @@ const submitCreateEvent = async () => {
                     </select>
                 </div>
                 
-                <div class="w-full md:w-72 relative">
+                <div class="w-full md:w-72 relative flex-shrink-0">
                     <Building class="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input 
                         v-model="organizer" 
@@ -375,8 +375,8 @@ const submitCreateEvent = async () => {
             </div>
 
             <!-- Table -->
-            <div class="bg-white/70 dark:bg-neutral-900/70 backdrop-blur-sm rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-sm overflow-hidden min-h-[400px]">
-                <div class="overflow-x-auto">
+            <div class="bg-white/70 dark:bg-neutral-900/70 backdrop-blur-sm rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-sm overflow-hidden min-h-[400px] w-full">
+                <div class="overflow-x-auto w-full">
                     <table class="w-full text-sm text-start">
                         <thead class="text-[11px] text-gray-400 dark:text-gray-500 uppercase tracking-widest bg-gray-50/50 dark:bg-neutral-800/30 border-b border-gray-100 dark:border-neutral-800">
                             <tr>
@@ -456,11 +456,11 @@ const submitCreateEvent = async () => {
             </div>
 
             <!-- Pagination -->
-            <div v-if="events?.links && events.links.length > 3" class="flex justify-center mt-6 pb-20">
-                <div class="flex gap-2">
+            <div v-if="events?.links && events.links.length > 3" class="flex justify-center mt-6 pb-20 w-full">
+                <div class="flex gap-2 flex-wrap justify-center">
                     <template v-for="(link, p) in events.links" :key="p">
-                        <div v-if="link.url === null" class="px-4 py-2 border border-gray-200 dark:border-neutral-700 rounded-xl text-sm font-medium opacity-50 cursor-not-allowed bg-gray-50 dark:bg-neutral-800 text-gray-500 dark:text-gray-400" v-html="link.label"></div>
-                        <Link v-else :href="link.url" class="px-4 py-2 border rounded-xl text-sm font-medium transition" :class="[link.active ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-700']" v-html="link.label"></Link>
+                        <div v-if="link.url === null" class="px-3 sm:px-4 py-2 border border-gray-200 dark:border-neutral-700 rounded-xl text-xs sm:text-sm font-medium opacity-50 cursor-not-allowed bg-gray-50 dark:bg-neutral-800 text-gray-500 dark:text-gray-400 whitespace-nowrap" v-html="link.label"></div>
+                        <Link v-else :href="link.url" class="px-3 sm:px-4 py-2 border rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap" :class="[link.active ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-700']" v-html="link.label"></Link>
                     </template>
                 </div>
             </div>

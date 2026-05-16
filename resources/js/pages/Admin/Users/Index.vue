@@ -157,7 +157,7 @@ const translatePagination = (label: string) => {
     <Head :title="t('events.manageUsers')" />
 
     <AppLayout>
-        <div class="px-4 py-8 md:px-8 space-y-8 max-w-[1400px] mx-auto">
+        <div class="px-4 py-8 md:px-8 space-y-8 max-w-[1400px] mx-auto w-full min-w-0">
             
             <!-- Page Header -->
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -221,8 +221,8 @@ const translatePagination = (label: string) => {
             </div>
 
             <!-- Users List Table -->
-            <div class="bg-white/70 dark:bg-neutral-900/70 backdrop-blur-sm rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md hover:border-gray-200 dark:hover:border-neutral-700">
-                <div class="overflow-x-auto">
+            <div class="bg-white/70 dark:bg-neutral-900/70 backdrop-blur-sm rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md hover:border-gray-200 dark:hover:border-neutral-700 w-full">
+                <div class="overflow-x-auto w-full">
                     <table class="w-full text-sm text-start">
                         <thead class="text-[11px] text-gray-400 dark:text-gray-500 uppercase tracking-[0.1em] bg-gray-50/50 dark:bg-neutral-800/30 border-b border-gray-100 dark:border-neutral-800">
                             <tr>
@@ -280,11 +280,11 @@ const translatePagination = (label: string) => {
             </div>
             
             <!-- Pagination Controls -->
-            <div v-if="users?.links && users?.links.length > 3" class="flex justify-center mt-6">
-                <div class="flex gap-2">
+            <div v-if="users?.links && users?.links.length > 3" class="flex justify-center mt-6 w-full">
+                <div class="flex gap-2 flex-wrap justify-center">
                     <template v-for="(link, p) in users.links" :key="p">
-                        <div v-if="link.url === null" class="px-4 py-2 border border-gray-200 dark:border-neutral-700 rounded-xl text-sm font-medium opacity-50 cursor-not-allowed bg-gray-50 dark:bg-neutral-800 text-gray-500 dark:text-gray-400" v-html="translatePagination(link.label)"></div>
-                        <Link v-else :href="link.url" class="px-4 py-2 border rounded-xl text-sm font-medium transition" :class="[link.active ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-700']" v-html="translatePagination(link.label)"></Link>
+                        <div v-if="link.url === null" class="px-3 sm:px-4 py-2 border border-gray-200 dark:border-neutral-700 rounded-xl text-xs sm:text-sm font-medium opacity-50 cursor-not-allowed bg-gray-50 dark:bg-neutral-800 text-gray-500 dark:text-gray-400 whitespace-nowrap" v-html="translatePagination(link.label)"></div>
+                        <Link v-else :href="link.url" class="px-3 sm:px-4 py-2 border rounded-xl text-xs sm:text-sm font-medium transition whitespace-nowrap" :class="[link.active ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-700']" v-html="translatePagination(link.label)"></Link>
                     </template>
                 </div>
             </div>

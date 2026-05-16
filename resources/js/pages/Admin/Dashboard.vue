@@ -52,7 +52,7 @@ const formatCurrency = (amount: number) => {
     <Head :title="t('events.adminDashboard')" />
 
     <AppLayout>
-        <div class="px-4 py-8 md:px-8 space-y-8 max-w-[1600px] mx-auto">
+        <div class="px-4 py-8 md:px-8 space-y-8 max-w-[1600px] mx-auto w-full min-w-0">
             
             <!-- Welcome Header -->
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -138,7 +138,7 @@ const formatCurrency = (amount: number) => {
             </div>
 
             <!-- ── Events Performance Table ─────────────────────────────────── -->
-            <div class="bg-white dark:bg-neutral-900 rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-sm overflow-hidden">
+            <div class="bg-white dark:bg-neutral-900 rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-sm overflow-hidden w-full">
                 <div class="px-6 py-5 border-b border-gray-100 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ t('events.recentEventsPerformance') }}</h3>
                     <div class="relative max-w-sm w-full">
@@ -152,7 +152,7 @@ const formatCurrency = (amount: number) => {
                     </div>
                 </div>
 
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto w-full">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="text-gray-400 dark:text-gray-500 text-xs uppercase tracking-widest font-bold">

@@ -70,7 +70,7 @@ const handleAffiliatePayout = (id: number) => {
     <Head :title="t('events.adminFinancials')" />
 
     <AppLayout>
-        <div class="px-4 py-8 md:px-8 space-y-8 max-w-[1200px] mx-auto">
+        <div class="px-4 py-8 md:px-8 space-y-8 max-w-[1400px] mx-auto w-full min-w-0">
             
             <!-- Page Header -->
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -203,8 +203,8 @@ const handleAffiliatePayout = (id: number) => {
             </div>
 
             <!-- TAB: History -->
-            <div v-if="currentTab === 'history'" class="bg-white dark:bg-neutral-900 rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-sm overflow-hidden">
-                <div v-if="history.length > 0" class="overflow-x-auto">
+            <div v-if="currentTab === 'history'" class="bg-white dark:bg-neutral-900 rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-sm overflow-hidden w-full">
+                <div v-if="history.length > 0" class="overflow-x-auto w-full">
                     <table class="w-full text-sm text-left">
                         <thead class="text-xs text-gray-500 uppercase tracking-widest bg-gray-50 dark:bg-neutral-800/50 border-b border-gray-100 dark:border-neutral-800">
                             <tr>
