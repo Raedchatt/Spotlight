@@ -718,9 +718,9 @@ class EvenementController extends Controller
     {
         $event = Evenement::findOrFail($id);
 
-        // Only owner can manage permissions
-        if ($event->organisateur_id !== Auth::id()) {
-            return response()->json(['message' => 'Unauthorized. Only the owner can manage team permissions.'], 403);
+        // Only owner or collaborators with 'can_manage_team' can manage permissions
+        if (!$event->isManagedBy(Auth::id(), 'can_manage_team')) {
+            return response()->json(['message' => 'Unauthorized. You do not have permission to manage team permissions.'], 403);
         }
 
         $collaborator = EventCollaborator::where('evenement_id', $id)

@@ -389,8 +389,8 @@ const getStatusBadge = (status: string) => {
                                             </Badge>
                                         </div>
                                         
-                                        <!-- Permissions Manager (Owner Only) -->
-                                        <DropdownMenu v-if="isOwner && collab.statut === 'accepted'">
+                                        <!-- Permissions Manager (Owner or HR Manager Only) -->
+                                        <DropdownMenu v-if="(isOwner || stats.user_permissions.can_manage_team) && collab.statut === 'accepted'">
                                             <DropdownMenuTrigger as-child>
                                                 <Button variant="ghost" size="icon" class="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <Settings class="w-4 h-4" />
@@ -401,19 +401,19 @@ const getStatusBadge = (status: string) => {
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuCheckboxItem 
                                                     :checked="collab.can_edit"
-                                                    @update:checked="togglePermission(collab.id, 'can_edit', collab.can_edit)"
+                                                    @select.prevent="togglePermission(collab.id, 'can_edit', collab.can_edit)"
                                                 >
                                                     <Pencil class="w-4 h-4 mr-2" /> Can Edit Event
                                                 </DropdownMenuCheckboxItem>
                                                 <DropdownMenuCheckboxItem 
                                                     :checked="collab.can_cancel"
-                                                    @update:checked="togglePermission(collab.id, 'can_cancel', collab.can_cancel)"
+                                                    @select.prevent="togglePermission(collab.id, 'can_cancel', collab.can_cancel)"
                                                 >
                                                     <Ban class="w-4 h-4 mr-2" /> Can Cancel Event
                                                 </DropdownMenuCheckboxItem>
                                                 <DropdownMenuCheckboxItem 
                                                     :checked="collab.can_manage_team"
-                                                    @update:checked="togglePermission(collab.id, 'can_manage_team', collab.can_manage_team)"
+                                                    @select.prevent="togglePermission(collab.id, 'can_manage_team', collab.can_manage_team)"
                                                 >
                                                     <Users class="w-4 h-4 mr-2" /> Can Manage Team
                                                 </DropdownMenuCheckboxItem>
