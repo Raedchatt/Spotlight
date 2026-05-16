@@ -52,6 +52,11 @@ interface SimilarEvent {
     categorie: string;
     prix_spectateur: number;
     medias?: EventMedia[];
+    category?: {
+        id: number;
+        slug: string;
+        label: any;
+    };
 }
 
 interface Props {
@@ -73,6 +78,7 @@ interface Props {
             joueurs_par_equipe?: number;
         };
         categorie: string;
+        categorie_autre?: string;
         organisateur: {
             id: number;
             name: string;
@@ -109,6 +115,8 @@ interface Props {
         participant_remaining?: number;
         spectator_remaining?: number;
         total_revenue?: number;
+        is_equipe?: boolean;
+        participant_capacity_raw?: number;
     };
     is_reserved: boolean;
     is_pending_collaborator?: boolean;
@@ -697,7 +705,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                         </div>
                                         <div class="text-sm text-muted-foreground">
                                             <span class="font-bold text-foreground">
-                                                {{ props.stats.is_equipe ? Math.floor((props.stats.participant_reserved || 0) / (props.event.tournoi.joueurs_par_equipe || 1)) : props.stats.participant_reserved }}
+                                                {{ props.stats.is_equipe ? Math.floor((props.stats.participant_reserved || 0) / (props.event.tournoi?.joueurs_par_equipe || 1)) : props.stats.participant_reserved }}
                                             </span> / 
                                             {{ (props.stats.is_equipe && props.event.tournoi) ? props.event.tournoi.nombre_equipes : props.event.capacite_participant }} 
                                             {{ props.stats.is_equipe ? t('events.teams') : t('events.slots') }}
@@ -710,9 +718,9 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                         ></div>
                                     </div>
                                     <div class="flex justify-between text-xs font-bold uppercase tracking-wider text-zinc-400">
-                                        <span>{{ props.stats.is_equipe ? t('events.teamsJoinedCount', { count: Math.floor((props.stats.participant_reserved || 0) / (props.event.tournoi.joueurs_par_equipe || 1)) }) : t('events.playersCount', { count: props.stats.participant_reserved }) }}</span>
-                                        <span :class="(props.stats.participant_remaining ?? 0) <= (props.stats.is_equipe ? props.event.tournoi.joueurs_par_equipe : 3) ? 'text-red-500' : ''">
-                                            {{ props.stats.is_equipe ? t('events.teamsRemainingCount', { count: Math.floor((props.stats.participant_remaining || 0) / (props.event.tournoi.joueurs_par_equipe || 1)) }) : t('events.remainingCount', { count: props.stats.participant_remaining }) }}
+                                        <span>{{ props.stats.is_equipe ? t('events.teamsJoinedCount', { count: Math.floor((props.stats.participant_reserved || 0) / (props.event.tournoi?.joueurs_par_equipe || 1)) }) : t('events.playersCount', { count: props.stats.participant_reserved }) }}</span>
+                                        <span :class="(props.stats.participant_remaining ?? 0) <= (props.stats.is_equipe ? (props.event.tournoi?.joueurs_par_equipe || 0) : 3) ? 'text-red-500' : ''">
+                                            {{ props.stats.is_equipe ? t('events.teamsRemainingCount', { count: Math.floor((props.stats.participant_remaining || 0) / (props.event.tournoi?.joueurs_par_equipe || 1)) }) : t('events.remainingCount', { count: props.stats.participant_remaining }) }}
                                         </span>
                                     </div>
                                 </div>
@@ -807,7 +815,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                 <!-- Co-Organizer View: Lightweight Management Card -->
                                 <div v-else-if="props.is_collaborator" class="p-8">
                                     <h3 class="text-lg font-bold text-foreground mb-2">{{ t('events.coOrganizerPanel') }}</h3>
-                                    <p class="text-sm text-muted-foreground mb-6">{{ t('events.coOrganizerDesc') }}</p>
+                                    <p class="text-sm text-muted-foreground mb-6">{{ t('events.coOrganizersDesc') }}</p>
                                     <Link :href="`/dashboard/events/${props.event.id}/edit`" class="block w-full">
                                         <Button class="w-full py-5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold flex items-center justify-center gap-2">
                                             <Edit class="w-4 h-4" />
@@ -985,7 +993,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                             </div>
                             <div class="absolute top-4 left-4">
                                 <span class="bg-white/90 backdrop-blur-md text-zinc-900 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider shadow-sm">
-                                    {{ sim.category ? (typeof sim.category.label === 'object' ? (sim.category.label as any)[locale.value] || (sim.category.label as any)['en'] : sim.category.label) : t(`categories.${String(sim.categorie).toLowerCase()}`) }}
+                                    {{ sim.category ? (typeof sim.category.label === 'object' ? (sim.category.label as any)[locale] || (sim.category.label as any)['en'] : sim.category.label) : t(`categories.${String(sim.categorie).toLowerCase()}`) }}
                                 </span>
                             </div>
                         </div>

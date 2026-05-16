@@ -9,7 +9,7 @@ import {
     ShieldCheck,
     MoreHorizontal
 } from 'lucide-vue-next';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AppFooter from '@/components/AppFooter.vue';
 import AppHeader from '@/components/AppHeader.vue';
@@ -51,8 +51,28 @@ const scroll = (direction: 'left' | 'right') => {
     });
 };
 
+// Hero Banner Images
+const banners = [
+    '/images/1.png',
+    '/images/2.jpeg',
+    '/images/3.jpeg',
+    '/images/4.jpeg',
+    '/images/5.jpeg'
+];
+const currentBannerIndex = ref(0);
+let bannerInterval: ReturnType<typeof setInterval> | null = null;
+
 onMounted(() => {
     fetchEvents();
+    
+    // Start banner rotation
+    bannerInterval = setInterval(() => {
+        currentBannerIndex.value = (currentBannerIndex.value + 1) % banners.length;
+    }, 5000);
+});
+
+onUnmounted(() => {
+    if (bannerInterval) clearInterval(bannerInterval);
 });
 </script>
 
@@ -68,12 +88,17 @@ onMounted(() => {
                 <!-- Fallback gradient if image fails, and dimming overlay -->
                 <div class="absolute inset-0 bg-gradient-to-r from-black/80 to-black/40 z-10"></div>
                 
-                <!-- Background Image (Using a generic concert/crowd placeholder image) -->
-                <img 
-                    src="/images/hero-banner.webp" 
-                    alt="Crowd at event" 
-                    class="absolute inset-0 h-full w-full object-cover opacity-60"
-                />
+                <!-- Background Images with Transition -->
+                <div class="absolute inset-0 h-full w-full">
+                    <transition name="fade">
+                        <img 
+                            :key="banners[currentBannerIndex]"
+                            :src="banners[currentBannerIndex]" 
+                            alt="Hero banner" 
+                            class="absolute inset-0 h-full w-full object-cover opacity-60"
+                        />
+                    </transition>
+                </div>
 
                 <!-- Content container -->
                 <div class="relative z-20 mx-auto flex h-full max-w-7xl flex-col justify-center px-4 sm:px-6 lg:px-8">
@@ -216,5 +241,16 @@ onMounted(() => {
 .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+}
+
+/* Hero Banner Fade Transition */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 1.5s ease-in-out;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

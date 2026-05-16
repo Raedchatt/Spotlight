@@ -60,7 +60,7 @@ class AuthController extends Controller
     /**
      * Verify the email with the code
      */
-    public function verify(Request $request)
+    public function verifyCode(Request $request)
     {
         $request->validate([
             'code' => 'required|string|size:6',

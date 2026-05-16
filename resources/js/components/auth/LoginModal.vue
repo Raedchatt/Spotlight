@@ -96,9 +96,7 @@ const login = () => {
 
 
 
-
-
-        <!-- TEST LOGINS -->
+        <!-- TEST LOGINS 
         <div class="grid grid-cols-2 gap-2 mt-2">
           <button @click="email = 'org@org.com'; password = '12345678';" class="bg-orange-600/10 text-orange-600 py-2 px-2 rounded-full hover:bg-orange-600/20 transition text-[10px] font-bold border border-orange-600/20 uppercase tracking-wider">
             {{ t('auth.loginAsOrg') }}
@@ -115,7 +113,7 @@ const login = () => {
             {{ t('auth.loginAsAdmin') }}
           </button>
         </div>
-
+-->
 
 
 
@@ -130,7 +128,7 @@ const login = () => {
         <!-- GOOGLE LOGIN -->
         <a href="/auth/google" class="w-full border border-border py-2 rounded-full flex items-center justify-center gap-2 hover:bg-accent transition text-foreground">
           <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="18" />
-          Login with Google
+          {{ t('auth.loginWithGoogle') }}
         </a>
 
         <p class="text-center text-sm mt-4 text-foreground">
