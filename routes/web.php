@@ -137,6 +137,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/events/{id}/collaborators/accept', [\App\Http\Controllers\CollaborationController::class, 'accept']);
         Route::post('/events/{id}/collaborators/reject', [\App\Http\Controllers\CollaborationController::class, 'reject']);
         Route::patch('/events/{id}/collaborators/{collaboratorId}/toggle-permission', [EvenementController::class, 'toggleCollaboratorPermission']);
+        Route::delete('/events/{id}/collaborators/{collaboratorId}', [\App\Http\Controllers\CollaborationController::class, 'remove']);
 
         // Admin - Block/Unblock
         Route::post('/admin/block/{user}', [\App\Http\Controllers\Admin\AdminUserController::class, 'bloquerUtilisateur'])->name('admin.users.block');

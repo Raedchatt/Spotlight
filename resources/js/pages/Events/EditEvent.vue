@@ -445,6 +445,37 @@ const inviteCollaborator = async () => {
     }
 };
 
+const togglePermission = async (collab: any, permission: string) => {
+    const originalValue = collab[permission];
+    collab[permission] = !originalValue; // optimistic update
+    
+    try {
+        await axios.patch(`/web-api/events/${props.id}/collaborators/${collab.id}/toggle-permission`, {
+            permission: permission,
+            value: collab[permission]
+        });
+        toast.success(t('events.permissionUpdatedSuccess'));
+    } catch (error: any) {
+        // revert on failure
+        collab[permission] = originalValue;
+        toast.error(error.response?.data?.message || t('events.failedToUpdatePermission'));
+    }
+};
+
+const removeCollaborator = async (collabId: number) => {
+    if (!confirm(t('events.confirmRemoveCollaborator'))) {
+        return;
+    }
+    
+    try {
+        await axios.delete(`/web-api/events/${props.id}/collaborators/${collabId}`);
+        toast.success(t('events.collaboratorRemovedSuccess'));
+        fetchCollaborators();
+    } catch (error: any) {
+        toast.error(error.response?.data?.message || t('events.failedToRemoveCollaborator'));
+    }
+};
+
 onMounted(async () => {
     await Promise.all([fetchEvent(), fetchCategories()]);
     await fetchCollaborators();
@@ -832,17 +863,69 @@ onMounted(async () => {
 
                             <!-- List Current Collaborators -->
                             <div v-if="collaborators.length > 0" class="pt-4 border-t space-y-3">
-                                <h4 class="text-sm font-medium text-muted-foreground">{{ t('events.currentPendingCoOrganizers') }}</h4>
-                                <div class="space-y-2">
-                                    <div v-for="collab in collaborators" :key="collab.id" class="flex items-center justify-between p-3 border rounded-lg bg-card transition-all hover:border-slate-300 dark:hover:border-slate-700">
-                                        <div class="flex flex-col">
-                                            <span class="font-bold text-sm">{{ collab.organizer.username }}</span>
-                                            <span class="text-xs text-muted-foreground">{{ collab.organizer.email }}</span>
+                                <h4 class="text-sm font-semibold text-muted-foreground">{{ t('events.currentPendingCoOrganizers') }}</h4>
+                                <div class="space-y-3">
+                                    <div v-for="collab in collaborators" :key="collab.id" class="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg bg-card gap-4 transition-all hover:border-slate-300 dark:hover:border-slate-700">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <span class="font-bold text-sm truncate">{{ collab.organizer.username }}</span>
+                                                <Badge v-if="collab.statut === 'accepted'" class="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-emerald-200 uppercase tracking-tighter text-[9px] font-black">{{ t('events.status_accepted') }}</Badge>
+                                                <Badge v-slot="scope" v-else-if="collab.statut === 'pending'" class="bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 border-amber-200 uppercase tracking-tighter text-[9px] font-black">{{ t('events.status_pending') }}</Badge>
+                                                <Badge v-slot="scope" v-else class="bg-red-500/10 text-red-600 hover:bg-red-500/20 border-red-200 uppercase tracking-tighter text-[9px] font-black">{{ t('events.status_declined') }}</Badge>
+                                            </div>
+                                            <span class="text-xs text-muted-foreground block mt-0.5 truncate">{{ collab.organizer.email }}</span>
+                                            
+                                            <!-- Permissions control toggles (Accepted only) -->
+                                            <div class="flex flex-wrap items-center gap-2 mt-3" v-if="collab.statut === 'accepted'">
+                                                <button 
+                                                    @click="togglePermission(collab, 'can_edit')" 
+                                                    :disabled="!(eventData?.is_owner || eventData?.can_manage_team)"
+                                                    class="px-2.5 py-1 text-xs font-semibold rounded-full border transition-all flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                                    :class="collab.can_edit 
+                                                        ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/35 dark:text-blue-300 dark:border-blue-800' 
+                                                        : 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700'"
+                                                >
+                                                    <span class="w-1.5 h-1.5 rounded-full" :class="collab.can_edit ? 'bg-blue-500' : 'bg-slate-400'"></span>
+                                                    {{ t('events.permission_edit') }}
+                                                </button>
+                                                
+                                                <button 
+                                                    @click="togglePermission(collab, 'can_cancel')" 
+                                                    :disabled="!(eventData?.is_owner || eventData?.can_manage_team)"
+                                                    class="px-2.5 py-1 text-xs font-semibold rounded-full border transition-all flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                                    :class="collab.can_cancel 
+                                                        ? 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/35 dark:text-red-300 dark:border-red-800' 
+                                                        : 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700'"
+                                                >
+                                                    <span class="w-1.5 h-1.5 rounded-full" :class="collab.can_cancel ? 'bg-red-500' : 'bg-slate-400'"></span>
+                                                    {{ t('events.permission_cancel') }}
+                                                </button>
+                                                
+                                                <button 
+                                                    @click="togglePermission(collab, 'can_manage_team')" 
+                                                    :disabled="!(eventData?.is_owner || eventData?.can_manage_team)"
+                                                    class="px-2.5 py-1 text-xs font-semibold rounded-full border transition-all flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                                                    :class="collab.can_manage_team 
+                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/35 dark:text-emerald-300 dark:border-emerald-800' 
+                                                        : 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700'"
+                                                >
+                                                    <span class="w-1.5 h-1.5 rounded-full" :class="collab.can_manage_team ? 'bg-emerald-500' : 'bg-slate-400'"></span>
+                                                    {{ t('events.permission_manage_team') }}
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <Badge v-if="collab.statut === 'accepted'" class="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-emerald-200 uppercase tracking-tighter text-[9px] font-black">{{ t('events.status_accepted') }}</Badge>
-                                            <Badge v-else-if="collab.statut === 'pending'" class="bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 border-amber-200 uppercase tracking-tighter text-[9px] font-black">{{ t('events.status_pending') }}</Badge>
-                                            <Badge v-else class="bg-red-500/10 text-red-600 hover:bg-red-500/20 border-red-200 uppercase tracking-tighter text-[9px] font-black">{{ t('events.status_declined') }}</Badge>
+                                        
+                                        <!-- Actions (Remove/Leave Button) -->
+                                        <div class="flex items-center justify-end" v-if="eventData?.is_owner || eventData?.can_manage_team || (collab.organizer.id === auth?.user?.id)">
+                                            <Button 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                class="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
+                                                @click="removeCollaborator(collab.id)"
+                                            >
+                                                <Trash2 class="w-4 h-4 mr-1.5" />
+                                                {{ collab.organizer.id === auth?.user?.id ? t('common.leave') : t('common.delete') }}
+                                            </Button>
                                         </div>
                                     </div>
                                 </div>

@@ -35,9 +35,12 @@ class CollaborationController extends Controller
             ->get()
             ->map(function ($c) {
                 return [
-                    'id'         => $c->id,
-                    'statut'     => $c->statut,
-                    'organizer'  => [
+                    'id'              => $c->id,
+                    'statut'          => $c->statut,
+                    'can_edit'        => $c->can_edit,
+                    'can_cancel'      => $c->can_cancel,
+                    'can_manage_team' => $c->can_manage_team,
+                    'organizer'       => [
                         'id'       => $c->organizer->id,
                         'username' => $c->organizer->username,
                         'email'    => $c->organizer->email,
@@ -210,5 +213,30 @@ class CollaborationController extends Controller
         })->filter(); // filter out any nulls
 
         return response()->json(['data' => $events]);
+    }
+
+    /**
+     * Remove a collaborator from the event.
+     */
+    public function remove($eventId, $collaboratorId)
+    {
+        $event = Evenement::findOrFail($eventId);
+        $collab = EventCollaborator::where('evenement_id', $eventId)
+            ->where('id', $collaboratorId)
+            ->firstOrFail();
+
+        // Check permission: Owner, the collaborator themselves, or someone with can_manage_team can remove
+        $authId = Auth::id();
+        $isOwner = $event->organisateur_id === $authId;
+        $isTheCollaborator = $collab->organizer_id === $authId;
+        $canManageTeam = $event->isManagedBy($authId, 'can_manage_team');
+
+        if (!$isOwner && !$isTheCollaborator && !$canManageTeam) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+
+        $collab->delete();
+
+        return response()->json(['message' => 'Collaborator removed successfully.']);
     }
 }

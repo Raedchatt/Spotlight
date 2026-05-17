@@ -22,6 +22,7 @@ interface EventRow {
     id: number;
     titre: string;
     categorie: string;
+    categorie_autre?: string | null;
     lieu: string;
     statut: string;
     revenue: number;
