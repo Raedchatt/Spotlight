@@ -393,21 +393,33 @@ const selectedOrganizer = ref<any>(null);
 const isInviting = ref(false);
 
 let searchTimeout: any = null;
-const searchOrganizers = () => {
+watch(searchQuery, (newVal) => {
     if (searchTimeout) clearTimeout(searchTimeout);
-    if (!searchQuery.value || searchQuery.value.length < 2) {
+    
+    // If input changes away from the selected organizer's username, reset the selection
+    if (selectedOrganizer.value && newVal !== selectedOrganizer.value.username) {
+        selectedOrganizer.value = null;
+    }
+
+    if (!newVal || newVal.length < 2) {
         searchResults.value = [];
         return;
     }
+    
+    // If the input matches the selected organizer's username, do not trigger search
+    if (selectedOrganizer.value && newVal === selectedOrganizer.value.username) {
+        return;
+    }
+
     searchTimeout = setTimeout(async () => {
         try {
-            const res = await axios.get(`/web-api/organizers/search?q=${searchQuery.value}`);
+            const res = await axios.get(`/web-api/organizers/search?q=${encodeURIComponent(newVal)}`);
             searchResults.value = res.data;
         } catch (e) {
             console.error('Search error', e);
         }
     }, 300);
-};
+});
 
 const selectOrganizer = (user: any) => {
     selectedOrganizer.value = user;
@@ -827,12 +839,12 @@ onMounted(async () => {
                             <!-- Invite New Collaborator (Owner Only) -->
                             <div class="space-y-3 font-semibold" v-if="eventData?.is_owner">
                                 <label class="text-sm font-medium">{{ t('events.inviteByNameEmail') }}</label>
-                                <div class="flex gap-2">
-                                    <div class="relative flex-1">
+                                <div class="flex flex-col gap-3 items-center">
+                                    <div class="relative w-[80%]">
                                         <Input 
                                             v-model="searchQuery" 
                                             :placeholder="t('events.searchOrganizersPlaceholder')" 
-                                            @input="searchOrganizers"
+                                            class="w-full"
                                         />
                                         <!-- Search Results Dropdown -->
                                         <div v-if="searchResults.length > 0 && searchQuery" class="absolute z-10 w-full mt-1 bg-white dark:bg-slate-900 border rounded-md shadow-lg max-h-48 overflow-y-auto">
@@ -850,12 +862,12 @@ onMounted(async () => {
                                     <Button 
                                         @click="inviteCollaborator" 
                                         :disabled="!selectedOrganizer || isInviting"
-                                        class="bg-blue-600 hover:bg-blue-700"
+                                        class="bg-blue-600 hover:bg-blue-700 w-[80%]"
                                     >
                                         {{ isInviting ? t('events.sending') : t('events.sendInvite') }}
                                     </Button>
                                 </div>
-                                <div v-if="selectedOrganizer" class="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-md text-sm">
+                                <div v-if="selectedOrganizer" class="w-[80%] mx-auto flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-md text-sm">
                                     <span>{{ t('events.selected') }}: <strong>{{ selectedOrganizer.username }}</strong></span>
                                     <button @click="selectedOrganizer = null; searchQuery = ''" class="hover:text-blue-900"><X class="w-4 h-4"/></button>
                                 </div>
