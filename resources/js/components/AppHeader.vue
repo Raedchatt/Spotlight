@@ -89,7 +89,7 @@ const mainNavItems = computed<NavItem[]>(() => {
         return [
             {
                 title: t('nav.dashboard'),
-                href: dashboard(),
+                href: '/affiliate/dashboard',
                 icon: LayoutGrid,
             },
             {
@@ -236,7 +236,7 @@ const handleLogout = () => {
                     </Sheet>
                 </div>
 
-                <Link :href="auth.user ? (auth.user.role === 'participant' ? '/discovery' : dashboard()) : '/'" class="flex items-center gap-x-2 mr-[2%] ">
+                <Link :href="auth.user ? (auth.user.role === 'participant' ? '/discovery' : auth.user.role === 'revendeur' ? '/affiliate/dashboard' : dashboard()) : '/'" class="flex items-center gap-x-2 mr-[2%] ">
                     <AppLogo />
                 </Link>
 
