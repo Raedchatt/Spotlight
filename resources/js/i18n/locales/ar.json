@@ -156,6 +156,7 @@
   },
 
   "events": {
+    "hostedByLabel": "تنظيم",
     "permissionUpdatedSuccess": "تم تحديث الصلاحية بنجاح!",
     "failedToUpdatePermission": "فشل تحديث الصلاحية.",
     "confirmRemoveCollaborator": "هل أنت متأكد أنك تريد إزالة هذا المتعاون؟",

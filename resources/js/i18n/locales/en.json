@@ -156,6 +156,7 @@
   },
 
   "events": {
+    "hostedByLabel": "Hosted by",
     "permissionUpdatedSuccess": "Permission updated successfully.",
     "failedToUpdatePermission": "Failed to update permission.",
     "confirmRemoveCollaborator": "Are you sure you want to remove this collaborator?",

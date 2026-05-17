@@ -156,6 +156,7 @@
   },
 
   "events": {
+    "hostedByLabel": "Organisé par",
     "permissionUpdatedSuccess": "Autorisation mise à jour avec succès !",
     "failedToUpdatePermission": "Échec de la mise à jour de l'autorisation.",
     "confirmRemoveCollaborator": "Êtes-vous sûr de vouloir supprimer ce collaborateur ?",

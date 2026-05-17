@@ -185,11 +185,11 @@ const formatTime = (dateString) => {
                     style="background-image: radial-gradient(circle at 2px 2px, rgba(0,0,0,0.02) 1px, transparent 0); background-size: 24px 24px;"
                 >
                     <div v-for="message in messages" :key="message.id" 
-                        :class="['flex w-full message-item transition-all duration-300', message.sender_id === $page.props.auth.user.id ? 'justify-end' : 'justify-start']"
+                        :class="['flex w-full message-item transition-all duration-300', message.sender_id !== otherUser.id ? 'justify-end' : 'justify-start']"
                     >
                         <div :class="[
                             'max-w-[85%] sm:max-w-[75%] rounded-3xl p-4 shadow-sm transition-all duration-300 group relative',
-                            message.sender_id === $page.props.auth.user.id 
+                            message.sender_id !== otherUser.id 
                                 ? 'bg-[#1a56db] text-primary-foreground rounded-br-none' 
                                 : 'bg-background text-foreground border border-border rounded-bl-none'
                         ]">
@@ -202,7 +202,7 @@ const formatTime = (dateString) => {
                                     <button 
                                         @click="toggleOriginal(message.id)"
                                         class="text-[9px] uppercase font-bold tracking-widest px-2.5 py-1 rounded-xl transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
-                                        :class="message.sender_id === $page.props.auth.user.id 
+                                        :class="message.sender_id !== otherUser.id 
                                             ? 'bg-white/10 hover:bg-white/20 text-white border border-white/10' 
                                             : 'bg-muted/80 hover:bg-muted text-muted-foreground border border-border'"
                                     >
@@ -215,9 +215,9 @@ const formatTime = (dateString) => {
                             </div>
 
                             <div :class="['mt-2 text-[10px] font-medium flex items-center gap-1.5', 
-                                message.sender_id === $page.props.auth.user.id ? 'justify-end text-blue-100/70' : 'justify-start text-muted-foreground/70']">
+                                message.sender_id !== otherUser.id ? 'justify-end text-blue-100/70' : 'justify-start text-muted-foreground/70']">
                                 {{ formatTime(message.created_at) }}
-                                <svg v-if="message.sender_id === $page.props.auth.user.id" class="w-3.5 h-3.5" :class="message.lu ? 'text-blue-100' : 'opacity-30'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg v-if="message.sender_id !== otherUser.id" class="w-3.5 h-3.5" :class="message.lu ? 'text-blue-100' : 'opacity-30'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
