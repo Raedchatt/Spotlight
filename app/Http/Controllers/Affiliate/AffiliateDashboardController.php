@@ -84,7 +84,7 @@ class AffiliateDashboardController extends Controller
             ];
         });
 
-        return Inertia::render('affiliate/Dashboard', [
+        return Inertia::render('Affiliate/Dashboard', [
             'stats' => $stats,
             'commissions' => $commissions,
             'referrals' => $referrals,
