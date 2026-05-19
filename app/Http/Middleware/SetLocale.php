@@ -17,9 +17,10 @@ class SetLocale
     public function handle(Request $request, Closure $next): Response
     {
         // Try to get locale from cookie, then header, then session, fallback to config
+        // Note: API routes don't have a session, so we check hasSession() first to avoid a RuntimeException
         $locale = $request->cookie('locale') 
                ?? $request->header('X-Locale') 
-               ?? $request->session()->get('locale') 
+               ?? ($request->hasSession() ? $request->session()->get('locale') : null) 
                ?? config('app.locale');
 
         if (in_array($locale, ['en', 'fr', 'ar'])) {
