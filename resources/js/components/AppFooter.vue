@@ -2,11 +2,18 @@
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { toast } from 'vue-sonner';
 
 const { t } = useI18n();
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
 const adminId = 40; // Hardcoded admin ID as per analysis
+
+const copyEmail = (e: Event) => {
+  e.preventDefault();
+  navigator.clipboard.writeText('spotlight.team.app@gmail.com');
+  toast.success(t('events.copied') || 'Email address copied to clipboard!');
+};
 </script>
 
 <template>
@@ -37,8 +44,8 @@ const adminId = 40; // Hardcoded admin ID as per analysis
             <a href="#" class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-300 transition-transform hover:scale-110 hover:bg-zinc-700">
               <svg class="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
             </a>
-            <!-- Mail -->
-            <a href="#" class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-300 transition-transform hover:scale-110 hover:bg-zinc-700">
+             <!-- Mail -->
+            <a href="mailto:spotlight.team.app@gmail.com" class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-300 transition-transform hover:scale-110 hover:bg-zinc-700" title="Email Us" @click="copyEmail">
                <svg class="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M20 4H4c-1.103 0-2 .897-2 2v12c0 1.103.897 2 2 2h16c1.103 0 2-.897 2-2V6c0-1.103-.897-2-2-2zm0 2v.511l-8 6.223-8-6.222V6h16zM4 18V9.044l7.386 5.745a.994.994 0 0 0 1.228 0L20 9.044 20.002 18H4z"/></svg>
             </a>
             <!-- Whatsapp -->
@@ -56,13 +63,14 @@ const adminId = 40; // Hardcoded admin ID as per analysis
               <Link href="/about-us" class="hover:text-white transition-colors">{{ t('footer.aboutUs') }}</Link>
             </li>
             <li>
-              <Link 
-                :href="user ? `/messages/${adminId}` : '/login'" 
+              <a 
+                href="https://mail.google.com/mail/?view=cm&fs=1&to=spotlight.team.app@gmail.com" 
+                target="_blank" rel="noopener noreferrer"
                 class="hover:text-white transition-colors"
-                :title="user ? t('footer.contactAdmin') : t('footer.loginToContact')"
+                :title="t('footer.contactUs')"
               >
                 {{ t('footer.contactUs') }}
-              </Link>
+              </a>
             </li>
             <li>
               <Link href="/privacy-policy" class="hover:text-white transition-colors">{{ t('footer.privacyPolicy') }}</Link>

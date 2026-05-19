@@ -130,18 +130,30 @@ const { t, locale } = useI18n();
 const auth = computed(() => page.props.auth as any);
 
 const isOwner = computed(() => {
-    return auth.value?.user?.id === props.event.organisateur.id;
+    return auth.value?.user?.role !== 'revendeur' && auth.value?.user?.id === props.event.organisateur.id;
+});
+
+const isCollaborator = computed(() => {
+    return auth.value?.user?.role !== 'revendeur' && !!props.is_collaborator;
 });
 
 // true for both the owner and accepted co-organizers
-const canManage = computed(() => isOwner.value || !!props.is_collaborator);
+const canManage = computed(() => isOwner.value || isCollaborator.value);
 
 const isReseller = computed(() => auth.value?.user?.role === 'revendeur');
 
-const breadcrumbs = [
-    { title: t('events.discovery'), href: '/discovery' },
-    { title: props.event.titre, href: `/events/${props.event.id}` },
-];
+const breadcrumbs = computed(() => {
+    if (isReseller.value) {
+        return [
+            { title: t('nav.affiliateDashboard') || 'Affiliate Dashboard', href: '/affiliate/dashboard' },
+            { title: props.event.titre, href: `/events/${props.event.id}` },
+        ];
+    }
+    return [
+        { title: t('events.discovery') || 'Discovery', href: '/discovery' },
+        { title: props.event.titre, href: `/events/${props.event.id}` },
+    ];
+});
 
 const displayCategory = computed(() => {
     if (props.event.category) {
@@ -177,7 +189,7 @@ const eventTeam = computed(() => {
         name: props.event.organisateur.organisateur?.nom_organisation || props.event.organisateur.username || props.event.organisateur.name || t('events.unknownOrganizer'),
         role: t('events.hostOwner'),
         isOwner: true,
-        isYou: auth.value?.user?.id === props.event.organisateur.id
+        isYou: auth.value?.user?.role !== 'revendeur' && auth.value?.user?.id === props.event.organisateur.id
     });
     
     // 2. Add Accepted Collaborators
@@ -189,7 +201,7 @@ const eventTeam = computed(() => {
                 name: collab.organizer.organisateur?.nom_organisation || collab.organizer.username || collab.organizer.name || t('events.unknownOrganizer'),
                 role: t('events.coOrganizer'),
                 isOwner: false,
-                isYou: auth.value?.user?.id === collab.organizer.id
+                isYou: auth.value?.user?.role !== 'revendeur' && auth.value?.user?.id === collab.organizer.id
             });
         }
     }
@@ -350,6 +362,13 @@ const reserveButtonText = computed(() => {
             return t('events.reserveAsSpectator');
         }
     }
+});
+
+const isButtonDisabled = computed(() => {
+    if (isReseller.value) return false;
+    if (auth.value.user && auth.value.user.role !== 'participant') return true;
+    if (isFullyBooked.value || isEventEnded.value) return true;
+    return false;
 });
 
 const { openLogin } = useAuthModal();
@@ -758,7 +777,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                             
                             <!-- Ticket / Management Card -->
                             <div class="bg-card rounded-2xl shadow-lg border border-border overflow-hidden">
-                                <div class="p-1 h-2" :class="isOwner ? 'bg-foreground' : (props.is_collaborator ? 'bg-violet-600' : 'bg-blue-600')"></div>
+                                <div class="p-1 h-2" :class="isOwner ? 'bg-foreground' : (isCollaborator ? 'bg-violet-600' : 'bg-blue-600')"></div>
                                 
                                 <!-- Owner View: Management Card -->
                                 <div v-if="isOwner" class="p-8">
@@ -813,7 +832,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                 </div>
 
                                 <!-- Co-Organizer View: Lightweight Management Card -->
-                                <div v-else-if="props.is_collaborator" class="p-8">
+                                <div v-else-if="isCollaborator" class="p-8">
                                     <h3 class="text-lg font-bold text-foreground mb-2">{{ t('events.coOrganizerPanel') }}</h3>
                                     <p class="text-sm text-muted-foreground mb-6">{{ t('events.coOrganizersDesc') }}</p>
                                     <Link :href="`/dashboard/events/${props.event.id}/edit`" class="block w-full">
@@ -894,15 +913,15 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                     <!-- Action Button -->
                                     <button 
                                         @click="handleReserveClick"
-                                        :disabled="(auth.user && auth.user.role !== 'participant') || isFullyBooked || isEventEnded"
+                                        :disabled="isButtonDisabled"
                                         :class="[
                                             'w-full py-4 rounded-xl font-bold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg mb-4',
-                                            ((auth.user && auth.user.role !== 'participant') || isFullyBooked || isEventEnded) 
+                                            isButtonDisabled 
                                                 ? 'bg-muted text-muted-foreground cursor-not-allowed shadow-none' 
-                                                : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/10'
+                                                : (isReseller ? 'bg-violet-600 hover:bg-violet-700 text-white shadow-violet-600/20' : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/10')
                                         ]"
                                     >
-                                        <Ticket class="w-5 h-5" v-if="!isFullyBooked && (!auth.user || auth.user.role === 'participant')" />
+                                        <Ticket class="w-5 h-5" v-if="!isReseller && !isFullyBooked && (!auth.user || auth.user.role === 'participant')" />
                                         <template v-if="isReseller">
                                             <component :is="copied ? CheckCircle : Copy" class="w-5 h-5" />
                                         </template>
@@ -943,6 +962,9 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                         <div class="flex-1 text-left">
                                             <h4 class="font-bold text-sm text-foreground leading-tight">
                                                 <template v-if="member.isYou">{{ t('events.you') }}</template>
+                                                <span v-else-if="isReseller" class="text-foreground">
+                                                    {{ member.name }}
+                                                </span>
                                                 <Link v-else :href="`/organizer/${member.id}`" class="hover:text-blue-600 transition-colors duration-200">
                                                     {{ member.name }}
                                                 </Link>
@@ -951,7 +973,7 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                                                 {{ member.role }}
                                             </div>
                                         </div>
-                                        <Link v-if="!member.isYou" :href="`/organizer/${member.id}`">
+                                        <Link v-if="!member.isYou && !isReseller" :href="`/organizer/${member.id}`">
                                             <Button variant="outline" size="icon" class="h-8 w-8 rounded-full">
                                                 <ChevronRight class="w-4 h-4" />
                                             </Button>
