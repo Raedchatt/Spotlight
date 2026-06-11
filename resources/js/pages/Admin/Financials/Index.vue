@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { 
-     Check, AlertCircle, Building, CalendarDays, ExternalLink, 
+      AlertCircle, Building, CalendarDays, ExternalLink, 
     RefreshCw, User as UserIcon,  
 } from 'lucide-vue-next';
 import { ref } from 'vue';
-import { toast } from 'vue-sonner';
 import { useI18n } from 'vue-i18n';
+import { toast } from 'vue-sonner';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

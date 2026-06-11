@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref } from "vue"
-import axios from "axios"
-import { router } from "@inertiajs/vue3"
-import { toast } from 'vue-sonner'
-import { useI18n } from 'vue-i18n'
+
 import { UserIcon, LockClosedIcon } from "@heroicons/vue/24/outline"
+import { router } from "@inertiajs/vue3"
+import { ref } from "vue"
+import { useI18n } from 'vue-i18n'
+import { toast } from 'vue-sonner'
 import {
   Dialog,
   DialogContent,
