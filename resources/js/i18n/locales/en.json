@@ -710,6 +710,8 @@
     "commerciaux": "Commercial",
     "art": "Art",
     "gaming": "Gaming",
+    "conference": "Conference",
+    "esports": "Esports",
     "autre": "Other",
     "all": "All"
   },
@@ -723,5 +725,6 @@
     "user": "We can't find a user with that email address.",
     "token": "This password reset token is invalid.",
     "throttled": "Please wait before retrying."
-  }
+  },
+  "profile-updated": "Profile updated successfully."
 }

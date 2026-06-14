@@ -658,12 +658,43 @@ class EvenementController extends Controller
         $limit = $request->input('limit');
         $perPage = $request->input('per_page');
 
+        // Apply Personalization if Participant
+        $user = Auth::user();
+        $isParticipant = $user && $user->isParticipant();
+
+        if ($isParticipant) {
+            $interestSlugs = $user->interests ?? [];
+
+            $historySlugs = Reservation::where('reservations.user_id', $user->id)
+                ->where('reservations.statut', \App\Enums\StatutReservation::Confirmed)
+                ->join('evenements', 'reservations.evenement_id', '=', 'evenements.id')
+                ->select('evenements.categorie')
+                ->groupBy('evenements.categorie')
+                ->orderByRaw('count(*) DESC')
+                ->limit(5)
+                ->pluck('categorie')
+                ->toArray();
+
+            $prioritySlugs = array_values(array_unique(array_merge($interestSlugs, $historySlugs)));
+
+            if (!empty($prioritySlugs)) {
+                $caseParts = [];
+                foreach ($prioritySlugs as $i => $slug) {
+                    $caseParts[] = "WHEN evenements.categorie = '{$slug}' THEN {$i}";
+                }
+                $caseStatement = 'CASE ' . implode(' ', $caseParts) . ' ELSE 999 END';
+                $query->orderByRaw($caseStatement);
+            }
+        }
+
+        $query->latest(); // Secondary sort (or primary if no personalization)
+
         if ($limit) {
-            $events = $query->latest()->limit($limit)->get();
+            $events = $query->limit($limit)->get();
         } elseif ($perPage) {
-            $events = $query->latest()->paginate($perPage);
+            $events = $query->paginate($perPage);
         } else {
-            $events = $query->latest()->get();
+            $events = $query->get();
         }
 
         // Add is_reserved flag for authenticated users

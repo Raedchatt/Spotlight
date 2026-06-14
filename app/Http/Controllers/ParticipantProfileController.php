@@ -38,6 +38,15 @@ class ParticipantProfileController extends Controller
                 ->groupBy('evenements.categorie')
                 ->orderBy('total', 'desc')
                 ->first()?->categorie ?? 'None',
+            'top_categories' => Reservation::where('user_id', $user->id)
+                ->where('reservations.statut', StatutReservation::Confirmed)
+                ->join('evenements', 'reservations.evenement_id', '=', 'evenements.id')
+                ->select('evenements.categorie', DB::raw('count(*) as total'))
+                ->groupBy('evenements.categorie')
+                ->orderBy('total', 'desc')
+                ->limit(3)
+                ->pluck('categorie')
+                ->toArray(),
         ];
 
         return Inertia::render('Participant/Settings', [
@@ -60,6 +69,22 @@ class ParticipantProfileController extends Controller
             ->where('statut', StatutReservation::Confirmed)
             ->count();
 
+        // Recent events attended (last 3 confirmed)
+        $recentEvents = Reservation::where('user_id', $id)
+            ->where('reservations.statut', StatutReservation::Confirmed)
+            ->join('evenements', 'reservations.evenement_id', '=', 'evenements.id')
+            ->select('evenements.titre', 'evenements.categorie', 'evenements.date_debut', 'evenements.id as event_id')
+            ->orderBy('evenements.date_debut', 'desc')
+            ->limit(3)
+            ->get()
+            ->map(fn($e) => [
+                'id' => $e->event_id,
+                'title' => $e->titre,
+                'category' => $e->categorie,
+                'date' => $e->date_debut,
+            ])
+            ->toArray();
+
         return Inertia::render('Participant/PublicProfile', [
             'participant' => [
                 'id' => $participantUser->id,
@@ -67,10 +92,14 @@ class ParticipantProfileController extends Controller
                 'email' => $participantUser->email,
                 'phone' => $participantUser->telephone,
                 'about' => $participantUser->about,
+                'member_since' => $participantUser->dateCreation
+                    ? date('Y', strtotime($participantUser->dateCreation))
+                    : date('Y', strtotime($participantUser->created_at)),
             ],
             'stats' => [
                 'total_events' => $totalEvents,
                 'interests' => $participantUser->interests ?? [],
+                'recent_events' => $recentEvents,
             ],
         ]);
     }

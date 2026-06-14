@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { Ticket, Trophy, User as UserIcon, Phone, Mail, User } from 'lucide-vue-next';
+import { Ticket, Trophy, User as UserIcon, Phone, Mail, User, Check, Sparkles } from 'lucide-vue-next';
 import AppearanceTabs from '@/components/AppearanceTabs.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ type Props = {
     stats: {
         total_events: number;
         best_category: string;
+        top_categories?: string[];
     };
     status?: string;
 };
@@ -34,16 +35,21 @@ const interestsForm = useForm({
     interests: props.user.interests || [],
 });
 
+// Aligned with real DB category slugs
 const availableInterests = [
-    { label: 'Music', slug: 'music', icon: '🎵' },
-    { label: 'Sports', slug: 'sports', icon: '⚽' },
-    { label: 'Art', slug: 'art', icon: '🎨' },
-    { label: 'Tech', slug: 'tech', icon: '💻' },
-    { label: 'Theater', slug: 'theater', icon: '🎭' },
-    { label: 'Food', slug: 'food', icon: '🍕' },
-    { label: 'Cinema', slug: 'cinema', icon: '🎬' },
-    { label: 'Gaming', slug: 'gaming', icon: '🎮' },
+    { label: 'Sports', slug: 'sportifs', icon: '⚽', color: 'from-green-500/20 to-emerald-500/10', ring: 'ring-green-500/40', text: 'text-green-600 dark:text-green-400' },
+    { label: 'Musical', slug: 'musicaux', icon: '🎵', color: 'from-purple-500/20 to-violet-500/10', ring: 'ring-purple-500/40', text: 'text-purple-600 dark:text-purple-400' },
+    { label: 'Cultural', slug: 'culturels', icon: '🎭', color: 'from-rose-500/20 to-pink-500/10', ring: 'ring-rose-500/40', text: 'text-rose-600 dark:text-rose-400' },
+    { label: 'Scientific', slug: 'scientifiques', icon: '🔬', color: 'from-blue-500/20 to-cyan-500/10', ring: 'ring-blue-500/40', text: 'text-blue-600 dark:text-blue-400' },
+    { label: 'Commercial', slug: 'commerciaux', icon: '💼', color: 'from-amber-500/20 to-yellow-500/10', ring: 'ring-amber-500/40', text: 'text-amber-600 dark:text-amber-400' },
+    { label: 'Art', slug: 'art', icon: '🎨', color: 'from-fuchsia-500/20 to-pink-500/10', ring: 'ring-fuchsia-500/40', text: 'text-fuchsia-600 dark:text-fuchsia-400' },
+    { label: 'Gaming', slug: 'gaming', icon: '🎮', color: 'from-indigo-500/20 to-blue-500/10', ring: 'ring-indigo-500/40', text: 'text-indigo-600 dark:text-indigo-400' },
 ];
+
+const categoryEmojiMap: Record<string, string> = {
+    sportifs: '⚽', musicaux: '🎵', culturels: '🎭',
+    scientifiques: '🔬', commerciaux: '💼', art: '🎨', gaming: '🎮',
+};
 
 const toggleInterest = (slug: string) => {
     const index = interestsForm.interests.indexOf(slug);
@@ -130,10 +136,34 @@ const breadcrumbItems = [
                                 <div class="text-xl font-bold text-orange-600 truncate">{{ stats.best_category }}</div>
                             </CardContent>
                         </Card>
+
+                        <!-- Top Categories Badges -->
+                        <Card v-if="stats.top_categories && stats.top_categories.length > 0" class="border-none shadow-sm">
+                            <CardHeader class="pb-2 pt-4">
+                                <div class="flex items-center gap-2">
+                                    <div class="p-2 bg-violet-500/10 rounded-lg">
+                                        <Sparkles class="h-4 w-4 text-violet-500" />
+                                    </div>
+                                    <CardTitle class="text-xs font-medium uppercase tracking-wider text-muted-foreground">Your top categories</CardTitle>
+                                </div>
+                            </CardHeader>
+                            <CardContent class="pb-4">
+                                <div class="flex flex-wrap gap-2">
+                                    <Badge
+                                        v-for="cat in stats.top_categories"
+                                        :key="cat"
+                                        variant="secondary"
+                                        class="text-xs font-semibold bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300 border-none"
+                                    >
+                                        {{ categoryEmojiMap[cat] || '📌' }} {{ cat }}
+                                    </Badge>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </div>
 
                     <!-- Column 2: Personal Information -->
-                    <div class="lg:col-span-6">
+                    <div class="lg:col-span-5">
                         <Card class="border-none shadow-sm">
                             <CardHeader>
                                 <CardTitle class="text-lg">Personal Information</CardTitle>
@@ -213,43 +243,61 @@ const breadcrumbItems = [
                         </Card>
                     </div>
 
-                    <!-- Column 3: Interests & Preferences -->
-                    <div class="lg:col-span-3">
+                    <!-- Column 3: Interests & Preferences — Upgraded -->
+                    <div class="lg:col-span-4">
                         <Card class="border-none shadow-sm">
                             <CardHeader>
-                                <CardTitle class="text-lg">Interests & Preferences</CardTitle>
-                                <p class="text-xs text-muted-foreground mt-1">Select the event types you enjoy</p>
+                                <CardTitle class="text-lg flex items-center gap-2">
+                                    <Sparkles class="h-5 w-5 text-violet-500" />
+                                    Interests & Preferences
+                                </CardTitle>
+                                <p class="text-xs text-muted-foreground mt-1">Select the event types you enjoy — this personalizes your Discovery feed</p>
                             </CardHeader>
                             <CardContent>
-                                <div class="flex flex-wrap gap-2 mb-8">
+                                <div class="grid grid-cols-2 gap-3 mb-8">
                                     <button
                                         v-for="interest in availableInterests"
                                         :key="interest.slug"
                                         type="button"
                                         @click="toggleInterest(interest.slug)"
                                         :class="[
-                                            'px-3 py-2 rounded-full text-xs font-semibold transition-all border outline-none',
+                                            'relative flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all duration-300 outline-none group',
                                             interestsForm.interests.includes(interest.slug)
-                                                ? 'bg-zinc-900 border-zinc-900 text-white shadow-sm'
-                                                : 'bg-transparent border-zinc-200 text-zinc-600 hover:border-zinc-400'
+                                                ? `bg-gradient-to-br ${interest.color} border-transparent ring-2 ${interest.ring} shadow-lg scale-[1.02]`
+                                                : 'bg-muted/30 border-transparent hover:border-zinc-200 dark:hover:border-zinc-700 hover:shadow-md hover:scale-[1.02]'
                                         ]"
                                     >
-                                        <span class="mr-1.5">{{ interest.icon }}</span>
-                                        {{ interest.label }}
+                                        <!-- Checkmark badge -->
+                                        <div
+                                            v-if="interestsForm.interests.includes(interest.slug)"
+                                            class="absolute -top-1.5 -right-1.5 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center shadow-md animate-pop"
+                                        >
+                                            <Check class="w-3.5 h-3.5 text-white" />
+                                        </div>
+
+                                        <span class="text-2xl mb-2 transition-transform duration-300 group-hover:scale-110">{{ interest.icon }}</span>
+                                        <span
+                                            :class="[
+                                                'text-xs font-bold uppercase tracking-wider transition-colors',
+                                                interestsForm.interests.includes(interest.slug)
+                                                    ? interest.text
+                                                    : 'text-zinc-500 dark:text-zinc-400'
+                                            ]"
+                                        >{{ interest.label }}</span>
                                     </button>
                                 </div>
 
                                 <Button
                                     @click="updateInterests"
                                     variant="outline"
-                                    class="w-full h-11 border-zinc-200 hover:bg-zinc-50 rounded-xl font-medium transition-all"
+                                    class="w-full h-11 border-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-xl font-medium transition-all"
                                     :disabled="interestsForm.processing"
                                 >
                                     {{ interestsForm.processing ? 'Saving...' : 'Save Interests' }}
                                 </Button>
 
                                 <p v-if="interestsForm.recentlySuccessful" class="text-sm text-center text-emerald-600 font-medium mt-4">
-                                    Interests updated.
+                                    Interests updated — your Discovery feed will now be personalized!
                                 </p>
                             </CardContent>
                         </Card>
@@ -273,4 +321,16 @@ const breadcrumbItems = [
 
 .grid > div:nth-child(2) { animation-delay: 0.1s; }
 .grid > div:nth-child(3) { animation-delay: 0.2s; }
+
+/* Pop-in animation for checkmark badge */
+@keyframes popIn {
+    0% { transform: scale(0); opacity: 0; }
+    60% { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-pop {
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
 </style>
+

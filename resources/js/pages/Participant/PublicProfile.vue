@@ -10,24 +10,25 @@ interface Props {
         email: string;
         phone?: string;
         about?: string;
+        member_since?: string;
     };
     stats: {
         total_events: number;
         interests: string[];
+        recent_events?: { id: number; title: string; category: string; date: string }[];
     };
 }
 
 const props = defineProps<Props>();
 
 const interestMapping: Record<string, { label: string; emoji: string }> = {
-    music:    { label: "Music",   emoji: "🎵" },
-    sports:   { label: "Sports",  emoji: "⚽" },
-    art:      { label: "Art",     emoji: "🎨" },
-    tech:     { label: "Tech",    emoji: "💻" },
-    theater:  { label: "Theater", emoji: "🎭" },
-    food:     { label: "Food",    emoji: "🍕" },
-    cinema:   { label: "Cinema",  emoji: "🎬" },
-    gaming:   { label: "Gaming",  emoji: "🎮" },
+    sportifs:      { label: "Sports",     emoji: "⚽" },
+    musicaux:      { label: "Musical",    emoji: "🎵" },
+    culturels:     { label: "Cultural",   emoji: "🎭" },
+    scientifiques: { label: "Scientific", emoji: "🔬" },
+    commerciaux:   { label: "Commercial", emoji: "💼" },
+    art:           { label: "Art",        emoji: "🎨" },
+    gaming:        { label: "Gaming",     emoji: "🎮" },
 };
 
 const getInitials = (name: string) => {
@@ -140,9 +141,11 @@ const getInitials = (name: string) => {
                         <div class="bg-gradient-to-br from-indigo-600 to-purple-700 p-8 rounded-[2rem] shadow-xl text-white relative overflow-hidden group">
                            <div class="relative z-10 space-y-4">
                                <h4 class="text-sm font-black uppercase tracking-widest opacity-60">Account Status</h4>
-                               <p class="text-xl font-bold leading-tight">Member since {{ new Date().getFullYear() - 1 }}</p>
+                               <p class="text-xl font-bold leading-tight">Member since {{ props.participant.member_since || new Date().getFullYear() }}</p>
                                <div class="h-1 w-12 bg-white/30 rounded-full"></div>
-                               <p class="text-xs font-medium opacity-80 leading-relaxed">Active participant in the Spotlight community, contributing to local vibrant events.</p>
+                               <p class="text-xs font-medium opacity-80 leading-relaxed">
+                                    {{ props.stats.total_events > 10 ? 'Highly active participant' : props.stats.total_events > 3 ? 'Regular participant' : 'New participant' }} in the Spotlight community, contributing to local vibrant events.
+                               </p>
                            </div>
                            <Trophy class="absolute -right-4 -bottom-4 w-32 h-32 opacity-10 rotate-12 group-hover:scale-110 transition-transform duration-1000" />
                         </div>
@@ -180,6 +183,36 @@ const getInitials = (name: string) => {
                                 <p class="text-sm text-gray-400">Discover events to start building your profile!</p>
                             </div>
                         </div>
+
+                        <!-- Recent Events Attended -->
+                        <div v-if="props.stats.recent_events && props.stats.recent_events.length > 0" class="mt-8 pt-8 border-t border-gray-50 dark:border-neutral-800/50">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div class="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl">
+                                    <Ticket class="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                                </div>
+                                <h3 class="text-xl font-black text-gray-900 dark:text-white tracking-tight">Recent Events Attended</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div v-for="event in props.stats.recent_events" :key="event.id" class="flex items-center justify-between p-4 bg-gray-50 dark:bg-neutral-800/30 rounded-2xl border border-transparent hover:border-gray-200 dark:hover:border-neutral-700 transition-colors">
+                                    <div>
+                                        <h4 class="font-bold text-gray-900 dark:text-white">{{ event.title }}</h4>
+                                        <div class="flex items-center gap-2 mt-1 text-sm text-gray-500">
+                                            <span>{{ new Date(event.date).toLocaleDateString() }}</span>
+                                            <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                            <span class="flex items-center gap-1">
+                                                {{ interestMapping[event.category]?.emoji || '📌' }}
+                                                {{ interestMapping[event.category]?.label || event.category }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <Link :href="`/events/${event.id}`" class="p-2 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-100 dark:border-neutral-800 transition-colors">
+                                        <ChevronRight class="w-5 h-5" />
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 

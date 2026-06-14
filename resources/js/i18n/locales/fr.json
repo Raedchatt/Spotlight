@@ -703,15 +703,17 @@
     "ar": "العربية"
   },
   "categories": {
-    "sportifs": "Sportifs",
-    "culturels": "Culturels",
-    "scientifiques": "Scientifiques",
-    "musicaux": "Musicaux",
-    "commerciaux": "Commerciaux",
+    "sportifs": "Sports",
+    "culturels": "Culturel",
+    "scientifiques": "Scientifique",
+    "musicaux": "Musique",
+    "commerciaux": "Commercial",
     "art": "Art",
     "gaming": "Gaming",
+    "conference": "Conférence",
+    "esports": "E-sport",
     "autre": "Autre",
-    "all": "Tous"
+    "all": "Tout"
   },
   "appearance": {
     "light": "Clair",
@@ -719,9 +721,10 @@
     "system": "Système"
   },
   "passwords": {
-    "sent": "Nous vous avons envoyé par email le lien de réinitialisation !",
-    "user": "Aucun utilisateur trouvé avec cette adresse email.",
-    "token": "Ce jeton de réinitialisation est invalide.",
+    "sent": "Nous vous avons envoyé par email le lien de réinitialisation de votre mot de passe !",
+    "user": "Aucun utilisateur n'a été trouvé avec cette adresse email.",
+    "token": "Ce jeton de réinitialisation de mot de passe est invalide.",
     "throttled": "Veuillez patienter avant de réessayer."
-  }
+  },
+  "profile-updated": "Profil mis à jour avec succès."
 }
