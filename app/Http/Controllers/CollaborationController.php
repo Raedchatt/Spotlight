@@ -202,7 +202,7 @@ class CollaborationController extends Controller
     {
         $userId = Auth::id();
 
-        $collaborations = EventCollaborator::with(['evenement.medias', 'evenement.organisateur'])
+        $collaborations = EventCollaborator::with(['evenement.medias', 'evenement.organisateur', 'evenement.sponsors'])
             ->where('organizer_id', $userId)
             ->where('statut', 'accepted')
             ->get();

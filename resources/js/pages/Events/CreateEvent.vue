@@ -661,7 +661,9 @@ onUnmounted(() => {
                                                 v-if="!s.error"
                                                 :src="s.url" 
                                                 alt="AI Suggestion" 
-                                                class="w-full h-full object-cover group-hover:scale-105 transition-transform" 
+                                                class="w-full h-full object-cover group-hover:scale-105 transition-all duration-300" 
+                                                :class="s.loaded ? 'opacity-100' : 'opacity-0'"
+
                                                 @load="s.loaded = true"
                                                 @error="(e) => {
                                                     const target = e.target as HTMLImageElement;
