@@ -56,6 +56,7 @@ class AdminFinancialController extends Controller
         $affiliatePayouts = Commission::with(['reservation.user', 'evenement', 'revendeur.user'])
             ->whereNotNull('revendeur_id')
             ->where('status', StatutCommission::Pending)
+            ->where('commission_revendeur', '>', 0)
             ->whereHas('evenement', function($q) use ($now) {
                 $q->where('date_fin', '<=', $now);
             })
@@ -119,6 +120,8 @@ class AdminFinancialController extends Controller
      */
     public function approveAffiliate(Commission $commission)
     {
+        \Illuminate\Support\Facades\Log::info("approveAffiliate called for commission #{$commission->id}, current status: {$commission->status->value}");
+
         // 1. Guard: already approved
         if ($commission->status === StatutCommission::Approved) {
             return back()->with('error', 'This commission has already been paid out.');
@@ -140,28 +143,51 @@ class AdminFinancialController extends Controller
         try {
             Stripe::setApiKey(config('services.stripe.secret'));
 
-            // 4. Execute real Stripe Transfer
-            $transfer = Transfer::create([
-                'amount' => $transferAmount,
-                'currency' => 'eur',
-                'destination' => $revendeur->stripe_account_id,
-                'metadata' => [
-                    'commission_id' => $commission->id,
-                    'evenement_id' => $commission->evenement_id,
-                    'reseller_id' => $revendeur->id,
-                ],
-            ]);
+            $transferId = null;
+
+            if (app()->environment('local')) {
+                try {
+                    // 4. Execute real Stripe Transfer
+                    $transfer = Transfer::create([
+                        'amount' => $transferAmount,
+                        'currency' => 'eur',
+                        'destination' => $revendeur->stripe_account_id,
+                        'metadata' => [
+                            'commission_id' => $commission->id,
+                            'evenement_id' => $commission->evenement_id,
+                            'reseller_id' => $revendeur->id,
+                        ],
+                    ]);
+                    $transferId = $transfer->id;
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::warning('Stripe affiliate transfer failed in local environment, bypassing. Error: ' . $e->getMessage());
+                    $transferId = 'tr_local_mock_' . uniqid();
+                }
+            } else {
+                // 4. Execute real Stripe Transfer
+                $transfer = Transfer::create([
+                    'amount' => $transferAmount,
+                    'currency' => 'eur',
+                    'destination' => $revendeur->stripe_account_id,
+                    'metadata' => [
+                        'commission_id' => $commission->id,
+                        'evenement_id' => $commission->evenement_id,
+                        'reseller_id' => $revendeur->id,
+                    ],
+                ]);
+                $transferId = $transfer->id;
+            }
 
             // 5. Update commission with transfer proof and approved status
             $commission->update([
                 'status' => StatutCommission::Approved,
-                'stripe_transfer_id' => $transfer->id,
+                'stripe_transfer_id' => $transferId,
             ]);
 
             // Note: The Commission model's booted() observer will
             // automatically increment the reseller's balance.
 
-            return back()->with('success', 'Affiliate payout transferred successfully via Stripe.');
+            return back()->with('success', 'Affiliate payout transferred successfully (via Stripe or Mock).');
 
         } catch (\Stripe\Exception\ApiErrorException $e) {
             \Illuminate\Support\Facades\Log::error('Stripe affiliate transfer failed: ' . $e->getMessage());
@@ -197,15 +223,31 @@ class AdminFinancialController extends Controller
         try {
             Stripe::setApiKey(config('services.stripe.secret'));
 
-            Transfer::create([
-                'amount' => $transferAmount,
-                'currency' => 'eur',
-                'destination' => $orgProfile->stripe_account_id,
-                'metadata' => [
-                    'evenement_id' => $event->id,
-                    'evenement_titre' => $event->titre,
-                ],
-            ]);
+            if (app()->environment('local')) {
+                try {
+                    Transfer::create([
+                        'amount' => $transferAmount,
+                        'currency' => 'eur',
+                        'destination' => $orgProfile->stripe_account_id,
+                        'metadata' => [
+                            'evenement_id' => $event->id,
+                            'evenement_titre' => $event->titre,
+                        ],
+                    ]);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::warning('Stripe Transfer failed in local environment, bypassing. Error: ' . $e->getMessage());
+                }
+            } else {
+                Transfer::create([
+                    'amount' => $transferAmount,
+                    'currency' => 'eur',
+                    'destination' => $orgProfile->stripe_account_id,
+                    'metadata' => [
+                        'evenement_id' => $event->id,
+                        'evenement_titre' => $event->titre,
+                    ],
+                ]);
+            }
 
             $event->update([
                 'is_paid_out' => true,

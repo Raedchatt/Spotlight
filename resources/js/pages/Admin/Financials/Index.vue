@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { 
       AlertCircle, Building, CalendarDays, ExternalLink, 
     RefreshCw, User as UserIcon,  
@@ -24,6 +24,22 @@ const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(locale.value, { style: 'currency', currency: 'TND' }).format(amount);
 };
 
+/**
+ * Helper to show a toast based on flash messages from the server.
+ * Inertia's onSuccess fires for ALL redirects, even ones with error flash messages.
+ */
+const showFlashToast = (successMsg: string, errorMsg: string) => {
+    const page = usePage();
+    const flash = (page.props as any).flash;
+    if (flash?.error) {
+        toast.error(flash.error);
+    } else if (flash?.success) {
+        toast.success(flash.success);
+    } else {
+        toast.success(successMsg);
+    }
+};
+
 const handleOrganizerPayout = (id: number, stripeAccountId: string | null) => {
     if (!stripeAccountId) {
         toast.error(t('events.stripeNotConnectedError'));
@@ -34,7 +50,7 @@ const handleOrganizerPayout = (id: number, stripeAccountId: string | null) => {
         processingId.value = id;
         router.post(`/admin/financials/organizer/${id}/pay`, {}, {
             preserveScroll: true,
-            onSuccess: () => toast.success(t('events.stripeTransferSuccess')),
+            onSuccess: () => showFlashToast(t('events.stripeTransferSuccess'), t('events.stripeTransferError')),
             onError: () => toast.error(t('events.stripeTransferError')),
             onFinish: () => processingId.value = null
         });
@@ -46,7 +62,7 @@ const handleOrganizerRefund = (id: number) => {
         processingId.value = id;
         router.post(`/admin/financials/organizer/${id}/refund`, {}, {
             preserveScroll: true,
-            onSuccess: () => toast.success(t('events.refundSuccess')),
+            onSuccess: () => showFlashToast(t('events.refundSuccess'), t('events.refundError')),
             onError: () => toast.error(t('events.refundError')),
             onFinish: () => processingId.value = null
         });
@@ -58,7 +74,7 @@ const handleAffiliatePayout = (id: number) => {
         processingId.value = id;
         router.post(`/admin/financials/affiliate/${id}/approve`, {}, {
             preserveScroll: true,
-            onSuccess: () => toast.success(t('events.affiliatePayoutSuccess')),
+            onSuccess: () => showFlashToast(t('events.affiliatePayoutSuccess'), t('events.affiliatePayoutError')),
             onError: () => toast.error(t('events.affiliatePayoutError')),
             onFinish: () => processingId.value = null
         });

@@ -46,6 +46,13 @@ class HandleInertiaRequests extends Middleware
                 ->whereHas('reservations.paiement', function($q) {
                     $q->where('statut', '=', \App\Enums\StatutPaiement::Succeeded);
                 })
+                ->count()
+                + \App\Models\Commission::whereNotNull('revendeur_id')
+                ->where('status', \App\Enums\StatutCommission::Pending)
+                ->where('commission_revendeur', '>', 0)
+                ->whereHas('evenement', function($q) {
+                    $q->where('date_fin', '<=', now());
+                })
                 ->count();
         }
 
