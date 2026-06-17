@@ -30,7 +30,7 @@ const authUser = computed(() => page.props.auth?.user as any);
 const { t, locale: currentLocale } = useI18n();
 
 const breadcrumbs = computed(() => [
-    { title: t('events.dashboard'), href: '/dashboard' },
+    { title: t('events.dashboardNav'), href: '/dashboard' },
     { title: t('notifications.title'), href: '/notifications' },
 ]);
 

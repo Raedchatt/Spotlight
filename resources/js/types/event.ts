@@ -31,6 +31,12 @@ export interface Tournoi {
     type_tournoi: 'equipe' | 'individuel';
 }
 
+export interface Sponsor {
+    id: number;
+    nom: string;
+    logo: string | null;
+}
+
 export interface Evenement {
     id: number;
     organisateur_id: number;
@@ -59,6 +65,7 @@ export interface Evenement {
     total_tickets_reserved?: number | string;
     spectator_tickets_reserved?: number | string;
     participant_tickets_reserved?: number | string;
+    sponsors?: Sponsor[];
     created_at: string;
     updated_at: string;
 }

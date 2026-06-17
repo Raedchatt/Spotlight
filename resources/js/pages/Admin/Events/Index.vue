@@ -103,7 +103,7 @@ const handleReject = (id: number) => {
                             </div>
                             <div class="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold">
                                 <span>{{ t('events.price') }}: {{ formatCurrency(event.prix_spectateur) }}</span>
-                                <span>• {{ t('events.capacity') }}: {{ event.capacite_spectateur }}</span>
+                                <span>• {{ t('events.capacityLabel') }}: {{ event.capacite_spectateur }}</span>
                             </div>
                         </div>
                         

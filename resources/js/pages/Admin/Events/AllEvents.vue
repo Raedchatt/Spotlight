@@ -383,7 +383,7 @@ const submitCreateEvent = async () => {
                                 <th class="px-6 py-4 font-black text-start">{{ t('events.event') }}</th>
                                 <th class="px-6 py-4 font-black text-start">{{ t('events.organizer') }}</th>
                                 <th class="px-6 py-4 font-black text-center">{{ t('events.category') }}</th>
-                                <th class="px-6 py-4 font-black text-center">{{ t('events.status') }}</th>
+                                <th class="px-6 py-4 font-black text-center">{{ t('events.statusCol') }}</th>
                                 <th class="px-6 py-4 font-black text-end">{{ t('common.actions') }}</th>
                             </tr>
                         </thead>

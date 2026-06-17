@@ -174,7 +174,7 @@ const handleAffiliatePayout = (id: number) => {
                             <div class="text-sm text-gray-500">
                                 {{ t('events.forEvent') }}: <span class="font-bold text-gray-700 dark:text-gray-300">{{ item.event_title }}</span>
                             </div>
-                            <div class="text-xs text-gray-400">{{ t('events.eventEnded') }}: {{ item.date_fin }}</div>
+                            <div class="text-xs text-gray-400">{{ t('events.eventEndedLabel') }}: {{ item.date_fin }}</div>
                             <div v-if="!item.stripe_account_id" class="px-3 py-1 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-lg inline-flex items-center gap-2 text-xs font-semibold">
                                 <AlertCircle class="w-4 h-4" /> {{ t('events.affiliateNoStripeAccount') }}
                             </div>

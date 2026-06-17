@@ -33,7 +33,7 @@ import type { Evenement,StatutEvenement } from '@/types/event';
 const { t } = useI18n();
 
 const breadcrumbs = [
-    { title: t('events.dashboard'), href: '/dashboard' },
+    { title: t('events.dashboardNav'), href: '/dashboard' },
     { title: t('events.events'), href: '/dashboard/events' },
 ];
 

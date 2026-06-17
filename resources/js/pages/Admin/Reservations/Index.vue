@@ -255,7 +255,7 @@ const submitCreateReservation = () => {
 const cancellingId = ref<number | null>(null);
 
 const cancelReservation = (reservation: ReservationData) => {
-    if (!confirm(t('events.confirmCancelReservation', { id: reservation.id, username: reservation.user?.username }))) return;
+    if (!confirm(t('events.confirmCancelAdminReservation', { id: reservation.id, username: reservation.user?.username }))) return;
 
     cancellingId.value = reservation.id;
     router.patch(`/admin/reservations/${reservation.id}/cancel`, {}, {
@@ -297,7 +297,7 @@ const cancelReservation = (reservation: ReservationData) => {
             <!-- Filters -->
             <div class="relative z-20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-sm p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-neutral-800 grid grid-cols-1 md:grid-cols-12 gap-4 items-end w-full">
                 <div class="md:col-span-4 relative w-full space-y-1.5 min-w-0">
-                    <label class="text-[10px] uppercase font-bold text-gray-400 ps-1">{{ t('events.participant') }}</label>
+                    <label class="text-[10px] uppercase font-bold text-gray-400 ps-1">{{ t('events.participantLabel2') }}</label>
                     <div class="relative">
                         <Search class="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <input
@@ -321,7 +321,7 @@ const cancelReservation = (reservation: ReservationData) => {
                     </div>
                 </div>
                 <div class="md:col-span-3 space-y-1.5">
-                    <label class="text-[10px] uppercase font-bold text-gray-400 ps-1">{{ t('events.status') }}</label>
+                    <label class="text-[10px] uppercase font-bold text-gray-400 ps-1">{{ t('events.statusCol') }}</label>
                     <select
                         v-model="statusFilter"
                         class="w-full px-4 py-2.5 bg-gray-50/50 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:text-white text-sm"
@@ -363,11 +363,11 @@ const cancelReservation = (reservation: ReservationData) => {
                         <thead>
                             <tr class="bg-gray-50/80 dark:bg-neutral-800/50 border-b border-gray-100 dark:border-neutral-800">
                                 <th class="text-start text-[11px] font-bold text-gray-400 uppercase tracking-widest px-6 py-4">{{ t('events.id') }}</th>
-                                <th class="text-start text-[11px] font-bold text-gray-400 uppercase tracking-widest px-6 py-4">{{ t('events.participant') }}</th>
+                                <th class="text-start text-[11px] font-bold text-gray-400 uppercase tracking-widest px-6 py-4">{{ t('events.participantLabel2') }}</th>
                                 <th class="text-start text-[11px] font-bold text-gray-400 uppercase tracking-widest px-6 py-4">{{ t('events.event') }}</th>
                                 <th class="text-start text-[11px] font-bold text-gray-400 uppercase tracking-widest px-6 py-4">{{ t('events.type') }}</th>
                                 <th class="text-center text-[11px] font-bold text-gray-400 uppercase tracking-widest px-6 py-4">{{ t('events.ticketsLabel') }}</th>
-                                <th class="text-center text-[11px] font-bold text-gray-400 uppercase tracking-widest px-6 py-4">{{ t('events.status') }}</th>
+                                <th class="text-center text-[11px] font-bold text-gray-400 uppercase tracking-widest px-6 py-4">{{ t('events.statusCol') }}</th>
                                 <th class="text-start text-[11px] font-bold text-gray-400 uppercase tracking-widest px-6 py-4">{{ t('events.date') }}</th>
                                 <th class="text-center text-[11px] font-bold text-gray-400 uppercase tracking-widest px-6 py-4">{{ t('common.actions') }}</th>
                             </tr>
@@ -530,7 +530,7 @@ const cancelReservation = (reservation: ReservationData) => {
                                             <p class="font-bold text-gray-900 dark:text-white truncate">{{ selectedEvent.titre }}</p>
                                             <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
                                                 {{ selectedEvent.is_tournoi ? t('events.tournament') : t('events.event') }}
-                                                · {{ t('events.capacity') }}: {{ selectedEvent.capacite_spectateur }} {{ t('events.seats') }}
+                                                · {{ t('events.capacityLabel') }}: {{ selectedEvent.capacite_spectateur }} {{ t('events.seats') }}
                                             </p>
                                         </div>
                                     </div>
@@ -587,7 +587,7 @@ const cancelReservation = (reservation: ReservationData) => {
                                         ]"
                                     >
                                         <p class="text-sm font-bold text-gray-900 dark:text-white">👀 {{ t('events.spectator') }}</p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t('events.watchTournament') }}</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t('events.watchTournamentTicket') }}</p>
                                     </button>
                                     <button
                                         type="button"

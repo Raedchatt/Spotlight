@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
-import { ChevronLeft, CircleDollarSign, Info, MapPin, Save, Sparkles, Users, AlertCircle } from 'lucide-vue-next';
+import { ChevronLeft, CircleDollarSign, Info, MapPin, Save, Sparkles, Users, AlertCircle, Plus, Trash2, Check, Image as ImageIcon } from 'lucide-vue-next';
 import { X } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { toast } from 'vue-sonner';
@@ -19,7 +19,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 // Breadcrumbs
 const { t } = useI18n();
 const breadcrumbs = [
-    { title: t('events.dashboard'), href: '/dashboard' },
+    { title: t('events.dashboardNav'), href: '/dashboard' },
     { title: t('events.events'), href: '/dashboard/events' },
     { title: t('events.createEvent'), href: '/dashboard/events/create' },
 ];
@@ -208,6 +208,46 @@ const removeOrganizer = (index: number) => {
     form.value.collaborator_ids.splice(index, 1);
 };
 
+// Sponsors state
+const allSponsors = ref<any[]>([]);
+const selectedSponsorIds = ref<number[]>([]);
+const customSponsors = ref<{ nom: string; logoFile: File | null; logoPreview: string | null }[]>([]);
+
+const fetchSponsors = async () => {
+    try {
+        const res = await axios.get('/web-api/sponsors');
+        allSponsors.value = res.data;
+    } catch (e) {
+        console.error('Failed to load sponsors', e);
+    }
+};
+
+const toggleSponsorSelection = (id: number) => {
+    const idx = selectedSponsorIds.value.indexOf(id);
+    if (idx > -1) {
+        selectedSponsorIds.value.splice(idx, 1);
+    } else {
+        selectedSponsorIds.value.push(id);
+    }
+};
+
+const addCustomSponsor = () => {
+    customSponsors.value.push({ nom: '', logoFile: null, logoPreview: null });
+};
+
+const removeCustomSponsor = (index: number) => {
+    customSponsors.value.splice(index, 1);
+};
+
+const handleSponsorLogoChange = (event: Event, index: number) => {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        customSponsors.value[index].logoFile = file;
+        customSponsors.value[index].logoPreview = URL.createObjectURL(file);
+    }
+};
+
 // File upload
 const handleFileChange = (event: Event) => {
     const input = event.target as HTMLInputElement;
@@ -381,6 +421,22 @@ const submit = async () => {
             }
         });
 
+        // Append existing sponsors
+        selectedSponsorIds.value.forEach(id => {
+            formData.append('sponsor_ids[]', String(id));
+        });
+
+        // Append custom sponsors
+        const validCustomSponsors = customSponsors.value.filter(cs => cs.nom.trim() !== '');
+        const customSponsorsData = validCustomSponsors.map(cs => ({ nom: cs.nom.trim() }));
+        formData.append('sponsors_other', JSON.stringify(customSponsorsData));
+
+        validCustomSponsors.forEach((cs, idx) => {
+            if (cs.logoFile) {
+                formData.append(`sponsors_other_logos[${idx}]`, cs.logoFile);
+            }
+        });
+
         await axios.post('/web-api/events', formData);
         toast.success(t('events.eventPublishedSuccess'));
         
@@ -402,6 +458,7 @@ const submit = async () => {
 onMounted(() => {
     fetchCategories();
     initMap();
+    fetchSponsors();
 });
 
 onUnmounted(() => {
@@ -729,7 +786,7 @@ onUnmounted(() => {
                                 <div class="relative">
                                     <Input 
                                         v-model="searchQuery" 
-                                        :placeholder="t('events.searchOrganizersPlaceholder')" 
+                                        :placeholder="t('events.searchOrganizersInvitePlaceholder')" 
                                         @input="searchOrganizers"
                                     />
                                     <!-- Search Results Dropdown -->
@@ -755,6 +812,103 @@ onUnmounted(() => {
                                                 <X class="w-3 h-3" />
                                             </button>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <!-- Sponsors Card -->
+                    <Card>
+                        <CardHeader>
+                            <div class="flex items-center gap-2 text-blue-600 mb-2">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold">6</div>
+                                <CardTitle>{{ t('sponsors.title') }} <span class="text-xs font-normal text-muted-foreground">{{ t('sponsors.optional') }}</span></CardTitle>
+                            </div>
+                            <CardDescription>{{ t('sponsors.selectSponsors') }}</CardDescription>
+                        </CardHeader>
+                        <CardContent class="space-y-6">
+                            <!-- Existing Sponsors Grid -->
+                            <div class="space-y-3">
+                                <div v-if="allSponsors.length > 0" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                    <div 
+                                        v-for="sponsor in allSponsors" 
+                                        :key="sponsor.id"
+                                        @click="toggleSponsorSelection(sponsor.id)"
+                                        :class="[
+                                            'flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all hover:bg-slate-50 dark:hover:bg-slate-900/50',
+                                            selectedSponsorIds.includes(sponsor.id)
+                                                ? 'border-blue-600 bg-blue-50/20 dark:bg-blue-900/10'
+                                                : 'border-slate-100 dark:border-slate-800'
+                                        ]"
+                                    >
+                                        <div class="relative w-10 h-10 rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center border border-slate-200">
+                                            <img v-if="sponsor.logo" :src="sponsor.logo" alt="logo" class="w-full h-full object-contain" />
+                                            <span v-else class="text-xs font-bold text-slate-400 uppercase">{{ sponsor.nom.substring(0, 2) }}</span>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold truncate">{{ sponsor.nom }}</p>
+                                        </div>
+                                        <div v-if="selectedSponsorIds.includes(sponsor.id)" class="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-white flex-shrink-0">
+                                            <Check class="w-3 h-3" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-else class="text-sm text-muted-foreground italic py-2">
+                                    {{ t('sponsors.noRegisteredSponsors') }}
+                                </div>
+                            </div>
+
+                            <!-- Custom/Other Sponsors -->
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4">
+                                    <label class="text-sm font-medium text-muted-foreground">{{ t('sponsors.other') }}</label>
+                                    <Button type="button" variant="outline" size="sm" class="gap-1.5 text-xs text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300 dark:border-slate-800 dark:hover:bg-slate-800" @click="addCustomSponsor">
+                                        <Plus class="w-3.5 h-3.5" />
+                                        {{ t('sponsors.addSponsor') }}
+                                    </Button>
+                                </div>
+
+                                <div class="space-y-4">
+                                    <div 
+                                        v-for="(cs, idx) in customSponsors" 
+                                        :key="idx" 
+                                        class="flex flex-col sm:flex-row gap-4 p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 relative animate-in fade-in-50 duration-200"
+                                    >
+                                        <!-- Custom Logo Upload -->
+                                        <div class="flex-shrink-0">
+                                            <label :for="'cs-logo-' + idx" class="relative block w-20 h-20 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 cursor-pointer overflow-hidden bg-white dark:bg-slate-900 hover:bg-slate-100 transition-colors">
+                                                <div v-if="cs.logoPreview" class="w-full h-full">
+                                                    <img :src="cs.logoPreview" class="w-full h-full object-contain" />
+                                                </div>
+                                                <div v-else class="flex flex-col items-center justify-center h-full text-slate-400 gap-1 p-2">
+                                                    <ImageIcon class="w-5 h-5 text-slate-400" />
+                                                    <span class="text-[9px] text-center font-medium leading-none">{{ t('sponsors.uploadLogo') }}</span>
+                                                </div>
+                                                <input 
+                                                    :id="'cs-logo-' + idx" 
+                                                    type="file" 
+                                                    accept="image/*" 
+                                                    class="hidden" 
+                                                    @change="handleSponsorLogoChange($event, idx)" 
+                                                />
+                                            </label>
+                                        </div>
+
+                                        <!-- Sponsor Name Input -->
+                                        <div class="flex-1 space-y-2">
+                                            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ t('sponsors.sponsorName') }} *</label>
+                                            <Input v-model="cs.nom" :placeholder="t('sponsors.sponsorName')" class="h-10" />
+                                        </div>
+
+                                        <!-- Remove Button -->
+                                        <button 
+                                            type="button" 
+                                            @click="removeCustomSponsor(idx)" 
+                                            class="absolute top-2 right-2 sm:relative sm:top-auto sm:right-auto sm:self-end text-slate-400 hover:text-red-500 p-2 transition-colors"
+                                        >
+                                            <Trash2 class="w-4 h-4" />
+                                        </button>
                                     </div>
                                 </div>
                             </div>

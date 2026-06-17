@@ -35,7 +35,7 @@ class EvenementController extends Controller
     // List Events
     public function index()
     {
-        $events = Evenement::with(['medias', 'category'])
+        $events = Evenement::with(['medias', 'category', 'sponsors'])
             ->where('statut', StatutEvenement::Ouvert)
             ->latest()
             ->get();
@@ -46,7 +46,7 @@ class EvenementController extends Controller
     // Show Event Details (Public)
     public function show(Request $request, $id)
     {
-        $event = Evenement::with(['organisateur.organisateur', 'medias', 'collaborateurs.organizer.organisateur', 'tournoi', 'category'])->findOrFail($id);
+        $event = Evenement::with(['organisateur.organisateur', 'medias', 'collaborateurs.organizer.organisateur', 'tournoi', 'category', 'sponsors'])->findOrFail($id);
 
 
         // Stats calculation
@@ -312,7 +312,8 @@ class EvenementController extends Controller
             'type_tournoi' => $request->type_tournoi ?? null,
             'prix_participant' => $request->prix_participant ?? null,
             'capacite_participant' => $request->capacite_participant ?? null,
-            'statut' => StatutEvenement::EnAttente
+            'statut' => StatutEvenement::EnAttente,
+            'sponsors_pending' => $this->buildSponsorsPending($request),
         ]);
 
         if ($event->is_tournoi) {
@@ -417,6 +418,66 @@ class EvenementController extends Controller
         ]);
     }
 
+    /**
+     * Build sponsors_pending array from the incoming request.
+     * Handles: existing sponsor IDs and new "other" sponsors (with optional logo upload).
+     */
+    private function buildSponsorsPending(Request $request): array
+    {
+        $pending = [];
+
+        // Existing sponsors passed as sponsor_ids[]
+        $sponsorIds = $request->input('sponsor_ids', []);
+        if (is_string($sponsorIds)) {
+            $sponsorIds = json_decode($sponsorIds, true) ?? [];
+        }
+        
+        $existingSponsors = \App\Models\Sponsor::whereIn('id', $sponsorIds)->get()->keyBy('id');
+
+        foreach ($sponsorIds as $id) {
+            $sponsor = $existingSponsors->get((int)$id);
+            if ($sponsor) {
+                $pending[] = [
+                    'type' => 'existing', 
+                    'id' => (int)$id,
+                    'nom' => $sponsor->nom,
+                    'logo' => $sponsor->logo
+                ];
+            }
+        }
+
+        // New "other" sponsors passed as sponsors_other[] (array of {nom, logo_file_index})
+        $sponsorsOther = $request->input('sponsors_other', []);
+        if (is_string($sponsorsOther)) {
+            $sponsorsOther = json_decode($sponsorsOther, true) ?? [];
+        }
+
+        $otherLogoFiles = $request->file('sponsors_other_logos', []);
+
+        foreach ($sponsorsOther as $idx => $other) {
+            $nom = is_array($other) ? ($other['nom'] ?? '') : $other;
+            $logoUrl = is_array($other) ? ($other['logo'] ?? null) : null;
+
+            if (isset($otherLogoFiles[$idx])) {
+                try {
+                    $uploadResult = cloudinary()->uploadApi()->upload(
+                        $otherLogoFiles[$idx]->getRealPath(),
+                        ['folder' => 'sponsors', 'resource_type' => 'image']
+                    );
+                    $logoUrl = $uploadResult['secure_url'];
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::warning('Sponsor logo upload failed: ' . $e->getMessage());
+                }
+            }
+
+            if ($nom) {
+                $pending[] = ['type' => 'new', 'nom' => $nom, 'logo' => $logoUrl];
+            }
+        }
+
+        return $pending;
+    }
+
     public function update(Request $request, $id)
     {
         $event = Evenement::findOrFail($id);
@@ -469,6 +530,7 @@ class EvenementController extends Controller
             'prix_participant' => $request->prix_participant ?? null,
             'capacite_participant' => $request->capacite_participant ?? null,
             'poster_url' => $request->poster_url ?? $event->poster_url,
+            'sponsors_pending' => $this->buildSponsorsPending($request),
         ]);
 
         if ($event->is_tournoi) {

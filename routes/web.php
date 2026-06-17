@@ -87,6 +87,7 @@ Route::prefix('web-api')->group(function () {
     Route::get('/events/{id}', [EvenementController::class, 'show']);
     Route::get('/events/{id}/management-stats', [EvenementController::class, 'managementStats'])->middleware('auth');
     Route::get('/categories', [\App\Http\Controllers\CategoryController::class, 'index']);
+    Route::get('/sponsors', [\App\Http\Controllers\SponsorController::class, 'index']);
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -98,6 +99,9 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/events/{id}/ouvrir', [EvenementController::class, 'ouvrirReservation']);
         Route::patch('/events/{id}/fermer', [EvenementController::class, 'fermerReservation']);
         Route::post('/events/{id}/cancel', [EvenementController::class, 'cancelWithRefund']);
+
+        // Sponsors
+        Route::post('/sponsors', [\App\Http\Controllers\SponsorController::class, 'store']);
 
         Route::post('/reservations', [ReservationController::class, 'store']);
         Route::get('/my-reservations', [ReservationController::class, 'chercherReservationParParticipant']);

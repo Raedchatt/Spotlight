@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Evenement;
+use App\Models\Sponsor;
 use App\Models\User;
 use App\Enums\StatutEvenement;
 use App\Enums\Role;
@@ -88,6 +89,7 @@ class AdminEventController extends Controller
 
     /**
      * Approve the specified event.
+     * Also persists any pending sponsors into the sponsors table and links them.
      */
     public function approve(Evenement $event)
     {
@@ -99,6 +101,32 @@ class AdminEventController extends Controller
         $event->update([
             'statut' => StatutEvenement::Ouvert
         ]);
+
+        // Process pending sponsors
+        $pending = $event->sponsors_pending ?? [];
+        $sponsorIdsToAttach = [];
+
+        foreach ($pending as $item) {
+            if (($item['type'] ?? '') === 'existing' && !empty($item['id'])) {
+                // Existing sponsor — just link it
+                $sponsorIdsToAttach[] = (int) $item['id'];
+            } elseif (($item['type'] ?? '') === 'new' && !empty($item['nom'])) {
+                // New sponsor — create/find it then link
+                $sponsor = Sponsor::firstOrCreate(
+                    ['nom' => $item['nom']],
+                    ['logo' => $item['logo'] ?? null]
+                );
+                $sponsorIdsToAttach[] = $sponsor->id;
+            }
+        }
+
+        if (!empty($sponsorIdsToAttach)) {
+            // syncWithoutDetaching keeps existing if re-approved; sync replaces
+            $event->sponsors()->sync($sponsorIdsToAttach);
+        }
+
+        // Clear pending sponsors
+        $event->update(['sponsors_pending' => null]);
 
         app(\App\Services\NotificationService::class)->notifieOrganisateurEvenementApprouve($event->organisateur_id, $event->titre);
 

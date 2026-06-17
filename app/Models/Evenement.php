@@ -6,6 +6,7 @@ use App\Enums\StatutEvenement;
 use App\Models\EventCollaborator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -28,6 +29,7 @@ class Evenement extends Model
         'paid_out_at',
         'categorie',
         'categorie_autre',
+        'sponsors_pending',
         'category_id',
         'is_tournoi',
         'type_tournoi',
@@ -60,6 +62,7 @@ class Evenement extends Model
             'type_tournoi' => 'string',
             'prix_participant' => 'decimal:2',
             'capacite_participant' => 'integer',
+            'sponsors_pending' => 'array',
         ];
     }
 
@@ -109,6 +112,14 @@ class Evenement extends Model
     public function category()
     {
         return $this->belongsTo(Category::class, 'category_id');
+    }
+
+    /**
+     * Sponsors for this event.
+     */
+    public function sponsors(): BelongsToMany
+    {
+        return $this->belongsToMany(Sponsor::class, 'event_sponsor', 'evenement_id', 'sponsor_id');
     }
 
 
@@ -256,11 +267,40 @@ class Evenement extends Model
         return $this->update(['statut' => StatutEvenement::Ouvert]);
     }
 
-    /**
-     * Méthode: fermerReservation
-     */
     public function fermerReservation(): bool
     {
         return $this->update(['statut' => StatutEvenement::Ferme]);
+    }
+
+    /**
+     * Override toArray to include sponsors_pending in the sponsors array.
+     */
+    public function toArray()
+    {
+        $array = parent::toArray();
+        if (array_key_exists('sponsors', $array)) {
+            $merged = collect($array['sponsors']);
+            if (!empty($this->sponsors_pending)) {
+                foreach ($this->sponsors_pending as $pending) {
+                    if (isset($pending['type']) && $pending['type'] === 'existing') {
+                        if (!$merged->contains('id', $pending['id'])) {
+                            $merged->push([
+                                'id' => $pending['id'],
+                                'nom' => $pending['nom'] ?? 'Sponsor',
+                                'logo' => $pending['logo'] ?? null,
+                            ]);
+                        }
+                    } else {
+                        $merged->push([
+                            'id' => 'pending_' . uniqid(),
+                            'nom' => $pending['nom'] ?? 'Sponsor',
+                            'logo' => $pending['logo'] ?? null,
+                        ]);
+                    }
+                }
+            }
+            $array['sponsors'] = $merged->values()->all();
+        }
+        return $array;
     }
 }

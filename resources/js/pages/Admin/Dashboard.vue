@@ -114,7 +114,7 @@ const formatCurrency = (amount: number) => {
                         </span>
                     </div>
                     <div>
-                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">{{ t('events.totalRevenue') }}</p>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">{{ t('events.totalRevenueAdmin') }}</p>
                         <h3 class="text-2xl font-black text-gray-900 dark:text-white mt-1">{{ formatCurrency(stats.total_revenue) }}</h3>
                         <p class="text-xs text-gray-500 mt-2 font-medium">{{ t('events.grossPlatformVolume') }}</p>
                     </div>
