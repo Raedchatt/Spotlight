@@ -265,9 +265,13 @@ class EvenementController extends Controller
             'date_fin' => 'required|date|after:date_debut',
             'lieu' => 'required|string',
             'prix_spectateur' => 'required|numeric',
-            'capacite_spectateur' => 'required|integer',
+            'capacite_spectateur' => 'required|integer|min:0',
             'categorie' => 'required|string|max:255',
             'categorie_autre' => 'required_if:categorie,autre|nullable|string|max:255',
+            'is_tournoi' => 'sometimes|boolean',
+            'type_tournoi' => 'exclude_if:is_tournoi,0,false|required_if:is_tournoi,1,true|in:equipe,individuel',
+            'prix_participant' => 'exclude_if:is_tournoi,0,false|required_if:is_tournoi,1,true|numeric|min:0',
+            'capacite_participant' => 'exclude_if:is_tournoi,0,false|required_if:is_tournoi,1,true|integer|min:0',
         ];
 
         $user = Auth::user();
@@ -277,7 +281,12 @@ class EvenementController extends Controller
             $validationRules['organisateur_id'] = 'required|exists:users,id';
         }
 
-        $request->validate($validationRules);
+        try {
+            $request->validate($validationRules);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Illuminate\Support\Facades\Log::error('Event Store Validation Failed:', $e->errors());
+            throw $e;
+        }
 
         // For non-admin organizers, check Stripe
         if (!$user->isAdmin() && $user->role === \App\Enums\Role::Organisateur) {
@@ -291,6 +300,18 @@ class EvenementController extends Controller
                     'require_stripe' => true
                 ], 422);
             }
+        }
+
+        $capaciteSpectateur = (int) $request->input('capacite_spectateur', 0);
+        $isTournoi = $request->has('is_tournoi') ? $request->boolean('is_tournoi') : false;
+        $capaciteParticipant = $isTournoi ? (int) $request->input('capacite_participant', 0) : 0;
+
+        if ($capaciteSpectateur < 1 && $capaciteParticipant < 1) {
+            return response()->json([
+                'errors' => [
+                    'capacite_spectateur' => ['Total event capacity (spectators + participants) must be at least 1.']
+                ]
+            ], 422);
         }
 
         // Determine the organizer: admin can specify, others use their own ID
@@ -495,14 +516,14 @@ class EvenementController extends Controller
                 'date_fin' => 'required|date|after:date_debut',
                 'lieu' => 'required|string',
                 'prix_spectateur' => 'required|numeric',
-                'capacite_spectateur' => 'required|integer',
+                'capacite_spectateur' => 'required|integer|min:0',
                 'categorie' => 'required|string|max:255',
                 'categorie_autre' => 'required_if:categorie,autre|nullable|string|max:255',
                 'statut' => ['required', new Enum(StatutEvenement::class)],
                 'is_tournoi' => 'sometimes|boolean',
-                'type_tournoi' => 'exclude_if:is_tournoi,0|required_if:is_tournoi,1|in:equipe,individuel',
-                'prix_participant' => 'exclude_if:is_tournoi,0|required_if:is_tournoi,1|numeric|min:0',
-                'capacite_participant' => 'exclude_if:is_tournoi,0|required_if:is_tournoi,1|integer|min:1',
+                'type_tournoi' => 'exclude_if:is_tournoi,0,false|required_if:is_tournoi,1,true|in:equipe,individuel',
+                'prix_participant' => 'exclude_if:is_tournoi,0,false|required_if:is_tournoi,1,true|numeric|min:0',
+                'capacite_participant' => 'exclude_if:is_tournoi,0,false|required_if:is_tournoi,1,true|integer|min:0',
                 'medias.*' => 'nullable|file|mimes:jpeg,png,jpg,webp,mp4,mov|max:20480', // Allow up to 20MB
                 'media_to_delete' => 'nullable|array',
                 'media_to_delete.*' => 'integer|exists:media,id',
@@ -511,6 +532,18 @@ class EvenementController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Illuminate\Support\Facades\Log::error('Event Update Validation Failed:', $e->errors());
             throw $e;
+        }
+
+        $capaciteSpectateur = (int) $request->input('capacite_spectateur', 0);
+        $isTournoi = $request->has('is_tournoi') ? $request->boolean('is_tournoi') : false;
+        $capaciteParticipant = $isTournoi ? (int) $request->input('capacite_participant', 0) : 0;
+
+        if ($capaciteSpectateur < 1 && $capaciteParticipant < 1) {
+            return response()->json([
+                'errors' => [
+                    'capacite_spectateur' => ['Total event capacity (spectators + participants) must be at least 1.']
+                ]
+            ], 422);
         }
 
         $event->update([
@@ -681,7 +714,7 @@ class EvenementController extends Controller
     // Search events
     public function search(Request $request)
     {
-        $query = Evenement::with(['medias', 'tournoi', 'category'])
+        $query = Evenement::with(['medias', 'tournoi', 'category', 'sponsors'])
             ->withCount('reservations')
             ->withSum(['reservations as total_tickets_reserved' => function($q) {
                 $q->whereIn('statut', ['confirmed', 'pending']);

@@ -52,7 +52,7 @@ const form = ref({
     date_fin: '',
     lieu: '',
     prix_spectateur: 0,
-    capacite_spectateur: 0,
+    capacite_spectateur: 1,
     categorie: '',
     categorie_autre: '',
     is_tournoi: false,
@@ -416,6 +416,8 @@ const submit = async () => {
                 if (form.value.categorie === 'autre') {
                     formData.append(key, String(value));
                 }
+            } else if (typeof value === 'boolean') {
+                formData.append(key, value ? '1' : '0');
             } else {
                 formData.append(key, String(value));
             }
@@ -447,6 +449,9 @@ const submit = async () => {
     } catch (error: any) {
         if (error.response?.data?.errors) {
             formErrors.value = error.response.data.errors;
+            toast.error('Veuillez vérifier le formulaire pour les erreurs.');
+        } else if (error.response?.data?.message) {
+            toast.error(error.response.data.message);
         } else {
             toast.error(t('events.unexpectedError'));
         }

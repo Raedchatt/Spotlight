@@ -285,6 +285,22 @@ const getStatusLabel = (statut: StatutEvenement) => {
                                     <Users class="w-3 h-3 mr-1" /> {{ t('events.coOrganizer') }}
                                 </Badge>
                             </div>
+
+                            <!-- Sponsor Logo Icons Overlay -->
+                            <div v-if="event.sponsors && event.sponsors.length > 0" class="absolute bottom-3 left-3 flex items-center -space-x-1.5 z-10">
+                                <div 
+                                    v-for="sponsor in event.sponsors.slice(0, 3)" 
+                                    :key="sponsor.id" 
+                                    class="w-7 h-7 rounded-full overflow-hidden bg-white dark:bg-slate-800 flex items-center justify-center shrink-0 border-2 border-white dark:border-slate-900 shadow-sm ring-1 ring-black/5"
+                                    :title="sponsor.nom"
+                                >
+                                    <img v-if="sponsor.logo" :src="sponsor.logo" :alt="sponsor.nom" class="w-full h-full object-contain p-0.5" />
+                                    <span v-else class="text-[8px] font-black text-slate-400 uppercase leading-none">{{ sponsor.nom ? sponsor.nom.substring(0, 2) : 'SP' }}</span>
+                                </div>
+                                <div v-if="event.sponsors.length > 3" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center shrink-0 border-2 border-white dark:border-slate-900 shadow-sm text-[9px] font-extrabold text-slate-500 dark:text-slate-300">
+                                    +{{ event.sponsors.length - 3 }}
+                                </div>
+                            </div>
                                 <div class="absolute bottom-4 right-4 flex gap-2" v-if="event.organisateur_id === auth?.user?.id || true">
                                     <Button 
                                         size="icon" 

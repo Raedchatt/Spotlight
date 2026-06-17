@@ -188,24 +188,19 @@ const displayCategory = computed(() => {
                  </Link>
             </div>
             
-            <!-- Sponsor Logos Overlay -->
-            <div v-if="event.sponsors && event.sponsors.length > 0" class="absolute bottom-3 left-3 flex flex-wrap gap-1.5 z-10 max-w-[80%]">
+            <!-- Sponsor Logo Icons Overlay -->
+            <div v-if="event.sponsors && event.sponsors.length > 0" class="absolute bottom-3 left-3 flex items-center -space-x-1.5 z-10">
                 <div 
-                    v-for="sponsor in event.sponsors.slice(0, 2)" 
+                    v-for="sponsor in event.sponsors.slice(0, 3)" 
                     :key="sponsor.id" 
-                    class="flex items-center gap-1.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-1.5 py-1 rounded-full shadow-sm border border-white/20 dark:border-slate-700/50"
+                    class="w-7 h-7 rounded-full overflow-hidden bg-white dark:bg-slate-800 flex items-center justify-center shrink-0 border-2 border-white dark:border-slate-900 shadow-sm ring-1 ring-black/5"
                     :title="sponsor.nom"
                 >
-                    <div class="w-5 h-5 rounded-full overflow-hidden bg-white dark:bg-slate-800 flex items-center justify-center shrink-0 border border-slate-100 dark:border-slate-700">
-                        <img v-if="sponsor.logo" :src="sponsor.logo" :alt="sponsor.nom" class="w-full h-full object-contain" />
-                        <span v-else class="text-[8px] font-black text-slate-500 uppercase leading-none">{{ sponsor.nom ? sponsor.nom.substring(0, 2) : 'SP' }}</span>
-                    </div>
-                    <div class="text-[10px] font-bold text-slate-900 dark:text-slate-100 pr-1 truncate" style="max-width: 80px;">
-                        {{ sponsor.nom || 'Sponsor' }}
-                    </div>
+                    <img v-if="sponsor.logo" :src="sponsor.logo" :alt="sponsor.nom" class="w-full h-full object-contain p-0.5" />
+                    <span v-else class="text-[8px] font-black text-slate-400 uppercase leading-none">{{ sponsor.nom ? sponsor.nom.substring(0, 2) : 'SP' }}</span>
                 </div>
-                <div v-if="event.sponsors.length > 2" class="flex items-center justify-center px-2 py-1 rounded-full border border-white/20 dark:border-slate-700/50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md text-slate-800 dark:text-slate-200 text-[10px] font-extrabold shadow-sm">
-                    +{{ event.sponsors.length - 2 }}
+                <div v-if="event.sponsors.length > 3" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center shrink-0 border-2 border-white dark:border-slate-900 shadow-sm text-[9px] font-extrabold text-slate-500 dark:text-slate-300">
+                    +{{ event.sponsors.length - 3 }}
                 </div>
             </div>
         </div>

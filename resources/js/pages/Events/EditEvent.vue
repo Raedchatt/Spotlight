@@ -394,12 +394,10 @@ const submit = async () => {
                 if (form.value.categorie === 'autre' && value) {
                     formData.append(key, String(value));
                 }
+            } else if (typeof value === 'boolean') {
+                formData.append(key, value ? '1' : '0');
             } else if (value !== null && value !== '') {
-                if (typeof value === 'boolean') {
-                    formData.append(key, value ? '1' : '0');
-                } else {
-                    formData.append(key, String(value));
-                }
+                formData.append(key, String(value));
             }
         });
 
@@ -446,13 +444,14 @@ const submit = async () => {
                 }, 1000);
             }
         });
-    } catch (error: any) {
-        console.error('Error updating event:', error);
-        if (error.response?.status === 422) {
-            errors.value = error.response.data.errors;
+    } catch (e: any) {
+        if (e.response?.status === 422) {
+            errors.value = e.response.data.errors;
+            toast.error('Veuillez vérifier le formulaire pour les erreurs.');
+        } else if (e.response?.data?.message) {
+            toast.error(e.response.data.message);
         } else {
-            // Fallback for non-validation errors
-            toast.error(error.response?.data?.message || t('events.unexpectedError'));
+            toast.error(t('events.unexpectedError'));
         }
     } finally {
         processing.value = false;

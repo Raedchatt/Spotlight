@@ -589,10 +589,30 @@ const handleCollaboration = async (action: 'accept' | 'reject') => {
                 
                 <div class="absolute bottom-0 left-0 w-full p-6 md:p-12 max-w-7xl mx-auto right-0">
                     <div class="space-y-4">
-                        <span class="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md text-white border border-white/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                            <component :is="props.event.is_tournoi ? Trophy : Star" class="w-3.5 h-3.5" />
-                            {{ displayCategory }}
-                        </span>
+                        <div class="flex items-center gap-3 flex-wrap">
+                            <span class="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md text-white border border-white/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                                <component :is="props.event.is_tournoi ? Trophy : Star" class="w-3.5 h-3.5" />
+                                {{ displayCategory }}
+                            </span>
+                            
+                            <!-- Sponsors in Hero -->
+                            <div v-if="props.event.sponsors && props.event.sponsors.length > 0" class="flex items-center gap-2">
+                                <div 
+                                    v-for="sponsor in props.event.sponsors.slice(0, 4)" 
+                                    :key="sponsor.id" 
+                                    class="flex items-center bg-white/10 backdrop-blur-md rounded-full p-1 pr-3 border border-white/20"
+                                >
+                                    <div class="w-6 h-6 rounded-full overflow-hidden bg-white flex items-center justify-center shrink-0">
+                                        <img v-if="sponsor.logo" :src="sponsor.logo" :alt="sponsor.nom" class="w-full h-full object-contain p-0.5" />
+                                        <span v-else class="text-[10px] font-black text-slate-400 uppercase">{{ sponsor.nom ? sponsor.nom.substring(0, 2) : 'SP' }}</span>
+                                    </div>
+                                    <span class="ml-2 text-xs font-bold text-white truncate max-w-[100px]">{{ sponsor.nom || 'Sponsor' }}</span>
+                                </div>
+                                <span v-if="props.event.sponsors.length > 4" class="text-xs font-bold text-white bg-white/20 backdrop-blur-md rounded-full px-2 py-1 border border-white/20">
+                                    +{{ props.event.sponsors.length - 4 }}
+                                </span>
+                            </div>
+                        </div>
                         
                         <h1 class="text-3xl md:text-5xl font-bold text-white max-w-4xl leading-tight">
                             {{ props.event.titre }}

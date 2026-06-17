@@ -52,8 +52,8 @@ class GenerateImagesController extends Controller
         foreach ($items as $index => $item) {
             $seed = rand(1000, 9999) + ($round * 100) + $index;
             
-            // 🎯 LOREMFLICKR: Best-in-class reliability for both frontend and backend
-            $url = "https://loremflickr.com/1024/768/" . urlencode($item['keywords']) . "?lock={$seed}";
+            // 🎯 POLLINATIONS AI: Reliable free AI image generation based on keywords
+            $url = "https://image.pollinations.ai/prompt/" . urlencode($item['keywords'] . ' professional event poster high quality') . "?seed={$seed}&width=1024&height=768&nologo=true";
 
             $suggestions[] = [
                 'prompt'       => $item['prompt'],
